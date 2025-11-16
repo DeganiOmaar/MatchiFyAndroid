@@ -89,7 +89,7 @@ fun AppNavGraph(
             RecruiterSignupScreen(
                 onLoginClick = { navController.popBackStack() },
                 onSignupSuccess = {
-                    navController.navigate("recruiter_profile") {
+                    navController.navigate("main") {
                         popUpTo("login") { inclusive = true }
                     }
                 },
@@ -140,7 +140,12 @@ fun AppNavGraph(
             HomeScreen()
         }
 
-        // RECRUITER PROFILE
+        // MAIN SCREEN (Missions + Profile with Bottom Navigation)
+        composable("main") {
+            com.example.matchify.ui.missions.MainScreen()
+        }
+
+        // RECRUITER PROFILE (kept for backward compatibility)
         composable("recruiter_profile") {
             val vm: RecruiterProfileViewModel = viewModel(factory = RecruiterProfileViewModelFactory())
             RecruiterProfileScreen(

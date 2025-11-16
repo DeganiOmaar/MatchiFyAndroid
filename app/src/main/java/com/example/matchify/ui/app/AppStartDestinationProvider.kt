@@ -16,7 +16,7 @@ class AppStartDestinationProvider(private val context: Context) {
         return if (token != null && rememberMe) {
             // Check the role to determine the start destination
             when (role) {
-                "recruiter" -> "recruiter_profile"
+                "recruiter" -> "main"
                 "talent" -> "home"
                 else -> "login" // Default to login if role is unknown
             }

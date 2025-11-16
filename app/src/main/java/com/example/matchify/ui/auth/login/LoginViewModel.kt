@@ -69,7 +69,7 @@ class LoginViewModel(
 
                 // ⭐ ROLE-BASED NAVIGATION
                 _navigateTo.value = if (response.user.role == "recruiter") {
-                    "recruiter_profile"
+                    "main"
                 } else {
                     "home"
                 }

@@ -67,6 +67,13 @@ class ApiService(private val authPreferences: AuthPreferences) {
         retrofit.create(RecruiterApi::class.java)
     }
 
+    // -----------------------------------------------------------
+    // 📋 MISSION API (CRUD operations)
+    // -----------------------------------------------------------
+    val missionApi: MissionApi by lazy {
+        retrofit.create(MissionApi::class.java)
+    }
+
     companion object {
         @Volatile
         private var INSTANCE: ApiService? = null

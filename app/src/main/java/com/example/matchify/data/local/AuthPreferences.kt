@@ -36,6 +36,10 @@ class AuthPreferences(private val context: Context) {
     val currentAccessToken: StateFlow<String?> = _currentAccessToken
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    
+    // Get current user as StateFlow for easy access
+    private val _currentUser = MutableStateFlow<UserModel?>(null)
+    val currentUser: StateFlow<UserModel?> = _currentUser
 
     init {
         // Initialize StateFlow with current token value immediately
@@ -48,6 +52,19 @@ class AuthPreferences(private val context: Context) {
         applicationScope.launch {
             token.collect { newToken ->
                 _currentAccessToken.value = newToken
+            }
+        }
+        
+        // Initialize current user
+        applicationScope.launch {
+            val currentUserValue = user.first()
+            _currentUser.value = currentUserValue
+        }
+        
+        // Keep user synchronized
+        applicationScope.launch {
+            user.collect { newUser ->
+                _currentUser.value = newUser
             }
         }
     }
@@ -100,5 +117,6 @@ class AuthPreferences(private val context: Context) {
     suspend fun logout() {
         context.dataStore.edit { it.clear() }
         _currentAccessToken.value = null // Explicitly clear on logout
+        _currentUser.value = null // Clear current user on logout
     }
 }
