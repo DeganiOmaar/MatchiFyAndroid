@@ -35,6 +35,12 @@ import com.example.matchify.ui.recruiter.profile.RecruiterProfileViewModelFactor
 import com.example.matchify.ui.recruiter.edit.EditRecruiterProfileScreen
 import com.example.matchify.ui.recruiter.edit.EditRecruiterProfileViewModel
 import com.example.matchify.ui.recruiter.edit.EditRecruiterProfileViewModelFactory
+import com.example.matchify.ui.talent.profile.TalentProfileScreen
+import com.example.matchify.ui.talent.profile.TalentProfileViewModel
+import com.example.matchify.ui.talent.profile.TalentProfileViewModelFactory
+import com.example.matchify.ui.talent.edit.EditTalentProfileScreen
+import com.example.matchify.ui.talent.edit.EditTalentProfileViewModel
+import com.example.matchify.ui.talent.edit.EditTalentProfileViewModelFactory
 
 @Composable
 fun AppNavGraph(
@@ -135,9 +141,13 @@ fun AppNavGraph(
             )
         }
 
-        // HOME (Talents)
+        // HOME (Talents) - Talent Profile Screen
         composable("home") {
-            HomeScreen()
+            val vm: TalentProfileViewModel = viewModel(factory = TalentProfileViewModelFactory())
+            TalentProfileScreen(
+                viewModel = vm,
+                onEditProfile = { navController.navigate("edit_talent_profile") }
+            )
         }
 
         // MAIN SCREEN (Missions + Profile with Bottom Navigation)
@@ -170,6 +180,31 @@ fun AppNavGraph(
             }
             
             EditRecruiterProfileScreen(
+                viewModel = editViewModel,
+                onBack = {
+                    // Refresh profile after edit
+                    profileViewModel.refreshProfile()
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // EDIT TALENT PROFILE
+        composable("edit_talent_profile") {
+            val context = LocalContext.current
+            val profileViewModel: TalentProfileViewModel = viewModel(factory = TalentProfileViewModelFactory())
+            val user by profileViewModel.user.collectAsState()
+            
+            val editViewModel: EditTalentProfileViewModel = viewModel(
+                factory = EditTalentProfileViewModelFactory(context)
+            )
+            
+            // Load initial data when user is available
+            LaunchedEffect(user) {
+                user?.let { editViewModel.loadInitial(it) }
+            }
+            
+            EditTalentProfileScreen(
                 viewModel = editViewModel,
                 onBack = {
                     // Refresh profile after edit

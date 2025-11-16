@@ -12,7 +12,9 @@ data class UserModel(
     val bannerImage: String? = null,
     val location: String? = null,
     val talent: String? = null,
-    val description: String? = null, // NEW
+    val description: String? = null,
+    val skills: List<String>? = null, // Talent skills (max 10)
+    val portfolioLink: String? = null, // Talent portfolio URL
     val createdAt: String? = null,
     val updatedAt: String? = null
 ) {

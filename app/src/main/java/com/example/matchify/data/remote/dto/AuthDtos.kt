@@ -76,3 +76,28 @@ data class RecruiterProfileResponseDto(
     @SerializedName("message") val message: String?,
     @SerializedName("user") val user: RecruiterUserDto
 )
+
+// -------------------------------------------------------------
+// TALENT PROFILE (GET / PUT)
+// -------------------------------------------------------------
+
+data class TalentUserDto(
+    @SerializedName("_id") val id: String?,
+    @SerializedName("fullName") val fullName: String,
+    @SerializedName("email") val email: String,
+    @SerializedName("role") val role: String,
+    @SerializedName("phone") val phone: String?,
+    @SerializedName("profileImage") val profileImage: String?,
+    @SerializedName("location") val location: String?,
+    @SerializedName("talent") val talent: String?,
+    @SerializedName("description") val description: String?,
+    @SerializedName("skills") val skills: List<String>?,
+    @SerializedName("portfolioLink") val portfolioLink: String?,
+    @SerializedName("createdAt") val createdAt: String?,
+    @SerializedName("updatedAt") val updatedAt: String?
+)
+
+data class TalentProfileResponseDto(
+    @SerializedName("message") val message: String?,
+    @SerializedName("user") val user: TalentUserDto
+)

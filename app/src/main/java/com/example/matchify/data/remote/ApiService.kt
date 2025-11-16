@@ -68,6 +68,13 @@ class ApiService(private val authPreferences: AuthPreferences) {
     }
 
     // -----------------------------------------------------------
+    // 🎨 TALENT API (Profile + Edit + Multipart)
+    // -----------------------------------------------------------
+    val talentApi: TalentApi by lazy {
+        retrofit.create(TalentApi::class.java)
+    }
+
+    // -----------------------------------------------------------
     // 📋 MISSION API (CRUD operations)
     // -----------------------------------------------------------
     val missionApi: MissionApi by lazy {
