@@ -1,5 +1,6 @@
 package com.example.matchify.ui.missions.add
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -11,7 +12,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,12 +55,20 @@ fun MissionAddScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("New Mission") },
+                title = { 
+                    Text(
+                        "New Mission",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Back"
+                            contentDescription = "Back",
+                            tint = Color(0xFF007AFF)
                         )
                     }
                 },
@@ -68,41 +81,69 @@ fun MissionAddScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color.White)
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            Spacer(modifier = Modifier.height(20.dp))
+            
             // Title
             OutlinedTextField(
                 value = title,
                 onValueChange = { viewModel.title.value = it },
-                label = { Text("Title") },
+                leadingIcon = {
+                    Icon(Icons.Default.Info, contentDescription = null, tint = Color.Gray)
+                },
                 placeholder = { Text("Mission title") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                shape = RoundedCornerShape(35.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFFCCCCCC),
+                    unfocusedBorderColor = Color(0xFFDDDDDD)
+                )
             )
 
             // Description
             OutlinedTextField(
                 value = description,
                 onValueChange = { viewModel.description.value = it },
-                label = { Text("Description") },
+                leadingIcon = {
+                    Icon(Icons.Default.Check, contentDescription = null, tint = Color.Gray)
+                },
                 placeholder = { Text("Mission description") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
-                maxLines = 5
+                maxLines = 5,
+                shape = RoundedCornerShape(20.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFFCCCCCC),
+                    unfocusedBorderColor = Color(0xFFDDDDDD)
+                )
             )
 
             // Duration
             OutlinedTextField(
                 value = duration,
                 onValueChange = { viewModel.duration.value = it },
-                label = { Text("Duration") },
+                leadingIcon = {
+                    Icon(Icons.Default.DateRange, contentDescription = null, tint = Color.Gray)
+                },
                 placeholder = { Text("e.g., 6 mois") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                shape = RoundedCornerShape(35.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFFCCCCCC),
+                    unfocusedBorderColor = Color(0xFFDDDDDD)
+                )
             )
 
             // Budget
@@ -112,11 +153,20 @@ fun MissionAddScreen(
                     // Filter out non-numeric characters
                     viewModel.budget.value = it.filter { char -> char.isDigit() }
                 },
-                label = { Text("Budget") },
+                leadingIcon = {
+                    Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color.Gray)
+                },
                 placeholder = { Text("Budget in euros") },
-                modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                shape = RoundedCornerShape(35.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFFCCCCCC),
+                    unfocusedBorderColor = Color(0xFFDDDDDD)
+                )
             )
 
             // Skills Section
@@ -142,8 +192,11 @@ fun MissionAddScreen(
                             value = skillInput,
                             onValueChange = { viewModel.skillInput.value = it },
                             placeholder = { Text("Add a skill") },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(55.dp),
                             singleLine = true,
+                            shape = RoundedCornerShape(35.dp),
                             trailingIcon = {
                                 IconButton(
                                     onClick = { viewModel.addSkill() },
@@ -151,10 +204,15 @@ fun MissionAddScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Add,
-                                        contentDescription = "Add"
+                                        contentDescription = "Add",
+                                        tint = if (skillInput.isNotEmpty() && skills.size < 10) Color(0xFF007AFF) else Color.Gray
                                     )
                                 }
-                            }
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFFCCCCCC),
+                                unfocusedBorderColor = Color(0xFFDDDDDD)
+                            )
                         )
                     }
 
@@ -204,15 +262,19 @@ fun MissionAddScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(10.dp))
+            
             // Error Message
             errorMessage?.let { error ->
                 Text(
                     text = error,
                     color = Color.Red,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(horizontal = 4.dp)
+                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Save Button
             Button(
@@ -220,27 +282,26 @@ fun MissionAddScreen(
                 enabled = viewModel.isFormValid && !isSaving,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
+                    .height(55.dp),
+                shape = RoundedCornerShape(30.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black
+                    containerColor = Color(0xFF007AFF),
+                    disabledContainerColor = Color(0xFFBAD7FF)
                 )
             ) {
                 if (isSaving) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White
+                        color = Color.White,
+                        strokeWidth = 2.dp
                     )
                 } else {
-                    Text(
-                        text = "Save Mission",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
+                    Text("Save Mission", color = Color.White)
                 }
             }
+            
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
+
 

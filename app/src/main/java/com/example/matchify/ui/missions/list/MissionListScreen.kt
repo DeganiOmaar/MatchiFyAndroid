@@ -49,7 +49,8 @@ fun MissionListScreen(
                     Text(
                         text = "Missions",
                         fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
                     )
                 },
                 actions = {
@@ -57,13 +58,14 @@ fun MissionListScreen(
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Add Mission",
-                            tint = Color.Black
+                            tint = Color(0xFF007AFF)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White
-                )
+                ),
+                modifier = Modifier
             )
         },
         snackbarHost = {
