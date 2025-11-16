@@ -2,6 +2,8 @@ package com.example.matchify.ui.auth.forgot
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.matchify.common.ErrorContext
+import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.remote.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +31,13 @@ class ForgotPasswordViewModel(
 
     fun sendCode() {
         _error.value = null
+        
+        // Validation
+        if (_email.value.isBlank()) {
+            _error.value = "Veuillez entrer votre adresse email."
+            return
+        }
+        
         _isLoading.value = true
 
         viewModelScope.launch {
@@ -38,7 +47,7 @@ class ForgotPasswordViewModel(
                 _codeSent.value = true
             } catch (e: Exception) {
                 _isLoading.value = false
-                _error.value = e.message ?: "Something went wrong"
+                _error.value = ErrorHandler.getErrorMessage(e, ErrorContext.FORGOT_PASSWORD)
             }
         }
     }

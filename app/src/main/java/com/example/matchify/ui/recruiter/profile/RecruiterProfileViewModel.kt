@@ -2,6 +2,8 @@ package com.example.matchify.ui.recruiter.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.matchify.common.ErrorContext
+import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.local.AuthPreferences
 import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.data.remote.ApiService
@@ -78,7 +80,7 @@ class RecruiterProfileViewModel(
                 Log.e("RecruiterProfileViewModel", "Error loading profile: ${e.message}", e) // Log the error
                 // Don't show error if we have local data - just log it
                 if (_user.value == null) {
-                    _errorMessage.value = "Failed to load profile: ${e.message}"
+                    _errorMessage.value = ErrorHandler.getErrorMessage(e, ErrorContext.PROFILE_UPDATE)
                 }
             }
         }

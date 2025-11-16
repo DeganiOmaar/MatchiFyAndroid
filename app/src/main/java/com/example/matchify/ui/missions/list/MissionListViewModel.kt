@@ -2,6 +2,8 @@ package com.example.matchify.ui.missions.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.matchify.common.ErrorContext
+import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.remote.MissionRepository
 import com.example.matchify.domain.model.Mission
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +38,7 @@ class MissionListViewModel(
                 _isLoading.value = false
             } catch (e: Exception) {
                 _isLoading.value = false
-                _errorMessage.value = e.message ?: "Failed to load missions"
+                _errorMessage.value = ErrorHandler.getErrorMessage(e, ErrorContext.GENERAL)
             }
         }
     }
@@ -52,7 +54,7 @@ class MissionListViewModel(
                 // Remove from local list
                 _missions.value = _missions.value.filter { it.missionId != mission.missionId }
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "Failed to delete mission"
+                _errorMessage.value = ErrorHandler.getErrorMessage(e, ErrorContext.MISSION_DELETE)
             }
         }
     }

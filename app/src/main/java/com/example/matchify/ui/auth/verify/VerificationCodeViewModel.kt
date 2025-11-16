@@ -3,6 +3,8 @@ package com.example.matchify.ui.auth.verify
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.matchify.common.ErrorContext
+import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.remote.AuthRepository
 import com.example.matchify.data.remote.ApiService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +32,10 @@ class VerifyCodeViewModel(
     }
 
     fun verify() {
-        if (_code.value.length != 6) return
+        if (_code.value.length != 6) {
+            _error.value = "Le code doit contenir 6 chiffres."
+            return
+        }
 
         _loading.value = true
         _error.value = null
@@ -42,7 +47,7 @@ class VerifyCodeViewModel(
                 _success.value = true
             } catch (e: Exception) {
                 _loading.value = false
-                _error.value = e.message
+                _error.value = ErrorHandler.getErrorMessage(e, ErrorContext.VERIFY_CODE)
             }
         }
     }

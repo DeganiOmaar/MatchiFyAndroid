@@ -3,6 +3,8 @@ package com.example.matchify.ui.auth.reset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.matchify.common.ErrorContext
+import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.remote.AuthRepository
 import com.example.matchify.data.remote.ApiService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,12 +53,24 @@ class ResetPasswordViewModel(
     }
 
     fun reset() {
+        _error.value = null
+        
+        // Validation
+        if (_newPassword.value.isBlank() || _confirmPassword.value.isBlank()) {
+            _error.value = "Veuillez remplir tous les champs."
+            return
+        }
+        
         if (_newPassword.value != _confirmPassword.value) {
-            _error.value = "Passwords do not match"
+            _error.value = "Les mots de passe ne correspondent pas."
+            return
+        }
+        
+        if (_newPassword.value.length < 6) {
+            _error.value = "Le mot de passe doit contenir au moins 6 caractères."
             return
         }
 
-        _error.value = null
         _isLoading.value = true
 
         viewModelScope.launch {
@@ -71,7 +85,7 @@ class ResetPasswordViewModel(
 
             } catch (e: Exception) {
                 _isLoading.value = false
-                _error.value = e.message
+                _error.value = ErrorHandler.getErrorMessage(e, ErrorContext.PASSWORD_RESET)
             }
         }
     }

@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.matchify.common.ErrorContext
+import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.local.AuthPreferences
 import com.example.matchify.data.remote.RecruiterRepository
 import com.example.matchify.data.remote.dto.toDomain
@@ -66,8 +68,15 @@ class EditRecruiterProfileViewModel(
 
     /** Submit update */
     fun submit() {
-        saving.value = true
         error.value = null
+        
+        // Validation
+        if (fullName.value.isBlank() || email.value.isBlank()) {
+            error.value = "Le nom et l'email sont requis."
+            return
+        }
+        
+        saving.value = true
 
         viewModelScope.launch {
             try {
@@ -95,7 +104,7 @@ class EditRecruiterProfileViewModel(
 
             } catch (e: Exception) {
                 saving.value = false
-                error.value = e.message ?: "An error occurred"
+                error.value = ErrorHandler.getErrorMessage(e, ErrorContext.PROFILE_UPDATE)
             }
         }
     }

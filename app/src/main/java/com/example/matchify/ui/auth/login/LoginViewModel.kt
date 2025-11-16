@@ -2,6 +2,8 @@ package com.example.matchify.ui.auth.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.matchify.common.ErrorContext
+import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.local.AuthPreferences
 import com.example.matchify.data.remote.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,6 +52,13 @@ class LoginViewModel(
 
     fun login(rememberMe: Boolean) {
         _error.value = null
+        
+        // Validation
+        if (_email.value.isBlank() || _password.value.isBlank()) {
+            _error.value = "Veuillez remplir tous les champs."
+            return
+        }
+        
         _isLoading.value = true
 
         viewModelScope.launch {
@@ -76,7 +85,7 @@ class LoginViewModel(
 
             } catch (e: Exception) {
                 _isLoading.value = false
-                _error.value = e.message ?: "An error occurred"
+                _error.value = ErrorHandler.getErrorMessage(e, ErrorContext.LOGIN)
             }
         }
     }

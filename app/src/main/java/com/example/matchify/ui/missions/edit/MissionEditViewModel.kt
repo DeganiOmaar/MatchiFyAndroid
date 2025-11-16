@@ -2,6 +2,8 @@ package com.example.matchify.ui.missions.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.matchify.common.ErrorContext
+import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.remote.MissionRepository
 import com.example.matchify.data.remote.dto.UpdateMissionRequest
 import com.example.matchify.domain.model.Mission
@@ -56,14 +58,14 @@ class MissionEditViewModel(
 
     fun updateMission() {
         if (!isFormValid) {
-            _errorMessage.value = "Veuillez remplir tous les champs requis"
+            _errorMessage.value = "Veuillez remplir tous les champs requis."
             return
         }
 
         val filteredBudget = budget.value.filter { it.isDigit() }
         val budgetValue = filteredBudget.toIntOrNull()
             ?: run {
-                _errorMessage.value = "Le budget doit être un nombre valide"
+                _errorMessage.value = "Le budget doit être un nombre valide."
                 return
             }
 
@@ -85,7 +87,7 @@ class MissionEditViewModel(
                 _saveSuccess.value = true
             } catch (e: Exception) {
                 _isSaving.value = false
-                _errorMessage.value = e.message ?: "Failed to update mission"
+                _errorMessage.value = ErrorHandler.getErrorMessage(e, ErrorContext.MISSION_UPDATE)
             }
         }
     }

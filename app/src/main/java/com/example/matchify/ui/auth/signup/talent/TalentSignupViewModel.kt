@@ -2,6 +2,8 @@ package com.example.matchify.ui.auth.signup.talent
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.matchify.common.ErrorContext
+import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.local.AuthPreferences
 import com.example.matchify.data.remote.AuthRepository
 import com.example.matchify.data.remote.dto.TalentSignupRequest
@@ -70,15 +72,26 @@ class TalentSignupViewModel(
     fun signUp() {
         _error.value = null
 
+        // Validation
+        if (_fullName.value.isBlank() || _email.value.isBlank() || 
+            _password.value.isBlank() || _confirmPassword.value.isBlank()) {
+            _error.value = "Veuillez remplir tous les champs requis."
+            return
+        }
+
         if (_password.value != _confirmPassword.value) {
-            _error.value = "Passwords do not match."
+            _error.value = "Les mots de passe ne correspondent pas."
+            return
+        }
+
+        if (_password.value.length < 6) {
+            _error.value = "Le mot de passe doit contenir au moins 6 caractères."
             return
         }
 
         _loading.value = true
 
         viewModelScope.launch {
-
             try {
                 val body = TalentSignupRequest(
                     fullName = _fullName.value,
@@ -101,7 +114,7 @@ class TalentSignupViewModel(
 
             } catch (e: Exception) {
                 _loading.value = false
-                _error.value = e.message ?: "Signup failed"
+                _error.value = ErrorHandler.getErrorMessage(e, ErrorContext.SIGNUP)
             }
         }
     }
