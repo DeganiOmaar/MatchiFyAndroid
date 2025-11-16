@@ -32,6 +32,17 @@ class AuthPreferences(private val context: Context) {
     // Define the token flow before the init block
     val token: Flow<String?> = context.dataStore.data.map { it[TOKEN] }
 
+    // Define user flow before the init block
+    val user: Flow<UserModel?> = context.dataStore.data.map { prefs ->
+        prefs[USER]?.let { gson.fromJson(it, UserModel::class.java) }
+    }
+
+    val role: Flow<String?> = context.dataStore.data.map { it[ROLE] }
+
+    val rememberMe: Flow<Boolean> = context.dataStore.data.map {
+        it[REMEMBER] ?: false
+    }
+
     private val _currentAccessToken = MutableStateFlow<String?>(null)
     val currentAccessToken: StateFlow<String?> = _currentAccessToken
 
@@ -93,18 +104,8 @@ class AuthPreferences(private val context: Context) {
         }
     }
 
-    val user: Flow<UserModel?> = context.dataStore.data.map { prefs ->
-        prefs[USER]?.let { gson.fromJson(it, UserModel::class.java) }
-    }
-
-    val role: Flow<String?> = context.dataStore.data.map { it[ROLE] }
-
     suspend fun saveRememberMe(state: Boolean) {
         context.dataStore.edit { it[REMEMBER] = state }
-    }
-
-    val rememberMe: Flow<Boolean> = context.dataStore.data.map {
-        it[REMEMBER] ?: false
     }
 
     // Startup helpers

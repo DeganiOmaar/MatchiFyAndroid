@@ -8,8 +8,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.NavigateNext
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,204 +41,297 @@ fun RecruiterProfileScreen(
     val joined by viewModel.joinedDate.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     
-    var showMoreSheet by remember { mutableStateOf(false) }
+    var showMenuSheet by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 20.dp, top = 8.dp)
-        ) {
-            // Error message
-            if (errorMessage != null) {
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.surface,
+        topBar = {
+            TopAppBar(
+                title = { 
+                    Text(
+                        text = "Profil",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                actions = {
+                    IconButton(
+                        onClick = { showMenuSheet = true }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.MoreVert,
+                            contentDescription = "Menu",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
+            )
+        }
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentPadding = PaddingValues(bottom = 24.dp)
+            ) {
+                // Error message
+                if (errorMessage != null) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = errorMessage ?: "",
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+
+                // Header Section with Banner and Avatar
                 item {
-                    Text(
-                        text = errorMessage ?: "",
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        textAlign = TextAlign.Center
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        // Banner Image
+                        Image(
+                            painter = painterResource(id = R.drawable.banner),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                        
+                        // Gradient Overlay
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .background(
+                                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)
+                                        )
+                                    )
+                                )
+                        )
+                    }
                 }
-            }
 
-            // Banner Image
-            item {
-                Image(
-                    painter = painterResource(id = R.drawable.banner),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    contentScale = ContentScale.Crop
-                )
-            }
-
-            // Avatar with white border and shadow
-            item {
-                Box(
-                    modifier = Modifier
-                        .offset(y = (-60).dp)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    AsyncImage(
-                        model = user?.profileImageUrl,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape)
-                            .border(4.dp, Color.White, CircleShape)
-                            .shadow(4.dp, shape = CircleShape),
-                        contentScale = ContentScale.Crop,
-                        error = painterResource(id = R.drawable.avatar),
-                        placeholder = painterResource(id = R.drawable.avatar)
-                    )
-                }
-            }
-
-            // Spacer to account for negative offset
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
-            }
-
-            // Name - 26sp, bold
-            item {
-                Text(
-                    text = user?.fullName ?: "Recruiter Name",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    textAlign = TextAlign.Center,
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            // Email - 16sp, gray
-            item {
-                Text(
-                    text = user?.email ?: "-",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 4.dp),
-                    textAlign = TextAlign.Center,
-                    fontSize = 16.sp,
-                    color = Color.Gray
-                )
-            }
-
-            // Action Buttons Row (Follow, Message, More)
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    ProfileActionButton(
-                        icon = R.drawable.ic_person,
-                        text = "Follow",
-                        onClick = { /* TODO: Implement follow */ }
-                    )
-                    ProfileActionButton(
-                        icon = R.drawable.ic_bubble,
-                        text = "Message",
-                        onClick = { /* TODO: Implement message */ }
-                    )
-                    ProfileActionButton(
-                        icon = R.drawable.ic_ellipsis,
-                        text = "More",
-                        onClick = { showMoreSheet = true }
-                    )
-                }
-            }
-
-            // Description Card
-            item {
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                        .shadow(4.dp, shape = RoundedCornerShape(20.dp)),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.White
-                    )
-                ) {
-                    Text(
-                        text = if (user?.description.isNullOrBlank()) {
-                            "You can add a description about yourself."
-                        } else {
-                            user?.description ?: ""
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        textAlign = TextAlign.Center,
-                        fontSize = 15.sp,
-                        color = Color.Gray
-                    )
-                }
-            }
-
-            // Information Card
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                        .shadow(4.dp, shape = RoundedCornerShape(20.dp)),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.White
-                    )
-                ) {
+                // Avatar and User Info Section
+                item {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp)
+                            .offset(y = (-60).dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Title
+                        // Avatar with modern shadow
+                        Card(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .shadow(
+                                    elevation = 12.dp,
+                                    shape = CircleShape,
+                                    spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                                ),
+                            shape = CircleShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
+                        ) {
+                            AsyncImage(
+                                model = user?.profileImageUrl,
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape)
+                                    .border(
+                                        width = 4.dp,
+                                        color = MaterialTheme.colorScheme.surface,
+                                        shape = CircleShape
+                                    ),
+                                contentScale = ContentScale.Crop,
+                                error = painterResource(id = R.drawable.avatar),
+                                placeholder = painterResource(id = R.drawable.avatar)
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Name
                         Text(
-                            text = "Information",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(bottom = 24.dp)
+                            text = user?.fullName ?: "Recruiter Name",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
                         )
+                        
+                        Spacer(modifier = Modifier.height(4.dp))
+                        
+                        // Email
+                        Text(
+                            text = user?.email ?: "-",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Joined Date
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.CalendarToday,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Membre depuis $joined",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
 
-                        // Info Rows
-                        InfoRow(
-                            icon = R.drawable.ic_email,
-                            title = "Email",
-                            value = user?.email ?: "-"
-                        )
-                        InfoRow(
-                            icon = R.drawable.ic_phone,
-                            title = "Phone",
-                            value = user?.phone ?: "-"
-                        )
-                        InfoRow(
-                            icon = R.drawable.ic_calendar,
-                            title = "Joined",
-                            value = joined
-                        )
+                // Spacer to account for negative offset
+                item {
+                    Spacer(modifier = Modifier.height(80.dp))
+                }
+
+                // User Information Cards
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Contact Information Card
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(20.dp)
+                            ) {
+                                Text(
+                                    text = "Informations de contact",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                
+                                Divider(
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                )
+                                
+                                // Email
+                                ModernInfoRow(
+                                    icon = Icons.Filled.Email,
+                                    title = "Email",
+                                    value = user?.email ?: "-"
+                                )
+                                
+                                // Phone
+                                ModernInfoRow(
+                                    icon = Icons.Filled.Phone,
+                                    title = "Téléphone",
+                                    value = user?.phone ?: "-"
+                                )
+                                
+                                // Location
+                                if (!user?.location.isNullOrBlank()) {
+                                    ModernInfoRow(
+                                        icon = Icons.Filled.LocationOn,
+                                        title = "Localisation",
+                                        value = user?.location ?: "-"
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Description Card
+                        if (!user?.description.isNullOrBlank()) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(20.dp)
+                                ) {
+                                    Text(
+                                        text = "À propos",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    
+                                    Text(
+                                        text = user?.description ?: "",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        lineHeight = 22.sp
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    // More Bottom Sheet
-    if (showMoreSheet) {
+    // Modern Bottom Sheet Menu
+    if (showMenuSheet) {
         val sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = false
         )
         ModalBottomSheet(
-            onDismissRequest = { showMoreSheet = false },
+            onDismissRequest = { showMenuSheet = false },
             sheetState = sheetState,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
             dragHandle = {
                 Box(
                     modifier = Modifier
@@ -240,17 +339,17 @@ fun RecruiterProfileScreen(
                         .height(4.dp)
                         .padding(vertical = 12.dp)
                         .clip(RoundedCornerShape(2.dp))
-                        .background(Color.Gray.copy(alpha = 0.3f))
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
                 )
             }
         ) {
-            MoreBottomSheetContent(
+            ModernMenuBottomSheetContent(
                 onEditProfile = {
-                    showMoreSheet = false
+                    showMenuSheet = false
                     onEditProfile()
                 },
                 onSettings = {
-                    showMoreSheet = false
+                    showMenuSheet = false
                     // TODO: Navigate to settings
                 }
             )
@@ -259,85 +358,56 @@ fun RecruiterProfileScreen(
 }
 
 @Composable
-fun ProfileActionButton(
-    icon: Int,
-    text: String,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .height(44.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .border(
-                width = 1.dp,
-                color = Color.Gray.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(14.dp)
-            )
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 12.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = Color.Black
-            )
-            Text(
-                text = text,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color.Black
-            )
-        }
-    }
-}
-
-@Composable
-fun InfoRow(
-    icon: Int,
+fun ModernInfoRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     value: String
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.Top
     ) {
-        Icon(
-            painter = painterResource(id = icon),
-            contentDescription = null,
-            modifier = Modifier
-                .size(18.dp)
-                .padding(top = 2.dp),
-            tint = Color.Gray.copy(alpha = 0.8f)
-        )
+        Surface(
+            modifier = Modifier.size(40.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+        
         Column(
             modifier = Modifier.weight(1f)
         ) {
             Text(
                 text = title,
-                fontSize = 17.sp,
-                color = Color.Gray.copy(alpha = 0.9f)
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = value,
-                fontSize = 16.sp,
-                color = Color.Black
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Normal
             )
         }
     }
 }
 
 @Composable
-fun MoreBottomSheetContent(
+fun ModernMenuBottomSheetContent(
     onEditProfile: () -> Unit,
     onSettings: () -> Unit
 ) {
@@ -346,72 +416,77 @@ fun MoreBottomSheetContent(
             .fillMaxWidth()
             .padding(bottom = 32.dp)
     ) {
-        // Title
-        Text(
-            text = "More",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+        // Menu Items
+        ModernMenuItem(
+            icon = Icons.Rounded.Edit,
+            title = "Modifier le profil",
+            onClick = onEditProfile
         )
-
+        
         Divider(
-            modifier = Modifier.padding(horizontal = 20.dp),
-            color = Color.Gray.copy(alpha = 0.2f)
+            modifier = Modifier.padding(horizontal = 16.dp),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
         )
+        
+        ModernMenuItem(
+            icon = Icons.Rounded.Settings,
+            title = "Paramètres",
+            onClick = onSettings
+        )
+    }
+}
 
-        // Edit Profile Button
+@Composable
+fun ModernMenuItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        color = Color.Transparent
+    ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onEditProfile() }
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_camera),
-                contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                tint = Color.Black
-            )
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            
             Text(
-                text = "Edit Profile",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color.Black
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.weight(1f))
-        }
-
-        Divider(
-            modifier = Modifier.padding(horizontal = 20.dp),
-            color = Color.Gray.copy(alpha = 0.2f)
-        )
-
-        // Settings Button
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onSettings() }
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+            
             Icon(
-                painter = painterResource(id = R.drawable.ic_settings),
+                imageVector = Icons.Filled.NavigateNext,
                 contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                tint = Color.Black
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Text(
-                text = "Settings",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color.Black
-            )
-            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
+

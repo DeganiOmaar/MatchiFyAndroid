@@ -10,12 +10,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.AttachMoney
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -65,7 +64,7 @@ fun MissionAddScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.Default.Close,
+                            imageVector = Icons.Rounded.Close,
                             contentDescription = "Back",
                             tint = Color(0xFF007AFF)
                         )
@@ -93,7 +92,7 @@ fun MissionAddScreen(
                 value = title,
                 onValueChange = { viewModel.title.value = it },
                 leadingIcon = {
-                    Icon(Icons.Default.Info, contentDescription = null, tint = Color.Gray)
+                    Icon(Icons.Rounded.Description, contentDescription = null, tint = Color.Gray)
                 },
                 placeholder = { Text("Mission title") },
                 singleLine = true,
@@ -112,7 +111,7 @@ fun MissionAddScreen(
                 value = description,
                 onValueChange = { viewModel.description.value = it },
                 leadingIcon = {
-                    Icon(Icons.Default.Check, contentDescription = null, tint = Color.Gray)
+                    Icon(Icons.Rounded.Description, contentDescription = null, tint = Color.Gray)
                 },
                 placeholder = { Text("Mission description") },
                 modifier = Modifier
@@ -131,7 +130,7 @@ fun MissionAddScreen(
                 value = duration,
                 onValueChange = { viewModel.duration.value = it },
                 leadingIcon = {
-                    Icon(Icons.Default.DateRange, contentDescription = null, tint = Color.Gray)
+                    Icon(Icons.Rounded.Schedule, contentDescription = null, tint = Color.Gray)
                 },
                 placeholder = { Text("e.g., 6 mois") },
                 singleLine = true,
@@ -153,7 +152,7 @@ fun MissionAddScreen(
                     viewModel.budget.value = it.filter { char -> char.isDigit() }
                 },
                 leadingIcon = {
-                    Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color.Gray)
+                    Icon(Icons.Rounded.AttachMoney, contentDescription = null, tint = Color.Gray)
                 },
                 placeholder = { Text("Budget in euros") },
                 singleLine = true,
@@ -202,7 +201,7 @@ fun MissionAddScreen(
                                     enabled = skillInput.isNotEmpty() && skills.size < 10
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Add,
+                                        imageVector = Icons.Rounded.Add,
                                         contentDescription = "Add",
                                         tint = if (skillInput.isNotEmpty() && skills.size < 10) Color(0xFF007AFF) else Color.Gray
                                     )
@@ -238,7 +237,7 @@ fun MissionAddScreen(
                                             color = Color.Black
                                         )
                                         Icon(
-                                            imageVector = Icons.Default.Close,
+                                            imageVector = Icons.Rounded.Close,
                                             contentDescription = "Remove",
                                             modifier = Modifier
                                                 .size(16.dp)

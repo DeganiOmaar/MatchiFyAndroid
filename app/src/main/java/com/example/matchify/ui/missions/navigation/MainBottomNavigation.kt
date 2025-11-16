@@ -1,8 +1,8 @@
 package com.example.matchify.ui.missions.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Work
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Work
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -23,7 +23,7 @@ fun MainBottomNavigation(
         NavigationBarItem(
             icon = {
                 Icon(
-                    imageVector = Icons.Default.Work,
+                    imageVector = Icons.Rounded.Work,
                     contentDescription = "Missions"
                 )
             },
@@ -48,7 +48,7 @@ fun MainBottomNavigation(
         NavigationBarItem(
             icon = {
                 Icon(
-                    imageVector = Icons.Default.Person,
+                    imageVector = Icons.Rounded.Person,
                     contentDescription = "Profile"
                 )
             },
