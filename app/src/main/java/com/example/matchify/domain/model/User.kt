@@ -18,8 +18,18 @@ data class UserModel(
 ) {
     val profileImageUrl: String?
         get() {
-            val path = profileImage ?: return null
+            // Return null if profileImage is null, empty, or blank
+            val path = profileImage?.trim()
+            if (path.isNullOrBlank()) return null
+            
+            // Normalize path: add leading slash if missing
+            // Example: "uploads/profile/image.jpg" -> "/uploads/profile/image.jpg"
             val normalized = if (path.startsWith("/")) path else "/$path"
-            return "http://10.0.2.2:3000$normalized"
+            val fullUrl = "http://10.0.2.2:3000$normalized"
+            
+            // Debug log (remove in production if needed)
+            android.util.Log.d("UserModel", "Profile image URL: $fullUrl (from path: $path)")
+            
+            return fullUrl
         }
 }

@@ -162,21 +162,38 @@ fun RecruiterProfileScreen(
                                         spotColor = Color.White.copy(alpha = 0.5f)
                                     )
                             ) {
-                                AsyncImage(
-                                    model = user?.profileImageUrl,
-                                    contentDescription = "Profile Picture",
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(CircleShape)
-                                        .border(
-                                            width = 4.dp,
-                                            color = Color.White,
-                                            shape = CircleShape
-                                        ),
-                                    contentScale = ContentScale.Crop,
-                                    error = painterResource(id = R.drawable.avatar),
-                                    placeholder = painterResource(id = R.drawable.avatar)
-                                )
+                                val imageUrl = user?.profileImageUrl
+                                if (imageUrl != null && imageUrl.isNotBlank()) {
+                                    AsyncImage(
+                                        model = imageUrl,
+                                        contentDescription = "Profile Picture",
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(CircleShape)
+                                            .border(
+                                                width = 4.dp,
+                                                color = Color.White,
+                                                shape = CircleShape
+                                            ),
+                                        contentScale = ContentScale.Crop,
+                                        error = painterResource(id = R.drawable.avatar),
+                                        placeholder = painterResource(id = R.drawable.avatar)
+                                    )
+                                } else {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.avatar),
+                                        contentDescription = "Default Avatar",
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(CircleShape)
+                                            .border(
+                                                width = 4.dp,
+                                                color = Color.White,
+                                                shape = CircleShape
+                                            ),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
                             }
                             
                             Spacer(modifier = Modifier.height(20.dp))

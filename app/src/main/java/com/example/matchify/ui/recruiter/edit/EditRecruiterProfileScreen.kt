@@ -3,6 +3,7 @@ package com.example.matchify.ui.recruiter.edit
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -121,18 +122,51 @@ fun EditRecruiterProfileScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Box {
-                    // Avatar image
-                    AsyncImage(
-                        model = selectedImageUri ?: viewModel.currentProfileImageUrl.collectAsState().value,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(110.dp)
-                            .clip(CircleShape)
-                            .border(2.dp, Color.Gray.copy(alpha = 0.2f), CircleShape),
-                        contentScale = ContentScale.Crop,
-                        error = painterResource(id = R.drawable.avatar),
-                        placeholder = painterResource(id = R.drawable.avatar)
-                    )
+                    // Avatar image - priority: selectedImageUri > currentProfileImageUrl > default avatar
+                    val currentUrl by viewModel.currentProfileImageUrl.collectAsState()
+                    
+                    when {
+                        selectedImageUri != null -> {
+                            // Show selected image
+                            AsyncImage(
+                                model = selectedImageUri,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(110.dp)
+                                    .clip(CircleShape)
+                                    .border(2.dp, Color.Gray.copy(alpha = 0.2f), CircleShape),
+                                contentScale = ContentScale.Crop,
+                                error = painterResource(id = R.drawable.avatar),
+                                placeholder = painterResource(id = R.drawable.avatar)
+                            )
+                        }
+                        !currentUrl.isNullOrBlank() -> {
+                            // Show current backend image
+                            AsyncImage(
+                                model = currentUrl,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(110.dp)
+                                    .clip(CircleShape)
+                                    .border(2.dp, Color.Gray.copy(alpha = 0.2f), CircleShape),
+                                contentScale = ContentScale.Crop,
+                                error = painterResource(id = R.drawable.avatar),
+                                placeholder = painterResource(id = R.drawable.avatar)
+                            )
+                        }
+                        else -> {
+                            // Show default avatar
+                            Image(
+                                painter = painterResource(id = R.drawable.avatar),
+                                contentDescription = "Default Avatar",
+                                modifier = Modifier
+                                    .size(110.dp)
+                                    .clip(CircleShape)
+                                    .border(2.dp, Color.Gray.copy(alpha = 0.2f), CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
 
                     // Edit icon overlay - blue circle with white edit icon
                     Box(
