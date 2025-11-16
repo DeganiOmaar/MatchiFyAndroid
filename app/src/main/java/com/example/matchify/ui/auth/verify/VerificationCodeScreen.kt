@@ -74,7 +74,7 @@ fun VerifyCodeScreenContent(
 
         // SUBTITLE
         Text(
-            text = "We have an OTP code to your email and ",
+            text = "A verification code has been sent to: ",
             color = Color.Gray
         )
 
@@ -85,7 +85,7 @@ fun VerifyCodeScreenContent(
         )
 
         Text(
-            text = "Enter the OTP code below to verify",
+            text = " Enter the OTP code below to verify",
             color = Color.Gray
         )
 

@@ -40,10 +40,14 @@ fun RecruiterSignupScreen(
 
     val error by viewModel.error.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val signupSuccess by viewModel.signupSuccess.collectAsState()
+    val navigateTo by viewModel.navigateTo.collectAsState()
 
-    LaunchedEffect(signupSuccess) {
-        if (signupSuccess) onSignupSuccess()
+    // Navigate when signup succeeds
+    LaunchedEffect(navigateTo) {
+        navigateTo?.let {
+            onSignupSuccess()
+            viewModel.onNavigationDone()
+        }
     }
 
     Column(

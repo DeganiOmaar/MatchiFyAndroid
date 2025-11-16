@@ -47,10 +47,14 @@ fun TalentSignupScreen(
 
     val error by viewModel.error.collectAsState()
     val loading by viewModel.loading.collectAsState()
-    val signupSuccess by viewModel.signupSuccess.collectAsState()
+    val navigateTo by viewModel.navigateTo.collectAsState()
 
-    LaunchedEffect(signupSuccess) {
-        if (signupSuccess) onSuccess()
+    // Navigate when signup succeeds
+    LaunchedEffect(navigateTo) {
+        navigateTo?.let {
+            onSuccess()
+            viewModel.onNavigationDone()
+        }
     }
 
     Column(

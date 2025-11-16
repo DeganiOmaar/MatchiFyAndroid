@@ -43,6 +43,10 @@ class RecruiterSignupViewModel(
     private val _signupSuccess = MutableStateFlow(false)
     val signupSuccess: StateFlow<Boolean> = _signupSuccess
 
+    // Navigation destination based on role
+    private val _navigateTo = MutableStateFlow<String?>(null)
+    val navigateTo: StateFlow<String?> = _navigateTo
+
     fun setFullName(v: String) { _fullName.value = v }
     fun setEmail(v: String) { _email.value = v }
     fun setPassword(v: String) { _password.value = v }
@@ -90,11 +94,22 @@ class RecruiterSignupViewModel(
 
                 _isLoading.value = false
                 _signupSuccess.value = true
+                
+                // ⭐ ROLE-BASED NAVIGATION (same as login)
+                _navigateTo.value = if (response.user.role == "recruiter") {
+                    "main"
+                } else {
+                    "home"  // Talent goes to Talent Profile
+                }
 
             } catch (e: Exception) {
                 _isLoading.value = false
                 _error.value = ErrorHandler.getErrorMessage(e, ErrorContext.SIGNUP)
             }
         }
+    }
+
+    fun onNavigationDone() {
+        _navigateTo.value = null
     }
 }

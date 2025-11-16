@@ -78,11 +78,16 @@ fun AppNavGraph(
         // SIGN UP TALENT
         composable("signup_talent") {
             val viewModel: TalentSignupViewModel = viewModel(factory = TalentSignupViewModelFactory())
+            val navigateTo by viewModel.navigateTo.collectAsState()
+            
             TalentSignupScreen(
                 onLogin = { navController.popBackStack() },
                 onSuccess = {
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
+                    // Navigation destination is determined by role in ViewModel
+                    navigateTo?.let { route ->
+                        navController.navigate(route) {
+                            popUpTo("login") { inclusive = true }
+                        }
                     }
                 },
                 viewModel = viewModel
@@ -92,11 +97,16 @@ fun AppNavGraph(
         // SIGN UP RECRUITER
         composable("signup_recruiter") {
             val viewModel: RecruiterSignupViewModel = viewModel(factory = RecruiterSignupViewModelFactory())
+            val navigateTo by viewModel.navigateTo.collectAsState()
+            
             RecruiterSignupScreen(
                 onLoginClick = { navController.popBackStack() },
                 onSignupSuccess = {
-                    navController.navigate("main") {
-                        popUpTo("login") { inclusive = true }
+                    // Navigation destination is determined by role in ViewModel
+                    navigateTo?.let { route ->
+                        navController.navigate(route) {
+                            popUpTo("login") { inclusive = true }
+                        }
                     }
                 },
                 viewModel = viewModel
