@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -44,285 +45,240 @@ fun RecruiterProfileScreen(
     var showMenuSheet by remember { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = Color(0xFFF5F7FA),
         topBar = {
-            TopAppBar(
-                title = { 
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.White,
+                shadowElevation = 0.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         text = "Profil",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1A1A1A)
                     )
-                },
-                actions = {
-                    IconButton(
-                        onClick = { showMenuSheet = true }
+                    
+                    Surface(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clickable { showMenuSheet = true },
+                        shape = CircleShape,
+                        color = Color(0xFFF5F7FA)
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.MoreVert,
-                            contentDescription = "Menu",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Rounded.MoreVert,
+                                contentDescription = "Menu",
+                                modifier = Modifier.size(24.dp),
+                                tint = Color(0xFF1A1A1A)
+                            )
+                        }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
-                )
-            )
+                }
+            }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(Color(0xFFF5F7FA))
+        ) {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(bottom = 24.dp)
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 // Error message
                 if (errorMessage != null) {
                     item {
-                        Card(
+                        Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer
-                            ),
-                            shape = RoundedCornerShape(12.dp)
+                                .padding(horizontal = 24.dp),
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             Text(
                                 text = errorMessage ?: "",
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp),
+                                    .padding(20.dp),
                                 textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }
                 }
 
-                // Header Section with Banner and Avatar
+                // Premium Header Section with Gradient
                 item {
                     Box(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp)
                     ) {
-                        // Banner Image
-                        Image(
-                            painter = painterResource(id = R.drawable.banner),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            contentScale = ContentScale.Crop
-                        )
-                        
-                        // Gradient Overlay
+                        // Gradient Background
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
+                                .fillMaxSize()
                                 .background(
-                                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                                    brush = Brush.linearGradient(
                                         colors = listOf(
-                                            Color.Transparent,
-                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)
-                                        )
+                                            MaterialTheme.colorScheme.primary,
+                                            MaterialTheme.colorScheme.secondary
+                                        ),
+                                        start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                                        end = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
                                     )
                                 )
                         )
-                    }
-                }
-
-                // Avatar and User Info Section
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .offset(y = (-60).dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Avatar with modern shadow
-                        Card(
+                        
+                        // Content
+                        Column(
                             modifier = Modifier
-                                .size(120.dp)
-                                .shadow(
-                                    elevation = 12.dp,
-                                    shape = CircleShape,
-                                    spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                                ),
-                            shape = CircleShape,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            )
+                                .fillMaxSize()
+                                .padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            AsyncImage(
-                                model = user?.profileImageUrl,
-                                contentDescription = "Profile Picture",
+                            // Premium Avatar with Glow Effect
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(CircleShape)
-                                    .border(
-                                        width = 4.dp,
-                                        color = MaterialTheme.colorScheme.surface,
-                                        shape = CircleShape
-                                    ),
-                                contentScale = ContentScale.Crop,
-                                error = painterResource(id = R.drawable.avatar),
-                                placeholder = painterResource(id = R.drawable.avatar)
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        // Name
-                        Text(
-                            text = user?.fullName ?: "Recruiter Name",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.Center
-                        )
-                        
-                        Spacer(modifier = Modifier.height(4.dp))
-                        
-                        // Email
-                        Text(
-                            text = user?.email ?: "-",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        // Joined Date
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.CalendarToday,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
+                                    .size(120.dp)
+                                    .shadow(
+                                        elevation = 16.dp,
+                                        shape = CircleShape,
+                                        spotColor = Color.White.copy(alpha = 0.5f)
+                                    )
+                            ) {
+                                AsyncImage(
+                                    model = user?.profileImageUrl,
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .border(
+                                            width = 4.dp,
+                                            color = Color.White,
+                                            shape = CircleShape
+                                        ),
+                                    contentScale = ContentScale.Crop,
+                                    error = painterResource(id = R.drawable.avatar),
+                                    placeholder = painterResource(id = R.drawable.avatar)
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(20.dp))
+                            
+                            // Name
                             Text(
-                                text = "Membre depuis $joined",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                text = user?.fullName ?: "Recruiter Name",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                textAlign = TextAlign.Center
                             )
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // Email
+                            Text(
+                                text = user?.email ?: "-",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White.copy(alpha = 0.9f),
+                                textAlign = TextAlign.Center
+                            )
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            // Joined Date Badge
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = Color.White.copy(alpha = 0.2f),
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.CalendarToday,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = Color.White
+                                    )
+                                    Text(
+                                        text = "Membre depuis $joined",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
                         }
                     }
                 }
 
-                // Spacer to account for negative offset
-                item {
-                    Spacer(modifier = Modifier.height(80.dp))
-                }
-
-                // User Information Cards
+                // Information Sections
                 item {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                            .padding(horizontal = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
-                        // Contact Information Card
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
-                                verticalArrangement = Arrangement.spacedBy(20.dp)
-                            ) {
-                                Text(
-                                    text = "Informations de contact",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                
-                                Divider(
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                )
-                                
-                                // Email
-                                ModernInfoRow(
-                                    icon = Icons.Filled.Email,
-                                    title = "Email",
-                                    value = user?.email ?: "-"
-                                )
-                                
-                                // Phone
-                                ModernInfoRow(
-                                    icon = Icons.Filled.Phone,
-                                    title = "Téléphone",
-                                    value = user?.phone ?: "-"
-                                )
-                                
-                                // Location
-                                if (!user?.location.isNullOrBlank()) {
-                                    ModernInfoRow(
-                                        icon = Icons.Filled.LocationOn,
-                                        title = "Localisation",
-                                        value = user?.location ?: "-"
-                                    )
-                                }
-                            }
-                        }
-                        
-                        // Description Card
+                        // About Section
                         if (!user?.description.isNullOrBlank()) {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(20.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surface
-                                ),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(20.dp)
-                                ) {
-                                    Text(
-                                        text = "À propos",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    
-                                    Text(
-                                        text = user?.description ?: "",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        lineHeight = 22.sp
-                                    )
-                                }
-                            }
+                            PremiumAboutSection(
+                                description = user?.description ?: ""
+                            )
                         }
+
+                        // Contact Information Section
+                        PremiumInfoSection(
+                            title = "Informations de contact",
+                            items = listOfNotNull(
+                                PremiumInfoItem(
+                                    icon = Icons.Filled.Email,
+                                    label = "Email",
+                                    value = user?.email ?: "-",
+                                    iconColor = MaterialTheme.colorScheme.primary
+                                ),
+                                PremiumInfoItem(
+                                    icon = Icons.Filled.Phone,
+                                    label = "Téléphone",
+                                    value = user?.phone ?: "-",
+                                    iconColor = MaterialTheme.colorScheme.secondary
+                                ),
+                                if (!user?.location.isNullOrBlank()) {
+                                    PremiumInfoItem(
+                                        icon = Icons.Filled.LocationOn,
+                                        label = "Localisation",
+                                        value = user?.location ?: "-",
+                                        iconColor = MaterialTheme.colorScheme.tertiary
+                                    )
+                                } else null
+                            )
+                        )
                     }
                 }
             }
         }
     }
 
-    // Modern Bottom Sheet Menu
+    // Premium Bottom Sheet Menu
     if (showMenuSheet) {
         val sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = false
@@ -330,20 +286,20 @@ fun RecruiterProfileScreen(
         ModalBottomSheet(
             onDismissRequest = { showMenuSheet = false },
             sheetState = sheetState,
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            containerColor = Color.White,
             dragHandle = {
                 Box(
                     modifier = Modifier
-                        .width(40.dp)
-                        .height(4.dp)
-                        .padding(vertical = 12.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                        .width(48.dp)
+                        .height(5.dp)
+                        .padding(vertical = 16.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(Color(0xFFE0E0E0))
                 )
             }
         ) {
-            ModernMenuBottomSheetContent(
+            PremiumMenuBottomSheetContent(
                 onEditProfile = {
                     showMenuSheet = false
                     onEditProfile()
@@ -358,48 +314,83 @@ fun RecruiterProfileScreen(
 }
 
 @Composable
-fun ModernInfoRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+fun PremiumInfoSection(
     title: String,
-    value: String
+    items: List<PremiumInfoItem>
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = Color.White
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1A1A)
+            )
+            
+            items.forEachIndexed { index, item ->
+                if (index > 0) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        color = Color(0xFFE8E8E8),
+                        thickness = 1.dp
+                    )
+                }
+                
+                PremiumInfoRow(item = item)
+            }
+        }
+    }
+}
+
+@Composable
+fun PremiumInfoRow(
+    item: PremiumInfoItem
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.Top
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        // Premium Icon Container
         Surface(
-            modifier = Modifier.size(40.dp),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            modifier = Modifier.size(52.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = item.iconColor.copy(alpha = 0.12f)
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
+            Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    imageVector = icon,
+                    imageVector = item.icon,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    modifier = Modifier.size(26.dp),
+                    tint = item.iconColor
                 )
             }
         }
         
+        // Label and Value
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = item.label,
+                style = MaterialTheme.typography.labelLarge,
+                color = Color(0xFF6B6B6B),
                 fontWeight = FontWeight.Medium
             )
-            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = value,
+                text = item.value,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = Color(0xFF1A1A1A),
                 fontWeight = FontWeight.Normal
             )
         }
@@ -407,86 +398,135 @@ fun ModernInfoRow(
 }
 
 @Composable
-fun ModernMenuBottomSheetContent(
+fun PremiumAboutSection(
+    description: String
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = Color.White
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "À propos",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1A1A)
+            )
+            
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color(0xFF4A4A4A),
+                lineHeight = 26.sp
+            )
+        }
+    }
+}
+
+@Composable
+fun PremiumMenuBottomSheetContent(
     onEditProfile: () -> Unit,
     onSettings: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 32.dp)
+            .padding(bottom = 40.dp, top = 8.dp)
     ) {
-        // Menu Items
-        ModernMenuItem(
+        PremiumMenuItem(
             icon = Icons.Rounded.Edit,
             title = "Modifier le profil",
-            onClick = onEditProfile
+            subtitle = "Mettre à jour vos informations",
+            onClick = onEditProfile,
+            iconColor = MaterialTheme.colorScheme.primary
         )
         
-        Divider(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-        )
+        Spacer(modifier = Modifier.height(12.dp))
         
-        ModernMenuItem(
+        PremiumMenuItem(
             icon = Icons.Rounded.Settings,
             title = "Paramètres",
-            onClick = onSettings
+            subtitle = "Gérer vos préférences",
+            onClick = onSettings,
+            iconColor = MaterialTheme.colorScheme.secondary
         )
     }
 }
 
 @Composable
-fun ModernMenuItem(
+fun PremiumMenuItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
-    onClick: () -> Unit
+    subtitle: String,
+    onClick: () -> Unit,
+    iconColor: Color
 ) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(20.dp),
         color = Color.Transparent
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                modifier = Modifier.size(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                modifier = Modifier.size(56.dp),
+                shape = RoundedCornerShape(18.dp),
+                color = iconColor.copy(alpha = 0.15f)
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
+                Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        modifier = Modifier.size(28.dp),
+                        tint = iconColor
                     )
                 }
             }
             
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f)
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1A1A)
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF6B6B6B)
+                )
+            }
             
             Icon(
                 imageVector = Icons.Filled.NavigateNext,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(24.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
 
+data class PremiumInfoItem(
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val label: String,
+    val value: String,
+    val iconColor: Color
+)

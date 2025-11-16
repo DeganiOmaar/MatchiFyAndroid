@@ -77,9 +77,9 @@ class EditRecruiterProfileViewModel(
                 val response = repository.updateRecruiterProfile(
                     fullName = fullName.value,
                     email = email.value,
-                    phone = phone.value,
-                    location = location.value,
-                    description = description.value,
+                    phone = phone.value.ifBlank { null },
+                    location = location.value.ifBlank { null },
+                    description = description.value.ifBlank { null },
                     imageFile = imageFile
                 )
 

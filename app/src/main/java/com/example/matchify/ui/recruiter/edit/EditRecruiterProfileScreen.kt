@@ -11,6 +11,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,38 +63,55 @@ fun EditRecruiterProfileScreen(
     }
 
     Scaffold(
+        containerColor = Color(0xFFF5F7FA),
         topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        "Edit Profile",
-                        fontWeight = FontWeight.SemiBold
-                    ) 
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_arrow_back),
-                            contentDescription = "Back",
-                            tint = Color.Black
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.White,
+                shadowElevation = 0.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color(0xFF1A1A1A)
+                            )
+                        }
+                        Text(
+                            text = "Edit Profile",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1A1A1A)
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                )
-            )
+                }
+            }
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(Color(0xFFF5F7FA))
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Avatar Section
             Box(
@@ -132,21 +155,24 @@ fun EditRecruiterProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Personal Info Section Header
             Text(
                 text = "Personal Info",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Black,
-                modifier = Modifier.padding(bottom = 16.dp)
+                color = Color(0xFF1A1A1A),
+                modifier = Modifier.padding(bottom = 8.dp)
             )
 
             // Full Name
             OutlinedTextField(
                 value = viewModel.fullName.collectAsState().value,
                 onValueChange = { viewModel.fullName.value = it },
+                leadingIcon = {
+                    Icon(Icons.Filled.Person, contentDescription = null, tint = Color.Gray)
+                },
                 placeholder = { Text("Full Name") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -159,12 +185,13 @@ fun EditRecruiterProfileScreen(
                 )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
             // Email
             OutlinedTextField(
                 value = viewModel.email.collectAsState().value,
                 onValueChange = { viewModel.email.value = it },
+                leadingIcon = {
+                    Icon(Icons.Filled.Email, contentDescription = null, tint = Color.Gray)
+                },
                 placeholder = { Text("Email") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -180,12 +207,13 @@ fun EditRecruiterProfileScreen(
                 )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
             // Phone
             OutlinedTextField(
                 value = viewModel.phone.collectAsState().value,
                 onValueChange = { viewModel.phone.value = it },
+                leadingIcon = {
+                    Icon(Icons.Filled.Phone, contentDescription = null, tint = Color.Gray)
+                },
                 placeholder = { Text("Phone") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -201,12 +229,13 @@ fun EditRecruiterProfileScreen(
                 )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
             // Location
             OutlinedTextField(
                 value = viewModel.location.collectAsState().value,
                 onValueChange = { viewModel.location.value = it },
+                leadingIcon = {
+                    Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Color.Gray)
+                },
                 placeholder = { Text("Location") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -219,19 +248,20 @@ fun EditRecruiterProfileScreen(
                 )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
             // Description
             OutlinedTextField(
                 value = viewModel.description.collectAsState().value,
                 onValueChange = { viewModel.description.value = it },
+                leadingIcon = {
+                    Icon(Icons.Rounded.Description, contentDescription = null, tint = Color.Gray)
+                },
                 placeholder = { Text("Description") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 120.dp),
                 maxLines = 6,
                 minLines = 3,
-                shape = RoundedCornerShape(35.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFFCCCCCC),
                     unfocusedBorderColor = Color(0xFFDDDDDD)
@@ -250,9 +280,9 @@ fun EditRecruiterProfileScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Save Button - same style as login
+            // Save Button - same style as Add Mission
             Button(
                 onClick = { viewModel.submit() },
                 enabled = !isSaving,

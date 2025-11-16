@@ -137,9 +137,16 @@ fun MainScreen(
                 val profileViewModel: RecruiterProfileViewModel = viewModel(
                     factory = RecruiterProfileViewModelFactory()
                 )
+                val user by profileViewModel.user.collectAsState()
+                
                 val editViewModel: EditRecruiterProfileViewModel = viewModel(
                     factory = EditRecruiterProfileViewModelFactory(context)
                 )
+                
+                // Load initial data when user is available
+                LaunchedEffect(user) {
+                    user?.let { editViewModel.loadInitial(it) }
+                }
                 
                 EditRecruiterProfileScreen(
                     viewModel = editViewModel,
