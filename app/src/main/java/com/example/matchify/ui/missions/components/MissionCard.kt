@@ -37,6 +37,11 @@ fun MissionCard(
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    
+    // Debug log
+    LaunchedEffect(isOwner) {
+        android.util.Log.d("MissionCard", "Mission: ${mission.title}, isOwner: $isOwner")
+    }
 
     Card(
         modifier = modifier
@@ -83,6 +88,7 @@ fun MissionCard(
                             )
                         }
 
+                        // Afficher les 3 points si isOwner est true
                         if (isOwner) {
                             Box {
                                 IconButton(
@@ -98,7 +104,7 @@ fun MissionCard(
                                         imageVector = Icons.Default.MoreVert,
                                         contentDescription = "More",
                                         tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                                 
@@ -107,23 +113,42 @@ fun MissionCard(
                                     onDismissRequest = { showMenu = false }
                                 ) {
                                     DropdownMenuItem(
-                                        text = { Text("Edit Mission") },
+                                        text = { 
+                                            Text(
+                                                "Edit Mission",
+                                                fontSize = 15.sp
+                                            ) 
+                                        },
                                         onClick = {
                                             showMenu = false
                                             onEdit()
                                         },
                                         leadingIcon = {
-                                            Icon(Icons.Default.Edit, contentDescription = null)
+                                            Icon(
+                                                Icons.Default.Edit, 
+                                                contentDescription = null,
+                                                tint = Color(0xFF007AFF)
+                                            )
                                         }
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("Delete Mission", color = Color.Red) },
+                                        text = { 
+                                            Text(
+                                                "Delete Mission", 
+                                                color = Color.Red,
+                                                fontSize = 15.sp
+                                            ) 
+                                        },
                                         onClick = {
                                             showMenu = false
                                             onDelete()
                                         },
                                         leadingIcon = {
-                                            Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red)
+                                            Icon(
+                                                Icons.Default.Delete, 
+                                                contentDescription = null, 
+                                                tint = Color.Red
+                                            )
                                         }
                                     )
                                 }

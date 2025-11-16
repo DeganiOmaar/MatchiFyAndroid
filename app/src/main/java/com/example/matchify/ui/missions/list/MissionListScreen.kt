@@ -12,6 +12,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,33 +47,29 @@ fun MissionListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = "Missions",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-                },
+                title = { },
                 actions = {
-                    IconButton(onClick = onAddMission) {
+                    IconButton(
+                        onClick = onAddMission
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Add Mission",
-                            tint = Color(0xFF007AFF)
+                            tint = Color(0xFF007AFF),
+                            modifier = Modifier.size(28.dp)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White
                 ),
-                modifier = Modifier
+                modifier = Modifier.shadow(4.dp)
             )
         },
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         },
-        containerColor = Color(0xFFF5F5F5)
+        containerColor = Color(0xFFF8F9FA)
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -89,20 +87,32 @@ fun MissionListScreen(
                 }
                 else -> {
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(vertical = 20.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFFF8F9FA)),
+                        contentPadding = PaddingValues(
+                            horizontal = 20.dp,
+                            vertical = 24.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         items(missions) { mission ->
+                            val isOwner = viewModel.isMissionOwner(mission)
+                            
+                            // Debug log
+                            LaunchedEffect(mission.missionId) {
+                                android.util.Log.d("MissionListScreen", "Mission: ${mission.title}, isOwner: $isOwner, recruiterId: ${mission.recruiterId}")
+                            }
+                            
                             MissionCard(
                                 mission = mission,
-                                isOwner = viewModel.isMissionOwner(mission),
+                                isOwner = isOwner,
                                 onEdit = { onEditMission(mission) },
                                 onDelete = {
                                     missionToDelete = mission
                                     showDeleteDialog = true
                                 },
-                                modifier = Modifier.padding(horizontal = 20.dp)
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
@@ -114,10 +124,23 @@ fun MissionListScreen(
     // Delete Confirmation Dialog
     if (showDeleteDialog && missionToDelete != null) {
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Mission") },
+            onDismissRequest = { 
+                showDeleteDialog = false
+                missionToDelete = null
+            },
+            title = { 
+                Text(
+                    "Delete Mission",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                ) 
+            },
             text = {
-                Text("Are you sure you want to delete this mission? This action cannot be undone.")
+                Text(
+                    "Are you sure you want to delete this mission? This action cannot be undone.",
+                    fontSize = 15.sp,
+                    color = Color.Gray
+                )
             },
             confirmButton = {
                 TextButton(
@@ -125,16 +148,36 @@ fun MissionListScreen(
                         missionToDelete?.let { viewModel.deleteMission(it) }
                         showDeleteDialog = false
                         missionToDelete = null
-                    }
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color.Red
+                    )
                 ) {
-                    Text("Delete", color = Color.Red)
+                    Text(
+                        "Delete",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                TextButton(
+                    onClick = { 
+                        showDeleteDialog = false
+                        missionToDelete = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFF007AFF)
+                    )
+                ) {
+                    Text(
+                        "Cancel",
+                        fontSize = 16.sp
+                    )
                 }
-            }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = Color.White
         )
     }
 }
@@ -144,24 +187,40 @@ fun EmptyStateView(onAddMission: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFFF8F9FA))
             .padding(40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.AccountBox,
-            contentDescription = null,
-            modifier = Modifier.size(60.dp),
-            tint = Color.Gray.copy(alpha = 0.5f)
-        )
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF4A90E2).copy(alpha = 0.1f),
+                            Color(0xFF9B59B6).copy(alpha = 0.1f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(50.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.AccountBox,
+                contentDescription = null,
+                modifier = Modifier.size(50.dp),
+                tint = Color(0xFF4A90E2)
+            )
+        }
         
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         
         Text(
             text = "No missions yet",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color.Gray
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
         )
         
         Spacer(modifier = Modifier.height(8.dp))
@@ -169,26 +228,27 @@ fun EmptyStateView(onAddMission: () -> Unit) {
         Text(
             text = "Create your first mission offer to get started",
             fontSize = 16.sp,
-            color = Color.Gray.copy(alpha = 0.8f)
+            color = Color.Gray,
+            modifier = Modifier.padding(horizontal = 20.dp)
         )
         
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(32.dp))
         
         Button(
             onClick = onAddMission,
             modifier = Modifier
-                .padding(top = 10.dp),
-            shape = RoundedCornerShape(14.dp),
+                .fillMaxWidth(0.7f)
+                .height(55.dp),
+            shape = RoundedCornerShape(30.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Black
+                containerColor = Color(0xFF007AFF)
             )
         ) {
             Text(
                 text = "Create Mission",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+                color = Color.White
             )
         }
     }

@@ -1,7 +1,9 @@
 package com.example.matchify.domain.model
 
+import com.google.gson.annotations.SerializedName
+
 data class UserModel(
-    val id: String? = null,
+    @SerializedName("_id") val id: String? = null,
     val fullName: String,
     val email: String,
     val role: String,

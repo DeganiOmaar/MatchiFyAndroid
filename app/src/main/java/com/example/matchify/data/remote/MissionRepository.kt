@@ -40,7 +40,19 @@ class MissionRepository(
     fun isMissionOwner(mission: Mission): Boolean {
         val currentUser = prefs.currentUser.value
         val currentUserId = currentUser?.id
-        return mission.recruiterId == currentUserId
+        
+        // Debug: Log pour vérifier
+        android.util.Log.d("MissionRepository", "isMissionOwner - currentUserId: $currentUserId, mission.recruiterId: ${mission.recruiterId}, user: ${currentUser?.fullName}")
+        
+        if (currentUserId == null || currentUserId.isEmpty()) {
+            android.util.Log.d("MissionRepository", "isMissionOwner - currentUserId is null or empty")
+            return false
+        }
+        
+        val isOwner = mission.recruiterId == currentUserId
+        android.util.Log.d("MissionRepository", "isMissionOwner - result: $isOwner")
+        
+        return isOwner
     }
 }
 
