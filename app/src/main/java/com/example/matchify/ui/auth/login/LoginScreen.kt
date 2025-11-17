@@ -91,14 +91,14 @@ fun LoginScreenContent(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(80.dp))
 
         // LOGO
         Image(
-            painter = painterResource(id = R.drawable.logo),
+            painter = painterResource(id = R.drawable.matchifylogo),
             contentDescription = "App Logo",
             modifier = Modifier
-                .size(120.dp)
+                .size(170.dp)
                 .padding(top = 10.dp)
         )
 
@@ -108,14 +108,16 @@ fun LoginScreenContent(
             text = "Connecting Talent With Opportunity",
             fontWeight = FontWeight.SemiBold,
             fontSize = MaterialTheme.typography.titleLarge.fontSize,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Left,
+                    modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
         )
 
         Text(
             text = "Please sign in to continue",
             color = Color.Gray,
             fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-            modifier = Modifier.padding(top = 4.dp)
+            textAlign = TextAlign.Left,
+            modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(32.dp))

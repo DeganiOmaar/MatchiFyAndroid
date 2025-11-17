@@ -1,48 +1,47 @@
 package com.example.matchify.ui.auth.signup.recruiter
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.matchify.R
-import com.example.matchify.data.local.AuthPreferences
-import com.example.matchify.data.remote.AuthApi
-import com.example.matchify.data.remote.AuthRepository
-import com.example.matchify.data.remote.dto.*
 
 @Composable
 fun RecruiterSignupScreen(
+    onBack: () -> Unit = {},
     onLoginClick: () -> Unit,
     onSignupSuccess: () -> Unit,
-    viewModel: RecruiterSignupViewModel // Accept ViewModel as a parameter
+    viewModel: RecruiterSignupViewModel
 ) {
-    // Observables
     val fullName by viewModel.fullName.collectAsState()
     val email by viewModel.email.collectAsState()
     val password by viewModel.password.collectAsState()
     val confirmPassword by viewModel.confirmPassword.collectAsState()
-
     val showPassword by viewModel.showPassword.collectAsState()
     val showConfirmPassword by viewModel.showConfirmPassword.collectAsState()
-
     val error by viewModel.error.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val navigateTo by viewModel.navigateTo.collectAsState()
 
-    // Navigate when signup succeeds
     LaunchedEffect(navigateTo) {
         navigateTo?.let {
             onSignupSuccess()
@@ -53,81 +52,187 @@ fun RecruiterSignupScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.Start
+            .background(Color.White)
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Back button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.Black
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // LOGO
+        Image(
+            painter = painterResource(id = R.drawable.matchifylogo),
+            contentDescription = "App Logo",
+            modifier = Modifier
+                .size(170.dp)
+                .padding(top = 10.dp)
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = "Sign Up Recruiter",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.SemiBold,
+            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            textAlign = TextAlign.Left,
+            modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
         )
 
         Text(
             text = "Create your recruiter profile",
             color = Color.Gray,
-            modifier = Modifier.padding(top = 6.dp)
+            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+            textAlign = TextAlign.Left,
+            modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         // FULL NAME
-        InputField(
+        OutlinedTextField(
             value = fullName,
-            onValueChange = viewModel::setFullName,
-            placeholder = "Full Name",
-            leading = R.drawable.ic_person
+            onValueChange = { viewModel.setFullName(it) },
+            leadingIcon = {
+                Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray)
+            },
+            placeholder = { Text("Full Name") },
+            singleLine = true,
+            shape = RoundedCornerShape(35.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFFCCCCCC),
+                unfocusedBorderColor = Color(0xFFDDDDDD)
+            )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // EMAIL
-        InputField(
+        OutlinedTextField(
             value = email,
-            onValueChange = viewModel::setEmail,
-            placeholder = "Email",
-            leading = R.drawable.ic_email
+            onValueChange = { viewModel.setEmail(it) },
+            leadingIcon = {
+                Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray)
+            },
+            placeholder = { Text("Email") },
+            singleLine = true,
+            shape = RoundedCornerShape(35.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFFCCCCCC),
+                unfocusedBorderColor = Color(0xFFDDDDDD)
+            )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // PASSWORD
-        InputField(
+        OutlinedTextField(
             value = password,
-            onValueChange = viewModel::setPassword,
-            placeholder = "Password",
-            leading = R.drawable.ic_lock,
-            isPassword = true,
-            visible = showPassword,
-            onToggleVisibility = viewModel::toggleShowPassword
+            onValueChange = { viewModel.setPassword(it) },
+            leadingIcon = {
+                Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray)
+            },
+            placeholder = { Text("Password") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            visualTransformation =
+            if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { viewModel.toggleShowPassword() }) {
+                    Icon(
+                        painter = painterResource(
+                            id = if (showPassword) R.drawable.visibility else R.drawable.visibility_off
+                        ),
+                        contentDescription = null,
+                        tint = Color.Gray
+                    )
+                }
+            },
+            shape = RoundedCornerShape(35.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFFCCCCCC),
+                unfocusedBorderColor = Color(0xFFDDDDDD)
+            )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // CONFIRM PASSWORD
-        InputField(
+        OutlinedTextField(
             value = confirmPassword,
-            onValueChange = viewModel::setConfirmPassword,
-            placeholder = "Confirm Password",
-            leading = R.drawable.ic_lock,
-            isPassword = true,
-            visible = showConfirmPassword,
-            onToggleVisibility = viewModel::toggleShowConfirmPassword
+            onValueChange = { viewModel.setConfirmPassword(it) },
+            leadingIcon = {
+                Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray)
+            },
+            placeholder = { Text("Confirm Password") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            visualTransformation =
+            if (showConfirmPassword) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { viewModel.toggleShowConfirmPassword() }) {
+                    Icon(
+                        painter = painterResource(
+                            id = if (showConfirmPassword) R.drawable.visibility else R.drawable.visibility_off
+                        ),
+                        contentDescription = null,
+                        tint = Color.Gray
+                    )
+                }
+            },
+            shape = RoundedCornerShape(35.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFFCCCCCC),
+                unfocusedBorderColor = Color(0xFFDDDDDD)
+            )
         )
 
-        if (error != null) {
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(error ?: "", color = Color.Red)
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // ERROR
+        error?.let {
+            Text(
+                text = it,
+                color = Color.Red,
+                fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Spacer(modifier = Modifier.height(10.dp))
 
         // SIGNUP BUTTON
         Button(
             onClick = { viewModel.signUp() },
-            enabled = !isLoading,
+            enabled = !isLoading && fullName.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty(),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(55.dp),
@@ -138,94 +243,22 @@ fun RecruiterSignupScreen(
             )
         ) {
             if (isLoading) {
-                CircularProgressIndicator(color = Color.White)
+                CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
             } else {
-                Text("Sign Up", color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text("Sign Up", color = Color.White)
             }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Already have account
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Already have an account?", color = Color.Gray)
-            Spacer(modifier = Modifier.width(4.dp))
+        Row {
+            Text("Already have an account? ", color = Color.Gray)
             Text(
-                text = "Login",
+                "Login",
                 color = Color(0xFF007AFF),
+                fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable { onLoginClick() }
             )
         }
     }
-}
-
-@Composable
-fun InputField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    leading: Int,
-    isPassword: Boolean = false,
-    visible: Boolean = false,
-    onToggleVisibility: (() -> Unit)? = null
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(placeholder, color = Color.Gray) },
-        singleLine = true,
-        leadingIcon = {
-            Image(
-                painter = painterResource(id = leading),
-                contentDescription = null
-            )
-        },
-        trailingIcon = if (isPassword) {
-            {
-                IconButton(onClick = { onToggleVisibility?.invoke() }) {
-                    Icon(
-                        painter = painterResource(
-                            id = if (visible) R.drawable.visibility_off else R.drawable.visibility
-                        ),
-                        contentDescription = null,
-                        tint = Color.Gray
-                    )
-                }
-            }
-        } else null,
-        visualTransformation =
-            if (isPassword && !visible) PasswordVisualTransformation()
-            else VisualTransformation.None,
-        shape = RoundedCornerShape(35.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(55.dp)
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewRecruiterSignup() {
-    val context = LocalContext.current
-    val fakeAuthApi = object : AuthApi {
-        override suspend fun login(body: LoginRequest): LoginResponse { TODO("Not yet implemented") }
-        override suspend fun signupTalent(body: TalentSignupRequest): LoginResponse { TODO("Not yet implemented") }
-        override suspend fun signupRecruiter(body: RecruiterSignupRequest): LoginResponse { TODO("Not yet implemented") }
-        override suspend fun forgotPassword(body: ForgotPasswordRequest): ForgotPasswordResponse { TODO("Not yet implemented") }
-        override suspend fun verifyResetCode(body: VerifyResetCodeRequest): VerifyResetCodeResponse { TODO("Not yet implemented") }
-        override suspend fun resetPassword(body: ResetPasswordRequest): ResetPasswordResponse { TODO("Not yet implemented") }
-    }
-    val dummyViewModel = RecruiterSignupViewModel(
-        AuthRepository(fakeAuthApi),
-        AuthPreferences(context)
-    )
-
-    RecruiterSignupScreen(
-        onLoginClick = {},
-        onSignupSuccess = {},
-        viewModel = dummyViewModel
-    )
 }

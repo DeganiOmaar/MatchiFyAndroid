@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,7 +22,8 @@ import com.example.matchify.R
 @Composable
 fun ChooseRoleScreen(
     onTalentSelected: () -> Unit,
-    onRecruiterSelected: () -> Unit
+    onRecruiterSelected: () -> Unit,
+    onBack: () -> Unit = {}
 ) {
     val viewModel: ChooseRoleViewModel = viewModel()
 
@@ -43,6 +46,21 @@ fun ChooseRoleScreen(
             .fillMaxSize()
             .padding(24.dp)
     ) {
+        // Back button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.Black
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 

@@ -1,38 +1,41 @@
 package com.example.matchify.ui.auth.signup.talent
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.matchify.R
-import com.example.matchify.data.local.AuthPreferences
-import com.example.matchify.data.remote.AuthApi
-import com.example.matchify.data.remote.AuthRepository
-import com.example.matchify.data.remote.dto.*
 
 @Composable
 fun TalentSignupScreen(
+    onBack: () -> Unit = {},
     onLogin: () -> Unit,
     onSuccess: () -> Unit,
-    viewModel: TalentSignupViewModel // Accept ViewModel as a parameter
+    viewModel: TalentSignupViewModel
 ) {
     val fullName by viewModel.fullName.collectAsState()
     val email by viewModel.email.collectAsState()
@@ -41,15 +44,12 @@ fun TalentSignupScreen(
     val talent by viewModel.talent.collectAsState()
     val password by viewModel.password.collectAsState()
     val confirmPassword by viewModel.confirmPassword.collectAsState()
-
     val showPassword by viewModel.showPassword.collectAsState()
     val showConfirmPassword by viewModel.showConfirmPassword.collectAsState()
-
     val error by viewModel.error.collectAsState()
     val loading by viewModel.loading.collectAsState()
     val navigateTo by viewModel.navigateTo.collectAsState()
 
-    // Navigate when signup succeeds
     LaunchedEffect(navigateTo) {
         navigateTo?.let {
             onSuccess()
@@ -60,69 +60,252 @@ fun TalentSignupScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp)
+            .background(Color.White)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text(
-            "Sign Up Talent",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-
-        Text(
-            "Create your talent profile",
-            color = Color.Gray
-        )
-
-        Spacer(modifier = Modifier.height(30.dp))
-
-        // INPUTS
-        AuthTextField("Full Name", fullName, Icons.Default.Person) { viewModel.setFullName(it) }
-        Spacer(modifier = Modifier.height(16.dp))
-
-        AuthTextField("Email", email, Icons.Default.Email) { viewModel.setEmail(it) }
-        Spacer(modifier = Modifier.height(16.dp))
-
-        AuthTextField("Phone", phone, Icons.Default.Phone) { viewModel.setPhone(it) }
-        Spacer(modifier = Modifier.height(16.dp))
-
-        AuthTextField("Location", location, Icons.Default.LocationOn) { viewModel.setLocation(it) }
-        Spacer(modifier = Modifier.height(16.dp))
-
-        AuthTextField("Talent", talent, Icons.Default.Star) { viewModel.setTalent(it) }
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // PASSWORD
-        PasswordField(
-            label = "Password",
-            value = password,
-            visible = showPassword,
-            onValueChange = { viewModel.setPassword(it) },
-            onToggle = { viewModel.togglePasswordVisibility() }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        PasswordField(
-            label = "Confirm Password",
-            value = confirmPassword,
-            visible = showConfirmPassword,
-            onValueChange = { viewModel.setConfirmPassword(it) },
-            onToggle = { viewModel.toggleConfirmPasswordVisibility() }
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        if (error != null) {
-            Text(text = error!!, color = Color.Red)
+        // Back button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.Black
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        // LOGO
+        Image(
+            painter = painterResource(id = R.drawable.matchifylogo),
+            contentDescription = "App Logo",
+            modifier = Modifier
+                .size(170.dp)
+                .padding(top = 10.dp)
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text(
+            text = "Sign Up Talent",
+            fontWeight = FontWeight.SemiBold,
+            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            textAlign = TextAlign.Left,
+            modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
+        )
+
+        Text(
+            text = "Create your talent profile",
+            color = Color.Gray,
+            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+            textAlign = TextAlign.Left,
+            modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // FULL NAME
+        OutlinedTextField(
+            value = fullName,
+            onValueChange = { viewModel.setFullName(it) },
+            leadingIcon = {
+                Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray)
+            },
+            placeholder = { Text("Full Name") },
+            singleLine = true,
+            shape = RoundedCornerShape(35.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFFCCCCCC),
+                unfocusedBorderColor = Color(0xFFDDDDDD)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // EMAIL
+        OutlinedTextField(
+            value = email,
+            onValueChange = { viewModel.setEmail(it) },
+            leadingIcon = {
+                Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray)
+            },
+            placeholder = { Text("Email") },
+            singleLine = true,
+            shape = RoundedCornerShape(35.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFFCCCCCC),
+                unfocusedBorderColor = Color(0xFFDDDDDD)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // PHONE
+        OutlinedTextField(
+            value = phone,
+            onValueChange = { viewModel.setPhone(it) },
+            leadingIcon = {
+                Icon(Icons.Default.Phone, contentDescription = null, tint = Color.Gray)
+            },
+            placeholder = { Text("Phone") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            shape = RoundedCornerShape(35.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFFCCCCCC),
+                unfocusedBorderColor = Color(0xFFDDDDDD)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // LOCATION
+        OutlinedTextField(
+            value = location,
+            onValueChange = { viewModel.setLocation(it) },
+            leadingIcon = {
+                Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.Gray)
+            },
+            placeholder = { Text("Location") },
+            singleLine = true,
+            shape = RoundedCornerShape(35.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFFCCCCCC),
+                unfocusedBorderColor = Color(0xFFDDDDDD)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // TALENT
+        OutlinedTextField(
+            value = talent,
+            onValueChange = { viewModel.setTalent(it) },
+            leadingIcon = {
+                Icon(Icons.Default.Star, contentDescription = null, tint = Color.Gray)
+            },
+            placeholder = { Text("Talent (e.g. Photographer, Singer...)") },
+            singleLine = true,
+            shape = RoundedCornerShape(35.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFFCCCCCC),
+                unfocusedBorderColor = Color(0xFFDDDDDD)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // PASSWORD
+        OutlinedTextField(
+            value = password,
+            onValueChange = { viewModel.setPassword(it) },
+            leadingIcon = {
+                Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray)
+            },
+            placeholder = { Text("Password") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            visualTransformation =
+            if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
+                    Icon(
+                        painter = painterResource(
+                            id = if (showPassword) R.drawable.visibility else R.drawable.visibility_off
+                        ),
+                        contentDescription = null,
+                        tint = Color.Gray
+                    )
+                }
+            },
+            shape = RoundedCornerShape(35.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFFCCCCCC),
+                unfocusedBorderColor = Color(0xFFDDDDDD)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // CONFIRM PASSWORD
+        OutlinedTextField(
+            value = confirmPassword,
+            onValueChange = { viewModel.setConfirmPassword(it) },
+            leadingIcon = {
+                Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray)
+            },
+            placeholder = { Text("Confirm Password") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            visualTransformation =
+            if (showConfirmPassword) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { viewModel.toggleConfirmPasswordVisibility() }) {
+                    Icon(
+                        painter = painterResource(
+                            id = if (showConfirmPassword) R.drawable.visibility else R.drawable.visibility_off
+                        ),
+                        contentDescription = null,
+                        tint = Color.Gray
+                    )
+                }
+            },
+            shape = RoundedCornerShape(35.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFFCCCCCC),
+                unfocusedBorderColor = Color(0xFFDDDDDD)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // ERROR
+        error?.let {
+            Text(
+                text = it,
+                color = Color.Red,
+                fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // SIGNUP BUTTON
         Button(
             onClick = { viewModel.signUp() },
+            enabled = !loading && fullName.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty(),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(55.dp),
@@ -133,7 +316,7 @@ fun TalentSignupScreen(
             )
         ) {
             if (loading) {
-                CircularProgressIndicator(color = Color.White)
+                CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
             } else {
                 Text("Sign Up", color = Color.White)
             }
@@ -141,94 +324,16 @@ fun TalentSignupScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+        Row {
             Text("Already have an account? ", color = Color.Gray)
             Text(
                 "Login",
                 color = Color(0xFF007AFF),
+                fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable { onLogin() }
             )
         }
+
+        Spacer(modifier = Modifier.height(40.dp))
     }
-}
-
-/* ---------- Reusable Fields ---------- */
-
-@Composable
-fun AuthTextField(
-    label: String,
-    value: String,
-    icon: Any,
-    onValueChange: (String) -> Unit
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(label) },
-        leadingIcon = {
-            when (icon) {
-                is Int -> Icon(painterResource(icon), null)
-                else -> Icon(icon as androidx.compose.ui.graphics.vector.ImageVector, null)
-            }
-        },
-        modifier = Modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(30.dp),
-        singleLine = true
-    )
-}
-
-@Composable
-fun PasswordField(
-    label: String,
-    value: String,
-    visible: Boolean,
-    onValueChange: (String) -> Unit,
-    onToggle: () -> Unit
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(label) },
-        leadingIcon = { Icon(Icons.Default.Lock, null) },
-        trailingIcon = {
-            IconButton(onClick = onToggle) {
-                Icon(
-                    painterResource(
-                        id = if (visible) R.drawable.visibility_off else R.drawable.visibility
-                    ),
-                    null
-                )
-            }
-        },
-        visualTransformation =
-            if (visible) VisualTransformation.None else PasswordVisualTransformation(),
-        singleLine = true,
-        shape = RoundedCornerShape(30.dp),
-        modifier = Modifier.fillMaxWidth()
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TalentSignupPreview() {
-    val context = LocalContext.current
-    val fakeAuthApi = object : AuthApi {
-        override suspend fun login(body: LoginRequest): LoginResponse { TODO("Not yet implemented") }
-        override suspend fun signupTalent(body: TalentSignupRequest): LoginResponse { TODO("Not yet implemented") }
-        override suspend fun signupRecruiter(body: RecruiterSignupRequest): LoginResponse { TODO("Not yet implemented") }
-        override suspend fun forgotPassword(body: ForgotPasswordRequest): ForgotPasswordResponse { TODO("Not yet implemented") }
-        override suspend fun verifyResetCode(body: VerifyResetCodeRequest): VerifyResetCodeResponse { TODO("Not yet implemented") }
-        override suspend fun resetPassword(body: ResetPasswordRequest): ResetPasswordResponse { TODO("Not yet implemented") }
-    }
-    val dummyViewModel = TalentSignupViewModel(
-        AuthRepository(fakeAuthApi),
-        AuthPreferences(context)
-    )
-
-    TalentSignupScreen(
-        onLogin = {},
-        onSuccess = {},
-        viewModel = dummyViewModel
-    )
 }

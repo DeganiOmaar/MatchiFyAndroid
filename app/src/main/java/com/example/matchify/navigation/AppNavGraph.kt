@@ -70,6 +70,11 @@ fun AppNavGraph(
         // CHOOSE ROLE
         composable("choose_role") {
             ChooseRoleScreen(
+                onBack = {
+                    navController.navigate("login") {
+                        popUpTo("choose_role") { inclusive = true }
+                    }
+                },
                 onTalentSelected = { navController.navigate("signup_talent") },
                 onRecruiterSelected = { navController.navigate("signup_recruiter") }
             )
@@ -81,7 +86,18 @@ fun AppNavGraph(
             val navigateTo by viewModel.navigateTo.collectAsState()
             
             TalentSignupScreen(
-                onLogin = { navController.popBackStack() },
+                onBack = { 
+                    // Navigate back to choose_role explicitly
+                    navController.navigate("choose_role") {
+                        popUpTo("signup_talent") { inclusive = true }
+                    }
+                },
+                onLogin = { 
+                    // Navigate to login and clear the signup flow (choose_role + signup)
+                    navController.navigate("login") {
+                        popUpTo("choose_role") { inclusive = true }
+                    }
+                },
                 onSuccess = {
                     // Navigation destination is determined by role in ViewModel
                     navigateTo?.let { route ->
@@ -100,7 +116,18 @@ fun AppNavGraph(
             val navigateTo by viewModel.navigateTo.collectAsState()
             
             RecruiterSignupScreen(
-                onLoginClick = { navController.popBackStack() },
+                onBack = { 
+                    // Navigate back to choose_role explicitly
+                    navController.navigate("choose_role") {
+                        popUpTo("signup_recruiter") { inclusive = true }
+                    }
+                },
+                onLoginClick = { 
+                    // Navigate to login and clear the signup flow (choose_role + signup)
+                    navController.navigate("login") {
+                        popUpTo("choose_role") { inclusive = true }
+                    }
+                },
                 onSignupSuccess = {
                     // Navigation destination is determined by role in ViewModel
                     navigateTo?.let { route ->
