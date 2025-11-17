@@ -86,4 +86,7 @@ dependencies {
     
     // Material Icons Extended (compatible with Compose BOM)
     implementation("androidx.compose.material:material-icons-extended")
+    
+    // Compose Foundation (for HorizontalPager)
+    implementation("androidx.compose.foundation:foundation")
 }

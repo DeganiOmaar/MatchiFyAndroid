@@ -13,15 +13,17 @@ class AppStartDestinationProvider(private val context: Context) {
         val rememberMe = prefs.getRememberMeValue()
         val role = prefs.getRoleValue() // Get the stored role
 
-        return if (token != null && rememberMe) {
+        // If user is logged in (has token and remember me), go to home
+        if (token != null && rememberMe) {
             // Check the role to determine the start destination
-            when (role) {
+            return when (role) {
                 "recruiter" -> "main"
                 "talent" -> "home"
                 else -> "login" // Default to login if role is unknown
             }
-        } else {
-            "login"
         }
+
+        // User is not logged in → always show onboarding
+        return "onboarding"
     }
 }

@@ -41,6 +41,10 @@ import com.example.matchify.ui.talent.profile.TalentProfileViewModelFactory
 import com.example.matchify.ui.talent.edit.EditTalentProfileScreen
 import com.example.matchify.ui.talent.edit.EditTalentProfileViewModel
 import com.example.matchify.ui.talent.edit.EditTalentProfileViewModelFactory
+import com.example.matchify.ui.onboarding.OnboardingScreen
+import com.example.matchify.ui.onboarding.OnboardingViewModel
+import com.example.matchify.ui.onboarding.OnboardingViewModelFactory
+import com.example.matchify.data.local.AuthPreferencesProvider
 
 @Composable
 fun AppNavGraph(
@@ -51,6 +55,23 @@ fun AppNavGraph(
         navController = navController,
         startDestination = startDestination
     ) {
+
+        // ONBOARDING
+        composable("onboarding") {
+            val viewModel: OnboardingViewModel = viewModel(
+                factory = OnboardingViewModelFactory(
+                    AuthPreferencesProvider.getInstance().get()
+                )
+            )
+            OnboardingScreen(
+                onComplete = {
+                    navController.navigate("login") {
+                        popUpTo("onboarding") { inclusive = true }
+                    }
+                },
+                viewModel = viewModel
+            )
+        }
 
         // LOGIN
         composable("login") {
