@@ -119,11 +119,8 @@ class TalentSignupViewModel(
                 _signupSuccess.value = true
                 
                 // ⭐ ROLE-BASED NAVIGATION (same as login)
-                _navigateTo.value = if (response.user.role == "recruiter") {
-                    "main"
-                } else {
-                    "home"  // Talent goes to Talent Profile
-                }
+                // Both Talent and Recruiter go to "main" (Missions + Profile with bottom nav)
+                _navigateTo.value = "main"
 
             } catch (e: Exception) {
                 _loading.value = false

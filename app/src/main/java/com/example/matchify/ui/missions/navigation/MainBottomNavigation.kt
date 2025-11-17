@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun MainBottomNavigation(
     currentRoute: String?,
+    profileRoute: String,
     onNavigate: (String) -> Unit
 ) {
     NavigationBar(
@@ -56,11 +57,11 @@ fun MainBottomNavigation(
                 Text(
                     "Profile",
                     fontSize = 12.sp,
-                    fontWeight = if (currentRoute == "recruiter_profile") FontWeight.SemiBold else FontWeight.Normal
+                    fontWeight = if (currentRoute == profileRoute) FontWeight.SemiBold else FontWeight.Normal
                 ) 
             },
-            selected = currentRoute == "recruiter_profile",
-            onClick = { onNavigate("recruiter_profile") },
+            selected = currentRoute == profileRoute,
+            onClick = { onNavigate(profileRoute) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF007AFF),
                 selectedTextColor = Color(0xFF007AFF),

@@ -77,11 +77,8 @@ class LoginViewModel(
                 _loginSuccess.value = true
 
                 // ⭐ ROLE-BASED NAVIGATION
-                _navigateTo.value = if (response.user.role == "recruiter") {
-                    "main"
-                } else {
-                    "home"
-                }
+                // Both Talent and Recruiter go to "main" (Missions + Profile with bottom nav)
+                _navigateTo.value = "main"
 
             } catch (e: Exception) {
                 _isLoading.value = false

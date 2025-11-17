@@ -23,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.matchify.domain.model.Mission
 import com.example.matchify.ui.missions.components.MissionListItem
+import com.example.matchify.data.local.AuthPreferencesProvider
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +37,12 @@ fun MissionListScreen(
     val missions by viewModel.missions.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    
+    // Get user role
+    val context = LocalContext.current
+    val prefs = remember { AuthPreferencesProvider.getInstance().get() }
+    val userRole by prefs.role.collectAsState(initial = "recruiter")
+    val isRecruiter = userRole == "recruiter"
     
     var showDeleteDialog by remember { mutableStateOf(false) }
     var missionToDelete by remember { mutableStateOf<Mission?>(null) }
@@ -73,24 +82,27 @@ fun MissionListScreen(
             SnackbarHost(hostState = snackbarHostState)
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddMission,
-                modifier = Modifier
-                    .size(64.dp)
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = CircleShape,
-                        spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                    ),
-                shape = CircleShape,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Add,
-                    contentDescription = "Ajouter une mission",
-                    modifier = Modifier.size(28.dp)
-                )
+            // Only show FAB for Recruiters
+            if (isRecruiter) {
+                FloatingActionButton(
+                    onClick = onAddMission,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = CircleShape,
+                            spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                        ),
+                    shape = CircleShape,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Add,
+                        contentDescription = "Ajouter une mission",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
         },
         containerColor = Color.White
@@ -109,7 +121,9 @@ fun MissionListScreen(
                     )
                 }
                 missions.isEmpty() -> {
-                    EmptyStateView(onAddMission = onAddMission)
+                    EmptyStateView(
+                        onAddMission = if (isRecruiter) onAddMission else null
+                    )
                 }
                 else -> {
                     LazyColumn(
@@ -123,7 +137,7 @@ fun MissionListScreen(
                             
                             MissionListItem(
                                 mission = mission,
-                                isOwner = isOwner,
+                                isOwner = isOwner && isRecruiter, // Only show actions if owner AND recruiter
                                 isEven = index % 2 == 0,
                                 onEdit = { onEditMission(mission) },
                                 onDelete = {
@@ -225,7 +239,7 @@ fun MissionListScreen(
 }
 
 @Composable
-fun EmptyStateView(onAddMission: () -> Unit) {
+fun EmptyStateView(onAddMission: (() -> Unit)?) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -269,34 +283,37 @@ fun EmptyStateView(onAddMission: () -> Unit) {
             modifier = Modifier.padding(horizontal = 20.dp)
         )
         
-        Spacer(modifier = Modifier.height(40.dp))
-        
-        Button(
-            onClick = onAddMission,
-            modifier = Modifier
-                .fillMaxWidth(0.75f)
-                .height(56.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ),
-            elevation = ButtonDefaults.buttonElevation(
-                defaultElevation = 4.dp,
-                pressedElevation = 8.dp
-            )
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Add,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Créer une mission",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold
-            )
+        // Only show button if onAddMission is provided (Recruiter only)
+        if (onAddMission != null) {
+            Spacer(modifier = Modifier.height(40.dp))
+            
+            Button(
+                onClick = onAddMission,
+                modifier = Modifier
+                    .fillMaxWidth(0.75f)
+                    .height(56.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 4.dp,
+                    pressedElevation = 8.dp
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Créer une mission",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }

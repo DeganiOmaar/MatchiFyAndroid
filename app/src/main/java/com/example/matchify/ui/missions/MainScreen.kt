@@ -29,7 +29,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.matchify.ui.recruiter.edit.EditRecruiterProfileScreen
 import com.example.matchify.ui.recruiter.edit.EditRecruiterProfileViewModel
 import com.example.matchify.ui.recruiter.edit.EditRecruiterProfileViewModelFactory
+import com.example.matchify.ui.talent.profile.TalentProfileScreen
+import com.example.matchify.ui.talent.profile.TalentProfileViewModel
+import com.example.matchify.ui.talent.profile.TalentProfileViewModelFactory
+import com.example.matchify.ui.talent.edit.EditTalentProfileScreen
+import com.example.matchify.ui.talent.edit.EditTalentProfileViewModel
+import com.example.matchify.ui.talent.edit.EditTalentProfileViewModelFactory
+import com.example.matchify.data.local.AuthPreferencesProvider
 import com.google.gson.Gson
+import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,13 +46,22 @@ fun MainScreen(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    
+    // Get user role
+    val context = LocalContext.current
+    val prefs = remember { AuthPreferencesProvider.getInstance().get() }
+    val userRole by prefs.role.collectAsState(initial = "recruiter")
+    
+    // Determine profile route based on role
+    val profileRoute = if (userRole == "talent") "talent_profile" else "recruiter_profile"
 
     Scaffold(
         bottomBar = {
             // Only show bottom bar on main screens
-            if (currentRoute in listOf("missions_list", "recruiter_profile")) {
+            if (currentRoute in listOf("missions_list", "recruiter_profile", "talent_profile")) {
                 MainBottomNavigation(
                     currentRoute = currentRoute,
+                    profileRoute = profileRoute,
                     onNavigate = { route ->
                         navController.navigate(route) {
                             popUpTo(navController.graph.startDestinationId) {
@@ -132,6 +149,19 @@ fun MainScreen(
                 )
             }
             
+            composable("talent_profile") {
+                val profileViewModel: TalentProfileViewModel = viewModel(
+                    factory = TalentProfileViewModelFactory()
+                )
+                TalentProfileScreen(
+                    viewModel = profileViewModel,
+                    onEditProfile = {
+                        // Navigate to edit profile in main nav graph
+                        navController.navigate("edit_talent_profile")
+                    }
+                )
+            }
+            
             composable("edit_recruiter_profile") {
                 val context = LocalContext.current
                 val profileViewModel: RecruiterProfileViewModel = viewModel(
@@ -149,6 +179,31 @@ fun MainScreen(
                 }
                 
                 EditRecruiterProfileScreen(
+                    viewModel = editViewModel,
+                    onBack = {
+                        profileViewModel.refreshProfile()
+                        navController.popBackStack()
+                    }
+                )
+            }
+            
+            composable("edit_talent_profile") {
+                val context = LocalContext.current
+                val profileViewModel: TalentProfileViewModel = viewModel(
+                    factory = TalentProfileViewModelFactory()
+                )
+                val user by profileViewModel.user.collectAsState()
+                
+                val editViewModel: EditTalentProfileViewModel = viewModel(
+                    factory = EditTalentProfileViewModelFactory(context)
+                )
+                
+                // Load initial data when user is available
+                LaunchedEffect(user) {
+                    user?.let { editViewModel.loadInitial(it) }
+                }
+                
+                EditTalentProfileScreen(
                     viewModel = editViewModel,
                     onBack = {
                         profileViewModel.refreshProfile()
