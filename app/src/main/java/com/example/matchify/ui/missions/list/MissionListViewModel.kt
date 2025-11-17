@@ -5,13 +5,17 @@ import androidx.lifecycle.viewModelScope
 import com.example.matchify.common.ErrorContext
 import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.remote.MissionRepository
+import com.example.matchify.data.realtime.MissionRealtimeClient
+import com.example.matchify.data.realtime.MissionRealtimeEvent
 import com.example.matchify.domain.model.Mission
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MissionListViewModel(
-    private val repository: MissionRepository
+    private val repository: MissionRepository,
+    private val realtimeClient: MissionRealtimeClient
 ) : ViewModel() {
 
     private val _missions = MutableStateFlow<List<Mission>>(emptyList())
@@ -25,6 +29,7 @@ class MissionListViewModel(
 
     init {
         loadMissions()
+        observeRealtimeUpdates()
     }
 
     fun loadMissions() {
@@ -47,6 +52,37 @@ class MissionListViewModel(
         loadMissions()
     }
 
+    private fun observeRealtimeUpdates() {
+        realtimeClient.connect()
+        viewModelScope.launch {
+            realtimeClient.events.collect { event ->
+                when (event) {
+                    is MissionRealtimeEvent.MissionCreated -> {
+                        _missions.update { current ->
+                            listOf(event.mission) + current.filterNot { it.missionId == event.mission.missionId }
+                        }
+                    }
+                    is MissionRealtimeEvent.MissionUpdated -> {
+                        _missions.update { current ->
+                            current.map { mission ->
+                                if (mission.missionId == event.mission.missionId) {
+                                    event.mission
+                                } else {
+                                    mission
+                                }
+                            }
+                        }
+                    }
+                    is MissionRealtimeEvent.MissionDeleted -> {
+                        _missions.update { current ->
+                            current.filterNot { it.missionId == event.missionId }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun deleteMission(mission: Mission) {
         viewModelScope.launch {
             try {
@@ -61,6 +97,11 @@ class MissionListViewModel(
 
     fun isMissionOwner(mission: Mission): Boolean {
         return repository.isMissionOwner(mission)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        realtimeClient.disconnect()
     }
 }
 

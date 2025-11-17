@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.data.remote.ApiService
 import com.example.matchify.data.remote.MissionRepository
+import com.example.matchify.data.realtime.MissionRealtimeClient
 
 class MissionListViewModelFactory : ViewModelProvider.Factory {
 
@@ -14,8 +15,9 @@ class MissionListViewModelFactory : ViewModelProvider.Factory {
             val authPreferences = AuthPreferencesProvider.getInstance().get()
             val missionApi = ApiService.getInstance().missionApi
             val missionRepository = MissionRepository(missionApi, authPreferences)
+            val realtimeClient = MissionRealtimeClient(authPreferences)
 
-            return MissionListViewModel(missionRepository) as T
+            return MissionListViewModel(missionRepository, realtimeClient) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

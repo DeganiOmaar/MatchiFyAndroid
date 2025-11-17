@@ -68,6 +68,7 @@ dependencies {
     // OkHttp (network client)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.squareup.okhttp3:okhttp-sse:4.12.0")
 
     // Jetpack Compose (if not already added)
     implementation(platform("androidx.compose:compose-bom:2024.04.01"))

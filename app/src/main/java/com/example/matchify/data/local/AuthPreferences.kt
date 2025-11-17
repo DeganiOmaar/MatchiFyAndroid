@@ -127,7 +127,9 @@ class AuthPreferences(private val context: Context) {
     suspend fun getHasSeenOnboardingValue(): Boolean = hasSeenOnboarding.first()
 
     suspend fun logout() {
-        context.dataStore.edit { it.clear() }
+        context.dataStore.edit { prefs ->
+            prefs.clear()
+        }
         _currentAccessToken.value = null // Explicitly clear on logout
         _currentUser.value = null // Clear current user on logout
     }

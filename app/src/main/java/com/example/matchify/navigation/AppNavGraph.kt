@@ -45,6 +45,9 @@ import com.example.matchify.ui.onboarding.OnboardingScreen
 import com.example.matchify.ui.onboarding.OnboardingViewModel
 import com.example.matchify.ui.onboarding.OnboardingViewModelFactory
 import com.example.matchify.data.local.AuthPreferencesProvider
+import com.example.matchify.ui.settings.SettingsScreen
+import com.example.matchify.ui.settings.SettingsViewModel
+import com.example.matchify.ui.settings.SettingsViewModelFactory
 
 @Composable
 fun AppNavGraph(
@@ -204,13 +207,16 @@ fun AppNavGraph(
             val vm: TalentProfileViewModel = viewModel(factory = TalentProfileViewModelFactory())
             TalentProfileScreen(
                 viewModel = vm,
-                onEditProfile = { navController.navigate("edit_talent_profile") }
+                onEditProfile = { navController.navigate("edit_talent_profile") },
+                onSettings = { navController.navigate("settings") }
             )
         }
 
         // MAIN SCREEN (Missions + Profile with Bottom Navigation)
         composable("main") {
-            com.example.matchify.ui.missions.MainScreen()
+            com.example.matchify.ui.missions.MainScreen(
+                onOpenSettings = { navController.navigate("settings") }
+            )
         }
 
         // RECRUITER PROFILE (kept for backward compatibility)
@@ -218,7 +224,8 @@ fun AppNavGraph(
             val vm: RecruiterProfileViewModel = viewModel(factory = RecruiterProfileViewModelFactory())
             RecruiterProfileScreen(
                 viewModel = vm,
-                onEditProfile = { navController.navigate("edit_recruiter_profile") }
+                onEditProfile = { navController.navigate("edit_recruiter_profile") },
+                onSettings = { navController.navigate("settings") }
             )
         }
 
@@ -268,6 +275,24 @@ fun AppNavGraph(
                     // Refresh profile after edit
                     profileViewModel.refreshProfile()
                     navController.popBackStack()
+                }
+            )
+        }
+
+        // SETTINGS
+        composable("settings") {
+            val context = LocalContext.current
+            val viewModel: SettingsViewModel = viewModel(
+                factory = SettingsViewModelFactory(AuthPreferencesProvider.getInstance().get())
+            )
+            SettingsScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+                onLogoutSuccess = {
+                    navController.navigate("login") {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
             )
         }

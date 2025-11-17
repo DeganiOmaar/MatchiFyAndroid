@@ -42,7 +42,8 @@ import androidx.compose.runtime.collectAsState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    onOpenSettings: () -> Unit = {}
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -143,9 +144,9 @@ fun MainScreen(
                 RecruiterProfileScreen(
                     viewModel = profileViewModel,
                     onEditProfile = {
-                        // Navigate to edit profile in main nav graph
                         navController.navigate("edit_recruiter_profile")
-                    }
+                    },
+                    onSettings = onOpenSettings
                 )
             }
             
@@ -156,9 +157,9 @@ fun MainScreen(
                 TalentProfileScreen(
                     viewModel = profileViewModel,
                     onEditProfile = {
-                        // Navigate to edit profile in main nav graph
                         navController.navigate("edit_talent_profile")
-                    }
+                    },
+                    onSettings = onOpenSettings
                 )
             }
             

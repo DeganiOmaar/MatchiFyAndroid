@@ -40,7 +40,8 @@ import com.example.matchify.R
 @Composable
 fun TalentProfileScreen(
     viewModel: TalentProfileViewModel,
-    onEditProfile: () -> Unit
+    onEditProfile: () -> Unit,
+    onSettings: () -> Unit
 ) {
     val user by viewModel.user.collectAsState()
     val joined by viewModel.joinedDate.collectAsState()
@@ -349,7 +350,7 @@ fun TalentProfileScreen(
                 },
                 onSettings = {
                     showMenuSheet = false
-                    // TODO: Navigate to settings
+                    onSettings()
                 }
             )
         }
