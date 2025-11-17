@@ -6,6 +6,7 @@ import com.example.matchify.data.local.AuthPreferences
 import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.data.remote.ApiService
 import com.example.matchify.data.remote.TalentRepository
+import com.example.matchify.data.realtime.RealtimeManager
 
 class TalentProfileViewModelFactory : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
@@ -13,7 +14,9 @@ class TalentProfileViewModelFactory : ViewModelProvider.Factory {
         val prefs = AuthPreferencesProvider.getInstance().get()
         val apiService = ApiService.getInstance()
         val repository = TalentRepository(apiService.talentApi, prefs)
-        return TalentProfileViewModel(prefs, repository) as T
+        val realtimeManager = RealtimeManager.initialize(prefs)
+        val realtimeClient = realtimeManager.profileClient
+        return TalentProfileViewModel(prefs, repository, realtimeClient) as T
     }
 }
 

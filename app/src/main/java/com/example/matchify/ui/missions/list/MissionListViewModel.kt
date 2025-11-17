@@ -101,7 +101,7 @@ class MissionListViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        realtimeClient.disconnect()
+        // Don't disconnect - let RealtimeManager handle lifecycle
     }
 }
 

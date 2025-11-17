@@ -56,6 +56,10 @@ class AuthPreferences(private val context: Context) {
     // Get current user as StateFlow for easy access
     private val _currentUser = MutableStateFlow<UserModel?>(null)
     val currentUser: StateFlow<UserModel?> = _currentUser
+    
+    // Get current role as StateFlow for easy access
+    private val _currentRole = MutableStateFlow<String?>(null)
+    val currentRole: StateFlow<String?> = _currentRole
 
     init {
         // Initialize StateFlow with current token value immediately
@@ -81,6 +85,19 @@ class AuthPreferences(private val context: Context) {
         applicationScope.launch {
             user.collect { newUser ->
                 _currentUser.value = newUser
+            }
+        }
+        
+        // Initialize current role
+        applicationScope.launch {
+            val currentRoleValue = role.first()
+            _currentRole.value = currentRoleValue
+        }
+        
+        // Keep role synchronized
+        applicationScope.launch {
+            role.collect { newRole ->
+                _currentRole.value = newRole
             }
         }
     }
@@ -132,5 +149,6 @@ class AuthPreferences(private val context: Context) {
         }
         _currentAccessToken.value = null // Explicitly clear on logout
         _currentUser.value = null // Clear current user on logout
+        _currentRole.value = null // Clear current role on logout
     }
 }

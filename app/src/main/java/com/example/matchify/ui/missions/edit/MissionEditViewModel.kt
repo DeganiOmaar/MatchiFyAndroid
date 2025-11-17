@@ -6,6 +6,8 @@ import com.example.matchify.common.ErrorContext
 import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.remote.MissionRepository
 import com.example.matchify.data.remote.dto.mission.UpdateMissionRequest
+import com.example.matchify.data.realtime.MissionRealtimeClient
+import com.example.matchify.data.realtime.MissionRealtimeEvent
 import com.example.matchify.domain.model.Mission
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,8 +15,43 @@ import kotlinx.coroutines.launch
 
 class MissionEditViewModel(
     private val repository: MissionRepository,
-    private val mission: Mission
+    private val mission: Mission,
+    private val realtimeClient: MissionRealtimeClient
 ) : ViewModel() {
+    
+    private val _currentMission = MutableStateFlow(mission)
+    val currentMission: StateFlow<Mission> = _currentMission
+    
+    init {
+        observeRealtimeUpdates()
+    }
+    
+    private fun observeRealtimeUpdates() {
+        viewModelScope.launch {
+            realtimeClient.events.collect { event ->
+                when (event) {
+                    is MissionRealtimeEvent.MissionUpdated -> {
+                        if (event.mission.missionId == mission.missionId) {
+                            _currentMission.value = event.mission
+                            // Update form fields
+                            title.value = event.mission.title
+                            description.value = event.mission.description
+                            duration.value = event.mission.duration
+                            budget.value = event.mission.budget.toString()
+                            skills.value = event.mission.skills
+                        }
+                    }
+                    is MissionRealtimeEvent.MissionDeleted -> {
+                        if (event.missionId == mission.missionId) {
+                            // Mission was deleted, handle navigation
+                            _errorMessage.value = "Cette mission a été supprimée"
+                        }
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
 
     val title = MutableStateFlow(mission.title)
     val description = MutableStateFlow(mission.description)

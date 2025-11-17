@@ -7,6 +7,7 @@ import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.local.AuthPreferences
 import com.example.matchify.data.remote.AuthRepository
 import com.example.matchify.data.remote.dto.auth.TalentSignupRequest
+import com.example.matchify.data.realtime.RealtimeManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -114,6 +115,14 @@ class TalentSignupViewModel(
                 prefs.saveToken(response.token)
                 prefs.saveUser(response.user)
                 prefs.saveRememberMe(true)
+
+                // Connect realtime clients after successful signup
+                try {
+                    val realtimeManager = RealtimeManager.getInstance()
+                    realtimeManager.connectAll()
+                } catch (e: Exception) {
+                    android.util.Log.e("TalentSignupViewModel", "Failed to connect realtime clients", e)
+                }
 
                 _loading.value = false
                 _signupSuccess.value = true

@@ -9,6 +9,8 @@ import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.data.remote.ApiService
 import com.example.matchify.data.remote.RecruiterRepository
 import com.example.matchify.data.remote.dto.profile.toDomain
+import com.example.matchify.data.realtime.ProfileRealtimeClient
+import com.example.matchify.data.realtime.ProfileRealtimeEvent
 import com.example.matchify.domain.model.UserModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +20,8 @@ import android.util.Log // Import Log for better debugging
 
 class RecruiterProfileViewModel(
     private val prefs: AuthPreferences,
-    private val repository: RecruiterRepository
+    private val repository: RecruiterRepository,
+    private val realtimeClient: ProfileRealtimeClient
 ) : ViewModel() {
 
     private val _user = MutableStateFlow<UserModel?>(null)
@@ -35,6 +38,33 @@ class RecruiterProfileViewModel(
         loadUserFromPreferences()
         // Then fetch fresh data from API
         loadProfile()
+        // Observe realtime updates
+        observeRealtimeUpdates()
+    }
+    
+    private fun observeRealtimeUpdates() {
+        realtimeClient.connect()
+        viewModelScope.launch {
+            realtimeClient.events.collect { event ->
+                when (event) {
+                    is ProfileRealtimeEvent.ProfileUpdated -> {
+                        // Only update if it's the current user's profile
+                        val currentUserId = _user.value?.id
+                        if (event.user.id == currentUserId) {
+                            _user.value = event.user
+                            prefs.saveUser(event.user)
+                            updateJoinedDate(event.user.createdAt)
+                            Log.d("RecruiterProfileViewModel", "Profile updated via realtime: ${event.user.fullName}")
+                        }
+                    }
+                    is ProfileRealtimeEvent.ProfileDeleted -> {
+                        if (event.userId == _user.value?.id) {
+                            _errorMessage.value = "Votre profil a été supprimé"
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun loadUserFromPreferences() {

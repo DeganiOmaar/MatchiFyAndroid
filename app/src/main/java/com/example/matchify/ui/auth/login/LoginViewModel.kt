@@ -6,6 +6,7 @@ import com.example.matchify.common.ErrorContext
 import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.local.AuthPreferences
 import com.example.matchify.data.remote.AuthRepository
+import com.example.matchify.data.realtime.RealtimeManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -72,6 +73,15 @@ class LoginViewModel(
                 prefs.saveToken(response.token)
                 prefs.saveUser(response.user)
                 prefs.saveRememberMe(rememberMe)
+
+                // Connect realtime clients after successful login
+                try {
+                    val realtimeManager = RealtimeManager.getInstance()
+                    realtimeManager.connectAll()
+                } catch (e: Exception) {
+                    // Log but don't fail login if realtime connection fails
+                    android.util.Log.e("LoginViewModel", "Failed to connect realtime clients", e)
+                }
 
                 _isLoading.value = false
                 _loginSuccess.value = true

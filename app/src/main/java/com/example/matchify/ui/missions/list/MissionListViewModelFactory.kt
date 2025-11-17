@@ -6,6 +6,7 @@ import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.data.remote.ApiService
 import com.example.matchify.data.remote.MissionRepository
 import com.example.matchify.data.realtime.MissionRealtimeClient
+import com.example.matchify.data.realtime.RealtimeManager
 
 class MissionListViewModelFactory : ViewModelProvider.Factory {
 
@@ -15,7 +16,8 @@ class MissionListViewModelFactory : ViewModelProvider.Factory {
             val authPreferences = AuthPreferencesProvider.getInstance().get()
             val missionApi = ApiService.getInstance().missionApi
             val missionRepository = MissionRepository(missionApi, authPreferences)
-            val realtimeClient = MissionRealtimeClient(authPreferences)
+            val realtimeManager = RealtimeManager.initialize(authPreferences)
+            val realtimeClient = realtimeManager.missionClient
 
             return MissionListViewModel(missionRepository, realtimeClient) as T
         }
