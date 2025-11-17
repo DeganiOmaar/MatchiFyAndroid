@@ -1,9 +1,10 @@
 package com.example.matchify.data.remote
 
 import com.example.matchify.data.local.AuthPreferences
-import com.example.matchify.data.remote.dto.CreateMissionRequest
-import com.example.matchify.data.remote.dto.MissionDto
-import com.example.matchify.data.remote.dto.toDomain
+import com.example.matchify.data.remote.dto.mission.CreateMissionRequest
+import com.example.matchify.data.remote.dto.mission.MissionDto
+import com.example.matchify.data.remote.dto.mission.UpdateMissionRequest
+import com.example.matchify.data.remote.dto.mission.toDomain
 import com.example.matchify.domain.model.Mission
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -29,7 +30,7 @@ class MissionRepository(
         api.createMission(request).toDomain()
     }
     
-    suspend fun updateMission(id: String, request: com.example.matchify.data.remote.dto.UpdateMissionRequest): Mission = withContext(Dispatchers.IO) {
+    suspend fun updateMission(id: String, request: UpdateMissionRequest): Mission = withContext(Dispatchers.IO) {
         api.updateMission(id, request).toDomain()
     }
     

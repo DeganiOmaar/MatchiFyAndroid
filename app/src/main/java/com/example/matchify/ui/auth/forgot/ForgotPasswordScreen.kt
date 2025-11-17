@@ -15,7 +15,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.matchify.R
 import com.example.matchify.data.remote.AuthApi
 import com.example.matchify.data.remote.AuthRepository
-import com.example.matchify.data.remote.dto.*
+import com.example.matchify.data.remote.dto.auth.*
 
 @Composable
 fun ForgotPasswordScreen(

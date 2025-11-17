@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.matchify.common.ErrorContext
 import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.remote.MissionRepository
-import com.example.matchify.data.remote.dto.CreateMissionRequest
+import com.example.matchify.data.remote.dto.mission.CreateMissionRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

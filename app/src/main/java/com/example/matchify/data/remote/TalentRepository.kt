@@ -1,7 +1,7 @@
 package com.example.matchify.data.remote
 
 import com.example.matchify.data.local.AuthPreferences
-import com.example.matchify.data.remote.dto.TalentProfileResponseDto
+import com.example.matchify.data.remote.dto.profile.TalentProfileResponseDto
 import com.example.matchify.domain.model.UserModel
 import com.example.matchify.data.remote.toMultipartString
 import com.google.gson.Gson
@@ -17,13 +17,11 @@ class TalentRepository(
     private val prefs: AuthPreferences
 ) {
 
-    // 🔹 GET talent profile
     suspend fun getTalentProfile(): TalentProfileResponseDto =
         withContext(Dispatchers.IO) {
             api.getTalentProfile()
         }
 
-    // 🔹 UPDATE talent profile (multipart)
     suspend fun updateTalentProfile(
         fullName: String?,
         email: String?,
@@ -45,7 +43,6 @@ class TalentRepository(
             val requestDescription = description?.toMultipartString()
             val requestPortfolioLink = portfolioLink?.toMultipartString()
 
-            // Convert skills list to JSON string
             val requestSkills = skills?.let {
                 val gson = Gson()
                 val jsonString = gson.toJson(it)
@@ -70,7 +67,7 @@ class TalentRepository(
             )
         }
 
-    // 🔹 Save updated user into DataStore
+
     suspend fun saveUpdatedUser(user: UserModel) {
         prefs.saveUser(user)
     }

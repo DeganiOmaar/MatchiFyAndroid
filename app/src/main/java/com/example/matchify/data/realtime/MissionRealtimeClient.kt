@@ -2,8 +2,8 @@ package com.example.matchify.data.realtime
 
 import android.util.Log
 import com.example.matchify.data.local.AuthPreferences
-import com.example.matchify.data.remote.dto.MissionDto
-import com.example.matchify.data.remote.dto.toDomain
+import com.example.matchify.data.remote.dto.mission.MissionDto
+import com.example.matchify.data.remote.dto.mission.toDomain
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow

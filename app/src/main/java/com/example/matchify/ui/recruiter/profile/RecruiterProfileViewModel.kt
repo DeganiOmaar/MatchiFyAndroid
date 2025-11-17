@@ -8,7 +8,7 @@ import com.example.matchify.data.local.AuthPreferences
 import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.data.remote.ApiService
 import com.example.matchify.data.remote.RecruiterRepository
-import com.example.matchify.data.remote.dto.toDomain
+import com.example.matchify.data.remote.dto.profile.toDomain
 import com.example.matchify.domain.model.UserModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

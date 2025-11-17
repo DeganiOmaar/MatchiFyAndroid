@@ -6,7 +6,7 @@ import com.example.matchify.common.ErrorContext
 import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.local.AuthPreferences
 import com.example.matchify.data.remote.AuthRepository
-import com.example.matchify.data.remote.dto.TalentSignupRequest
+import com.example.matchify.data.remote.dto.auth.TalentSignupRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

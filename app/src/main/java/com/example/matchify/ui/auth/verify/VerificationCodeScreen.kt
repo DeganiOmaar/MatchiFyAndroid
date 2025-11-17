@@ -18,7 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.draw.alpha
 import com.example.matchify.data.remote.AuthApi
 import com.example.matchify.data.remote.AuthRepository
-import com.example.matchify.data.remote.dto.*
+import com.example.matchify.data.remote.dto.auth.*
 
 @Composable
 fun VerifyCodeScreen(

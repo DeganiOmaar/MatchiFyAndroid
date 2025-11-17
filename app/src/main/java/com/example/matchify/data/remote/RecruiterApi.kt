@@ -1,6 +1,6 @@
 package com.example.matchify.data.remote
 
-import com.example.matchify.data.remote.dto.RecruiterProfileResponseDto
+import com.example.matchify.data.remote.dto.profile.RecruiterProfileResponseDto
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.http.GET
@@ -10,11 +10,9 @@ import retrofit2.http.Part
 
 interface RecruiterApi {
 
-    // Récupérer le profil recruteur connecté
-    @GET("recruiter/profile") // Changed back to "recruiter/profile" to match backend Controller
+    @GET("recruiter/profile")
     suspend fun getRecruiterProfile(): RecruiterProfileResponseDto
 
-    // Mettre à jour le profil recruteur (multipart comme sur iOS)
     @Multipart
     @PUT("recruiter/profile")
     suspend fun updateRecruiterProfile(

@@ -1,6 +1,6 @@
 package com.example.matchify.data.remote
 
-import com.example.matchify.data.remote.dto.TalentProfileResponseDto
+import com.example.matchify.data.remote.dto.profile.TalentProfileResponseDto
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.http.GET

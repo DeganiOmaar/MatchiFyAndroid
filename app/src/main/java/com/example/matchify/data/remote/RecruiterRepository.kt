@@ -1,7 +1,7 @@
 package com.example.matchify.data.remote
 
 import com.example.matchify.data.local.AuthPreferences
-import com.example.matchify.data.remote.dto.RecruiterProfileResponseDto
+import com.example.matchify.data.remote.dto.profile.RecruiterProfileResponseDto
 import com.example.matchify.domain.model.UserModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -15,13 +15,12 @@ class RecruiterRepository(
     private val prefs: AuthPreferences
 ) {
 
-    // 🔹 GET recruiter profile
     suspend fun getRecruiterProfile(): RecruiterProfileResponseDto =
         withContext(Dispatchers.IO) {
             api.getRecruiterProfile()
         }
 
-    // 🔹 UPDATE recruiter profile (multipart)
+
     suspend fun updateRecruiterProfile(
         fullName: String?,
         email: String?,
@@ -53,12 +52,10 @@ class RecruiterRepository(
             )
         }
 
-    // 🔹 Save updated user into DataStore
     suspend fun saveUpdatedUser(user: UserModel) {
         prefs.saveUser(user)
     }
 }
 
-// 🔹 Helper for multipart text fields
 fun String.toMultipartString(): RequestBody =
     RequestBody.create("text/plain".toMediaTypeOrNull(), this)

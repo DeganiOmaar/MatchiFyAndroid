@@ -1,8 +1,8 @@
 package com.example.matchify.data.remote
 
-import com.example.matchify.data.remote.dto.CreateMissionRequest
-import com.example.matchify.data.remote.dto.MissionDto
-import com.example.matchify.data.remote.dto.UpdateMissionRequest
+import com.example.matchify.data.remote.dto.mission.CreateMissionRequest
+import com.example.matchify.data.remote.dto.mission.MissionDto
+import com.example.matchify.data.remote.dto.mission.UpdateMissionRequest
 import retrofit2.http.*
 
 interface MissionApi {

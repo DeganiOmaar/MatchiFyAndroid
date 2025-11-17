@@ -1,6 +1,6 @@
 package com.example.matchify.data.remote
 
-import com.example.matchify.data.remote.dto.*
+import com.example.matchify.data.remote.dto.auth.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
