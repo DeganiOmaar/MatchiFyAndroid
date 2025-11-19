@@ -11,9 +11,9 @@ data class UserModel(
     val profileImage: String? = null,
     val bannerImage: String? = null,
     val location: String? = null,
-    val talent: String? = null,
+    val talent: List<String>? = null, // Talent categories (array)
     val description: String? = null,
-    val skills: List<String>? = null, // Talent skills (max 10)
+    val skills: List<String>? = null, // Talent skills
     val portfolioLink: String? = null, // Talent portfolio URL
     val createdAt: String? = null,
     val updatedAt: String? = null

@@ -40,8 +40,6 @@ fun TalentSignupScreen(
     val fullName by viewModel.fullName.collectAsState()
     val email by viewModel.email.collectAsState()
     val phone by viewModel.phone.collectAsState()
-    val location by viewModel.location.collectAsState()
-    val talent by viewModel.talent.collectAsState()
     val password by viewModel.password.collectAsState()
     val confirmPassword by viewModel.confirmPassword.collectAsState()
     val showPassword by viewModel.showPassword.collectAsState()
@@ -164,48 +162,6 @@ fun TalentSignupScreen(
             placeholder = { Text("Phone") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            shape = RoundedCornerShape(35.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFCCCCCC),
-                unfocusedBorderColor = Color(0xFFDDDDDD)
-            )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // LOCATION
-        OutlinedTextField(
-            value = location,
-            onValueChange = { viewModel.setLocation(it) },
-            leadingIcon = {
-                Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.Gray)
-            },
-            placeholder = { Text("Location") },
-            singleLine = true,
-            shape = RoundedCornerShape(35.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFCCCCCC),
-                unfocusedBorderColor = Color(0xFFDDDDDD)
-            )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // TALENT
-        OutlinedTextField(
-            value = talent,
-            onValueChange = { viewModel.setTalent(it) },
-            leadingIcon = {
-                Icon(Icons.Default.Star, contentDescription = null, tint = Color.Gray)
-            },
-            placeholder = { Text("Talent (e.g. Photographer, Singer...)") },
-            singleLine = true,
             shape = RoundedCornerShape(35.dp),
             modifier = Modifier
                 .fillMaxWidth()

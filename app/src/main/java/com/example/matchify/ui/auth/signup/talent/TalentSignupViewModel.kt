@@ -26,12 +26,6 @@ class TalentSignupViewModel(
     private val _phone = MutableStateFlow("")
     val phone: StateFlow<String> = _phone
 
-    private val _location = MutableStateFlow("")
-    val location: StateFlow<String> = _location
-
-    private val _talent = MutableStateFlow("")
-    val talent: StateFlow<String> = _talent
-
     private val _password = MutableStateFlow("")
     val password: StateFlow<String> = _password
 
@@ -61,8 +55,6 @@ class TalentSignupViewModel(
     fun setFullName(v: String) { _fullName.value = v }
     fun setEmail(v: String) { _email.value = v }
     fun setPhone(v: String) { _phone.value = v }
-    fun setLocation(v: String) { _location.value = v }
-    fun setTalent(v: String) { _talent.value = v }
     fun setPassword(v: String) { _password.value = v }
     fun setConfirmPassword(v: String) { _confirmPassword.value = v }
 
@@ -104,9 +96,7 @@ class TalentSignupViewModel(
                     password = _password.value,
                     confirmPassword = _confirmPassword.value,
                     phone = _phone.value,
-                    profileImage = "",  // same as iOS placeholder
-                    location = _location.value,
-                    talent = _talent.value
+                    profileImage = ""  // same as iOS placeholder
                 )
 
                 val response = repository.signupTalent(body)

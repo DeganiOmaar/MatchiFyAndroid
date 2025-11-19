@@ -27,7 +27,8 @@ class EditTalentProfileViewModel(
     val email = MutableStateFlow("")
     val phone = MutableStateFlow("")
     val location = MutableStateFlow("")
-    val talent = MutableStateFlow("")
+    val talents = MutableStateFlow<List<String>>(emptyList())
+    val talentInput = MutableStateFlow("")
     val description = MutableStateFlow("")
     val skills = MutableStateFlow<List<String>>(emptyList())
     val portfolioLink = MutableStateFlow("")
@@ -45,7 +46,7 @@ class EditTalentProfileViewModel(
         email.value = user.email
         phone.value = user.phone ?: ""
         location.value = user.location ?: ""
-        talent.value = user.talent ?: ""
+        talents.value = user.talent ?: emptyList()
         description.value = user.description ?: ""
         skills.value = user.skills ?: emptyList()
         portfolioLink.value = user.portfolioLink ?: ""
@@ -57,10 +58,24 @@ class EditTalentProfileViewModel(
         selectedImageUri.value = uri
     }
 
+    /** Add talent */
+    fun addTalent() {
+        val trimmed = talentInput.value.trim()
+        if (trimmed.isNotEmpty() && !talents.value.contains(trimmed)) {
+            talents.value = talents.value + trimmed
+            talentInput.value = ""
+        }
+    }
+
+    /** Remove talent */
+    fun removeTalent(talent: String) {
+        talents.value = talents.value.filter { it != talent }
+    }
+
     /** Add skill */
     fun addSkill() {
         val trimmed = skillInput.value.trim()
-        if (trimmed.isNotEmpty() && skills.value.size < 10 && !skills.value.contains(trimmed)) {
+        if (trimmed.isNotEmpty() && !skills.value.contains(trimmed)) {
             skills.value = skills.value + trimmed
             skillInput.value = ""
         }
@@ -96,11 +111,6 @@ class EditTalentProfileViewModel(
             error.value = "Le nom et l'email sont requis."
             return
         }
-
-        if (skills.value.size > 10) {
-            error.value = "Maximum 10 compétences autorisées."
-            return
-        }
         
         saving.value = true
 
@@ -114,7 +124,7 @@ class EditTalentProfileViewModel(
                     email = email.value,
                     phone = phone.value.ifBlank { null },
                     location = location.value.ifBlank { null },
-                    talent = talent.value.ifBlank { null },
+                    talent = if (talents.value.isNotEmpty()) talents.value else null,
                     description = description.value.ifBlank { null },
                     skills = if (skills.value.isNotEmpty()) skills.value else null,
                     portfolioLink = portfolioLink.value.ifBlank { null },

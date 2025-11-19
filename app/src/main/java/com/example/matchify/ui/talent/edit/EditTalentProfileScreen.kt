@@ -49,6 +49,8 @@ fun EditTalentProfileScreen(
     val isSaved by viewModel.saved.collectAsState()
     val error by viewModel.error.collectAsState()
     val selectedImageUri by viewModel.selectedImageUri.collectAsState()
+    val talents by viewModel.talents.collectAsState()
+    val talentInput by viewModel.talentInput.collectAsState()
     val skills by viewModel.skills.collectAsState()
     val skillInput by viewModel.skillInput.collectAsState()
 
@@ -284,24 +286,84 @@ fun EditTalentProfileScreen(
                 )
             )
 
-            // Talent (Category)
-            OutlinedTextField(
-                value = viewModel.talent.collectAsState().value,
-                onValueChange = { viewModel.talent.value = it },
-                leadingIcon = {
-                    Icon(Icons.Filled.Star, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Talent (e.g. Photographer, Singer...)") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                singleLine = true,
-                shape = RoundedCornerShape(35.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
-                )
+            // Talents Section
+            Text(
+                text = "Talents",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1A1A1A),
+                modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = talentInput,
+                    onValueChange = { viewModel.talentInput.value = it },
+                    placeholder = { Text("Add talent (e.g. Developer, Photographer)") },
+                    modifier = Modifier.weight(1f),
+                    trailingIcon = {
+                        IconButton(
+                            onClick = { viewModel.addTalent() },
+                            enabled = talentInput.isNotEmpty()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Add,
+                                contentDescription = "Add",
+                                tint = if (talentInput.isNotEmpty()) Color(0xFF007AFF) else Color.Gray
+                            )
+                        }
+                    },
+                    shape = RoundedCornerShape(35.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFCCCCCC),
+                        unfocusedBorderColor = Color(0xFFDDDDDD)
+                    )
+                )
+            }
+
+            if (talents.isNotEmpty()) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    items(talents) { talent ->
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color.Gray.copy(alpha = 0.15f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(
+                                    horizontal = 12.dp,
+                                    vertical = 8.dp
+                                ),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = talent,
+                                    fontSize = 14.sp,
+                                    color = Color(0xFF1A1A1A)
+                                )
+                                IconButton(
+                                    onClick = { viewModel.removeTalent(talent) },
+                                    modifier = Modifier.size(20.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Close,
+                                        contentDescription = "Remove",
+                                        tint = Color.Red,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             // Description
             OutlinedTextField(
@@ -325,7 +387,7 @@ fun EditTalentProfileScreen(
 
             // Skills Section
             Text(
-                text = "Skills (max 10)",
+                text = "Skills",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF1A1A1A),
@@ -345,12 +407,12 @@ fun EditTalentProfileScreen(
                     trailingIcon = {
                         IconButton(
                             onClick = { viewModel.addSkill() },
-                            enabled = skillInput.isNotEmpty() && skills.size < 10
+                            enabled = skillInput.isNotEmpty()
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.Add,
                                 contentDescription = "Add",
-                                tint = if (skillInput.isNotEmpty() && skills.size < 10) Color(0xFF007AFF) else Color.Gray
+                                tint = if (skillInput.isNotEmpty()) Color(0xFF007AFF) else Color.Gray
                             )
                         }
                     },

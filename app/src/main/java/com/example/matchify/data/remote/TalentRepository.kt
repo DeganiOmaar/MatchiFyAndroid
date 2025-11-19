@@ -27,7 +27,7 @@ class TalentRepository(
         email: String?,
         phone: String?,
         location: String?,
-        talent: String?,
+        talent: List<String>?,
         description: String?,
         skills: List<String>?,
         portfolioLink: String?,
@@ -39,9 +39,14 @@ class TalentRepository(
             val requestEmail = email?.toMultipartString()
             val requestPhone = phone?.toMultipartString()
             val requestLocation = location?.toMultipartString()
-            val requestTalent = talent?.toMultipartString()
             val requestDescription = description?.toMultipartString()
             val requestPortfolioLink = portfolioLink?.toMultipartString()
+
+            val requestTalent = talent?.let {
+                val gson = Gson()
+                val jsonString = gson.toJson(it)
+                RequestBody.create("application/json".toMediaTypeOrNull(), jsonString)
+            }
 
             val requestSkills = skills?.let {
                 val gson = Gson()

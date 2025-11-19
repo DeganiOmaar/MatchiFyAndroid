@@ -6,8 +6,6 @@ data class TalentSignupRequest(
     val password: String,
     val confirmPassword: String,
     val phone: String,
-    val profileImage: String,
-    val location: String,
-    val talent: String
+    val profileImage: String
 )
 
