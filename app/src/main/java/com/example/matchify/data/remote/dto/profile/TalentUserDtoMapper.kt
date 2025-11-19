@@ -12,7 +12,7 @@ fun TalentUserDto.toDomain(): UserModel {
         profileImage = this.profileImage,
         bannerImage = null,
         location = this.location,
-        talent = this.talent,
+        talent = this.talent?.let { listOf(it) },
         description = this.description,
         skills = this.skills,
         portfolioLink = this.portfolioLink,

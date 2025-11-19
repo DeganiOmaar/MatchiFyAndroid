@@ -12,7 +12,7 @@ fun RecruiterUserDto.toDomain(): UserModel {
         profileImage = this.profileImage,
         bannerImage = null,
         location = this.location,
-        talent = this.talent,
+        talent = this.talent?.let { listOf(it) },
         description = this.description,
         skills = null,
         portfolioLink = null,

@@ -269,9 +269,9 @@ fun TalentProfileScreen(
                         }
 
                         // Talent Category Section
-                        if (!user?.talent.isNullOrBlank()) {
+                        if (!user?.talent.isNullOrEmpty()) {
                             PremiumTalentCategorySection(
-                                talent = user?.talent ?: ""
+                                talent = user?.talent?.joinToString(", ") ?: ""
                             )
                         }
 
