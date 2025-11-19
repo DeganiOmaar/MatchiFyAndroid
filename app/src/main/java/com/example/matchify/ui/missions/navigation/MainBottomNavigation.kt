@@ -1,73 +1,91 @@
 package com.example.matchify.ui.missions.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Work
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Work
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.Modifier
 
+/**
+ * Modern Material 3 Bottom Navigation Bar
+ * 
+ * Features:
+ * - Official Material 3 NavigationBar component
+ * - Material default elevation, spacing, shape, ripple, and animations
+ * - Dynamic color support for light and dark themes
+ * - Icons and labels follow Material guidelines
+ * - Active destination uses highlight color and shape
+ * - Inactive destinations use subdued colors
+ * 
+ * Material 3 Guidelines:
+ * - Contains 2-5 destinations (currently 2: Missions, Profile)
+ * - All destinations have equal importance
+ * - Icon on top, label below
+ * - Smooth animations and transitions
+ */
 @Composable
 fun MainBottomNavigation(
     currentRoute: String?,
     profileRoute: String,
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val isMissionsSelected = currentRoute == "missions_list"
+    val isProfileSelected = currentRoute == profileRoute
+    
     NavigationBar(
-        containerColor = Color.White,
-        tonalElevation = 8.dp,
-        modifier = androidx.compose.ui.Modifier
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         NavigationBarItem(
             icon = {
                 Icon(
-                    imageVector = Icons.Rounded.Work,
+                    imageVector = if (isMissionsSelected) Icons.Filled.Work else Icons.Outlined.Work,
                     contentDescription = "Missions"
                 )
             },
-            label = { 
+            label = {
                 Text(
-                    "Missions",
-                    fontSize = 12.sp,
-                    fontWeight = if (currentRoute == "missions_list") FontWeight.SemiBold else FontWeight.Normal
-                ) 
+                    text = "Missions",
+                    style = MaterialTheme.typography.labelMedium
+                )
             },
-            selected = currentRoute == "missions_list",
+            selected = isMissionsSelected,
             onClick = { onNavigate("missions_list") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF007AFF),
-                selectedTextColor = Color(0xFF007AFF),
-                indicatorColor = Color(0xFF007AFF).copy(alpha = 0.1f),
-                unselectedIconColor = Color(0xFF8E8E93),
-                unselectedTextColor = Color(0xFF8E8E93)
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         )
 
         NavigationBarItem(
             icon = {
                 Icon(
-                    imageVector = Icons.Rounded.Person,
+                    imageVector = if (isProfileSelected) Icons.Filled.Person else Icons.Outlined.Person,
                     contentDescription = "Profile"
                 )
             },
-            label = { 
+            label = {
                 Text(
-                    "Profile",
-                    fontSize = 12.sp,
-                    fontWeight = if (currentRoute == profileRoute) FontWeight.SemiBold else FontWeight.Normal
-                ) 
+                    text = "Profile",
+                    style = MaterialTheme.typography.labelMedium
+                )
             },
-            selected = currentRoute == profileRoute,
+            selected = isProfileSelected,
             onClick = { onNavigate(profileRoute) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF007AFF),
-                selectedTextColor = Color(0xFF007AFF),
-                indicatorColor = Color(0xFF007AFF).copy(alpha = 0.1f),
-                unselectedIconColor = Color(0xFF8E8E93),
-                unselectedTextColor = Color(0xFF8E8E93)
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         )
     }

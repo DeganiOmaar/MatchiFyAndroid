@@ -18,6 +18,7 @@ import com.example.matchify.ui.missions.edit.MissionEditScreen
 import com.example.matchify.ui.missions.edit.MissionEditViewModel
 import com.example.matchify.ui.missions.edit.MissionEditViewModelFactory
 import com.example.matchify.ui.missions.list.MissionListScreen
+import com.example.matchify.ui.missions.list.MissionListScreenNew
 import com.example.matchify.ui.missions.list.MissionListViewModel
 import com.example.matchify.ui.missions.list.MissionListViewModelFactory
 import com.example.matchify.ui.missions.navigation.MainBottomNavigation
@@ -85,7 +86,7 @@ fun MainScreen(
                 val listViewModel: MissionListViewModel = viewModel(
                     factory = MissionListViewModelFactory()
                 )
-                MissionListScreen(
+                MissionListScreenNew(
                     onAddMission = {
                         navController.navigate("mission_add")
                     },
