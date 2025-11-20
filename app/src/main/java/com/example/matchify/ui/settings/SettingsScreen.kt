@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.matchify.ui.app.LocalAppLanguage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,6 +27,8 @@ fun SettingsScreen(
 ) {
     val isLoggingOut by viewModel.isLoggingOut.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val languageCode = LocalAppLanguage.current
+    val isFrench = languageCode == "fr"
 
     LaunchedEffect(Unit) {
         viewModel.logoutEvents.collect {
@@ -33,12 +36,19 @@ fun SettingsScreen(
         }
     }
 
+    val backgroundBrush = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFFE6ECFF),
+            Color(0xFFF5F7FA)
+        )
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Paramètres",
+                        text = if (isFrench) "Paramètres" else "Settings",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -47,130 +57,184 @@ fun SettingsScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Rounded.ArrowBack,
-                            contentDescription = "Retour",
-                            tint = MaterialTheme.colorScheme.primary
+                            contentDescription = if (isFrench) "Retour" else "Back",
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
+                    containerColor = Color.Transparent,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         },
-        containerColor = Color(0xFFF5F7FA)
+        containerColor = Color.Transparent
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
-                .padding(paddingValues)
                 .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .background(backgroundBrush)
+                .padding(paddingValues)
         ) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                color = Color.White,
-                tonalElevation = 1.dp
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp),
+                    color = Color.White,
+                    tonalElevation = 4.dp,
+                    shadowElevation = 6.dp
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .background(
-                                brush = Brush.linearGradient(
-                                    listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
-                                    )
-                                ),
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Settings,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    Text(
-                        text = "Compte",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        text = "Gérez votre session et déconnectez-vous en toute sécurité.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Surface(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(70.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        color = Color(0xFFF5F7FA)
+                            .padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp)
                     ) {
+                        // Sélecteur de langue
+                        Text(
+                            text = if (isFrench) "Langue de l'application" else "App language",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
                         Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 20.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Rounded.ExitToApp,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column {
-                                    Text(
-                                        text = "Se déconnecter",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    Text(
-                                        text = "Quitter la session actuelle",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
+                            FilterChip(
+                                selected = isFrench,
+                                onClick = { viewModel.setLanguage("fr") },
+                                label = { Text("Français") }
+                            )
+                            FilterChip(
+                                selected = !isFrench,
+                                onClick = { viewModel.setLanguage("en") },
+                                label = { Text("English") }
+                            )
+                        }
 
-                            Button(
-                                onClick = { viewModel.logout() },
-                                enabled = !isLoggingOut,
-                                shape = RoundedCornerShape(30.dp)
+                        Divider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = Color(0xFFE5E7EB)
+                        )
+
+                        // Icône paramètres dans un cercle dégradé
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .background(
+                                    brush = Brush.linearGradient(
+                                        listOf(
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+                                        )
+                                    ),
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Settings,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        Text(
+                            text = if (isFrench) "Compte" else "Account",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = if (isFrench)
+                                "Gérez votre session et déconnectez-vous en toute sécurité."
+                            else
+                                "Manage your session and log out safely.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(22.dp),
+                            color = Color(0xFFF5F7FA)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                if (isLoggingOut) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(18.dp),
-                                        strokeWidth = 2.dp,
-                                        color = Color.White
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Surface(
+                                        modifier = Modifier.size(40.dp),
+                                        shape = CircleShape,
+                                        color = Color(0xFFE5EBFF)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.ExitToApp,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text(
+                                            text = if (isFrench) "Se déconnecter" else "Log out",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            text = if (isFrench)
+                                                "Quitter la session actuelle"
+                                            else
+                                                "Sign out from current session",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+
+                                Button(
+                                    onClick = { viewModel.logout() },
+                                    enabled = !isLoggingOut,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp),
+                                    shape = RoundedCornerShape(24.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFEF4444), // rouge doux pour action de déconnexion
+                                        contentColor = Color.White
                                     )
-                                } else {
-                                    Text("Logout")
+                                ) {
+                                    if (isLoggingOut) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
+                                            strokeWidth = 2.dp,
+                                            color = Color.White
+                                        )
+                                    } else {
+                                        Text(if (isFrench) "Se déconnecter" else "Log out")
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    if (!errorMessage.isNullOrBlank()) {
-                        Text(
-                            text = errorMessage ?: "",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        if (!errorMessage.isNullOrBlank()) {
+                            Text(
+                                text = errorMessage ?: "",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     }
                 }
             }

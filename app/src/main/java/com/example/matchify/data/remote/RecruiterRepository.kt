@@ -28,7 +28,7 @@ class RecruiterRepository(
         location: String?,
         description: String?,
         imageFile: File?
-    ): RecruiterProfileResponseDto =
+    ): Unit =
         withContext(Dispatchers.IO) {
 
             val requestFullName = fullName?.toMultipartString()

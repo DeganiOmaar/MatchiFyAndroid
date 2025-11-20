@@ -100,7 +100,9 @@ class RecruiterProfileViewModel(
                 val response = repository.getRecruiterProfile()
                 Log.d("RecruiterProfileViewModel", "API Response: $response") // Log API response
 
-                val userData = response.user.toDomain()
+                val userDto = response.user
+                    ?: throw IllegalStateException("Profil recruteur manquant dans la réponse de l'API")
+                val userData = userDto.toDomain()
                 _user.value = userData
                 prefs.saveUser(userData)
 

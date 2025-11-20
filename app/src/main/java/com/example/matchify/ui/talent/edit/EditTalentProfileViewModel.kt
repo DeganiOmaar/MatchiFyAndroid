@@ -119,7 +119,8 @@ class EditTalentProfileViewModel(
                 // Convert URI to File if image is selected
                 val imageFile = selectedImageUri.value?.let { uriToFile(it) }
 
-                val response = repository.updateTalentProfile(
+                // 1) Appel d'update : succès si la requête passe sans exception.
+                repository.updateTalentProfile(
                     fullName = fullName.value,
                     email = email.value,
                     phone = phone.value.ifBlank { null },
@@ -131,12 +132,16 @@ class EditTalentProfileViewModel(
                     imageFile = imageFile
                 )
 
-                // Save updated user in DataStore
-                val updatedUser = response.user.toDomain()
-                repository.saveUpdatedUser(updatedUser)
-                
-                // Update current profile image URL
-                currentProfileImageUrl.value = updatedUser.profileImageUrl
+                // 2) Tentative de rafraîchissement du profil complet, sans
+                // impacter le succès si ça échoue.
+                kotlin.runCatching {
+                    val refreshedUserDto = repository.getTalentProfile().user
+                    if (refreshedUserDto != null) {
+                        val refreshedUser = refreshedUserDto.toDomain()
+                        repository.saveUpdatedUser(refreshedUser)
+                        currentProfileImageUrl.value = refreshedUser.profileImageUrl
+                    }
+                }
 
                 saving.value = false
                 saved.value = true

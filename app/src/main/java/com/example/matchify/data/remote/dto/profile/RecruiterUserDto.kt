@@ -10,7 +10,8 @@ data class RecruiterUserDto(
     @SerializedName("phone") val phone: String?,
     @SerializedName("profileImage") val profileImage: String?,
     @SerializedName("location") val location: String?,
-    @SerializedName("talent") val talent: String?,
+    // Le backend renvoie un tableau pour "talent" (ex: []), on le mappe donc sur une liste
+    @SerializedName("talent") val talent: List<String>?,
     @SerializedName("description") val description: String?,
     @SerializedName("createdAt") val createdAt: String?,
     @SerializedName("updatedAt") val updatedAt: String?

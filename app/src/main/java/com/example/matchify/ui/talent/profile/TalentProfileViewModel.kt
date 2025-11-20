@@ -94,7 +94,9 @@ class TalentProfileViewModel(
                 val response = repository.getTalentProfile()
                 Log.d("TalentProfileViewModel", "API Response: $response")
 
-                val userData = response.user.toDomain()
+                val userDto = response.user
+                    ?: throw IllegalStateException("Profil talent manquant dans la réponse de l'API")
+                val userData = userDto.toDomain()
                 _user.value = userData
                 prefs.saveUser(userData)
 

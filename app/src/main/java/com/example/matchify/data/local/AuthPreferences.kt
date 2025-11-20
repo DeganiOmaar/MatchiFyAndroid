@@ -28,6 +28,7 @@ class AuthPreferences(private val context: Context) {
         private val ROLE = stringPreferencesKey("user_role")
         private val REMEMBER = booleanPreferencesKey("remember_me")
         private val HAS_SEEN_ONBOARDING = booleanPreferencesKey("has_seen_onboarding")
+        private val LANGUAGE = stringPreferencesKey("app_language")
     }
 
     // Define the token flow before the init block
@@ -47,6 +48,8 @@ class AuthPreferences(private val context: Context) {
     val hasSeenOnboarding: Flow<Boolean> = context.dataStore.data.map {
         it[HAS_SEEN_ONBOARDING] ?: false
     }
+
+    val language: Flow<String?> = context.dataStore.data.map { it[LANGUAGE] }
 
     private val _currentAccessToken = MutableStateFlow<String?>(null)
     val currentAccessToken: StateFlow<String?> = _currentAccessToken
@@ -134,6 +137,10 @@ class AuthPreferences(private val context: Context) {
         context.dataStore.edit { it[HAS_SEEN_ONBOARDING] = hasSeen }
     }
 
+    suspend fun saveLanguage(code: String) {
+        context.dataStore.edit { it[LANGUAGE] = code }
+    }
+
     // Startup helpers
     suspend fun getTokenValue(): String? = token.first()
 
@@ -142,6 +149,8 @@ class AuthPreferences(private val context: Context) {
     suspend fun getRoleValue(): String? = role.first()
     
     suspend fun getHasSeenOnboardingValue(): Boolean = hasSeenOnboarding.first()
+
+    suspend fun getLanguageValue(): String? = language.first()
 
     suspend fun logout() {
         context.dataStore.edit { prefs ->

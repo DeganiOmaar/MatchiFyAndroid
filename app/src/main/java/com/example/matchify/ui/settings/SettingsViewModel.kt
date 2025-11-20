@@ -22,6 +22,12 @@ class SettingsViewModel(
     private val _logoutEvents = MutableSharedFlow<Unit>(replay = 0)
     val logoutEvents: SharedFlow<Unit> = _logoutEvents
 
+    fun setLanguage(code: String) {
+        viewModelScope.launch {
+            authPreferences.saveLanguage(code)
+        }
+    }
+
     fun logout() {
         if (_isLoggingOut.value) return
 
