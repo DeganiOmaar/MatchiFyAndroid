@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.matchify.common.ErrorContext
 import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.local.AuthPreferences
+import com.example.matchify.data.remote.PortfolioRepository
 import com.example.matchify.data.remote.TalentRepository
 import com.example.matchify.data.remote.dto.profile.toDomain
 import com.example.matchify.data.realtime.ProfileRealtimeClient
 import com.example.matchify.data.realtime.ProfileRealtimeEvent
+import com.example.matchify.domain.model.Project
 import com.example.matchify.domain.model.UserModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +21,7 @@ import android.util.Log
 class TalentProfileViewModel(
     private val prefs: AuthPreferences,
     private val repository: TalentRepository,
+    private val portfolioRepository: PortfolioRepository,
     private val realtimeClient: ProfileRealtimeClient
 ) : ViewModel() {
 
@@ -30,12 +33,20 @@ class TalentProfileViewModel(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
+    
+    private val _projects = MutableStateFlow<List<Project>>(emptyList())
+    val projects: StateFlow<List<Project>> = _projects
+    
+    private val _isLoadingProjects = MutableStateFlow(false)
+    val isLoadingProjects: StateFlow<Boolean> = _isLoadingProjects
 
     init {
         // Load user data from local preferences first
         loadUserFromPreferences()
         // Then fetch fresh data from API
         loadProfile()
+        // Load projects
+        loadProjects()
         // Observe realtime updates
         observeRealtimeUpdates()
     }
@@ -135,6 +146,21 @@ class TalentProfileViewModel(
     
     fun refreshProfile() {
         loadProfile()
+    }
+    
+    fun loadProjects() {
+        _isLoadingProjects.value = true
+        viewModelScope.launch {
+            try {
+                val projectsList = portfolioRepository.getProjects()
+                _projects.value = projectsList
+            } catch (e: Exception) {
+                Log.e("TalentProfileViewModel", "Error loading projects: ${e.message}", e)
+                // Silently fail - projects will remain empty
+            } finally {
+                _isLoadingProjects.value = false
+            }
+        }
     }
 }
 

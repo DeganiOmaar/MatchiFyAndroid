@@ -13,8 +13,33 @@ fun MissionDto.toDomain(): Mission {
         skills = skills,
         recruiterId = recruiterId,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        proposalsCount = proposalsCount,
+        interviewingCount = interviewingCount,
+        hasApplied = hasApplied,
+        isFavorite = isFavorite
     )
+}
+
+object MissionDtoMapper {
+    fun toDomain(dto: MissionDto): Mission {
+        return Mission(
+            id = dto.id,
+            _id = dto._id,
+            title = dto.title,
+            description = dto.description,
+            duration = dto.duration,
+            budget = dto.budget,
+            skills = dto.skills,
+            recruiterId = dto.recruiterId,
+            createdAt = dto.createdAt,
+            updatedAt = dto.updatedAt,
+            proposalsCount = dto.proposalsCount,
+            interviewingCount = dto.interviewingCount,
+            hasApplied = dto.hasApplied,
+            isFavorite = dto.isFavorite
+        )
+    }
 }
 
 fun Mission.toCreateRequest(): CreateMissionRequest {

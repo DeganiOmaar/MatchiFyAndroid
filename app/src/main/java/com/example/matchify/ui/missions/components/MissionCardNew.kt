@@ -32,12 +32,13 @@ fun MissionCardNew(
     mission: Mission,
     isFavorite: Boolean,
     onFavoriteToggle: () -> Unit,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { /* Tappable but no action yet */ },
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface

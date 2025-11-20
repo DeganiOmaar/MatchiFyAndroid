@@ -56,6 +56,3 @@ class RecruiterRepository(
         prefs.saveUser(user)
     }
 }
-
-fun String.toMultipartString(): RequestBody =
-    RequestBody.create("text/plain".toMediaTypeOrNull(), this)

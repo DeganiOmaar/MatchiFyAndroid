@@ -13,7 +13,11 @@ data class Mission(
     val skills: List<String>,
     val recruiterId: String,
     val createdAt: String? = null,
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
+    val proposalsCount: Int? = null,
+    val interviewingCount: Int? = null,
+    val hasApplied: Boolean? = null,
+    val isFavorite: Boolean? = null
 ) {
     val missionId: String
         get() = id ?: _id ?: ""
@@ -37,6 +41,18 @@ data class Mission(
             val formatter = java.text.NumberFormat.getNumberInstance(Locale.FRENCH)
             return "${formatter.format(budget)} €"
         }
+    
+    val proposals: Int
+        get() = proposalsCount ?: 0
+    
+    val interviewing: Int
+        get() = interviewingCount ?: 0
+    
+    val hasAppliedToMission: Boolean
+        get() = hasApplied ?: false
+    
+    val isFavorited: Boolean
+        get() = isFavorite ?: false
 }
 
 

@@ -81,6 +81,48 @@ class ApiService(private val authPreferences: AuthPreferences) {
         retrofit.create(MissionApi::class.java)
     }
 
+    // -----------------------------------------------------------
+    // 📝 PROPOSAL API
+    // -----------------------------------------------------------
+    val proposalApi: ProposalApi by lazy {
+        retrofit.create(ProposalApi::class.java)
+    }
+
+    // -----------------------------------------------------------
+    // 💬 CONVERSATION API
+    // -----------------------------------------------------------
+    val conversationApi: ConversationApi by lazy {
+        retrofit.create(ConversationApi::class.java)
+    }
+
+    // -----------------------------------------------------------
+    // ⭐ FAVORITE API
+    // -----------------------------------------------------------
+    val favoriteApi: FavoriteApi by lazy {
+        retrofit.create(FavoriteApi::class.java)
+    }
+
+    // -----------------------------------------------------------
+    // 🎨 PORTFOLIO API
+    // -----------------------------------------------------------
+    val portfolioApi: PortfolioApi by lazy {
+        retrofit.create(PortfolioApi::class.java)
+    }
+
+    // -----------------------------------------------------------
+    // 👤 USER API
+    // -----------------------------------------------------------
+    val userApi: UserApi by lazy {
+        retrofit.create(UserApi::class.java)
+    }
+
+    // -----------------------------------------------------------
+    // 🎯 SKILL API
+    // -----------------------------------------------------------
+    val skillApi: SkillApi by lazy {
+        retrofit.create(SkillApi::class.java)
+    }
+
     companion object {
         @Volatile
         private var INSTANCE: ApiService? = null
