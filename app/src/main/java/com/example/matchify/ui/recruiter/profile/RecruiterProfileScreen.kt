@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,46 +43,45 @@ fun RecruiterProfileScreen(
     val user by viewModel.user.collectAsState()
     val joined by viewModel.joinedDate.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    
-    var showMenuSheet by remember { mutableStateOf(false) }
+
+    // Fond statique : dégradé bleu vers clair, sans animation
+    val backgroundBrush = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF4A6BFF),   // bleu en haut
+            Color(0xFF6F7FDB),   // bleu plus doux
+            Color(0xFFF5F7FA)    // fond clair en bas
+        ),
+        start = Offset(0f, 0f),
+        end = Offset(0f, 1600f)
+    )
 
     Scaffold(
-        containerColor = Color(0xFFF5F7FA),
+        containerColor = Color.Transparent,
         topBar = {
+            // Barre simple avec icône paramètres
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color.White,
+                // App bar bleu comme le haut de l'écran
+                color = Color(0xFF4A6BFF),
                 shadowElevation = 0.dp
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Profil",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A1A)
+                        text = "",
+                        style = MaterialTheme.typography.titleLarge
                     )
-                    
-                    Surface(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clickable { showMenuSheet = true },
-                        shape = CircleShape,
-                        color = Color(0xFFF5F7FA)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Rounded.MoreVert,
-                                contentDescription = "Menu",
-                                modifier = Modifier.size(24.dp),
-                                tint = Color(0xFF1A1A1A)
-                            )
-                        }
+                    IconButton(onClick = onSettings) {
+                        Icon(
+                            imageVector = Icons.Rounded.Settings,
+                            contentDescription = "Paramètres",
+                            tint = Color.Black
+                        )
                     }
                 }
             }
@@ -91,242 +91,201 @@ fun RecruiterProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF5F7FA))
+                // Dégradé bleu qui se fond dans un fond clair,
+                // pour éviter que tout l'écran soit entièrement bleu.
+                .background(brush = backgroundBrush)
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+            // Contenu global
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
             ) {
-                // Error message
-                if (errorMessage != null) {
-                    item {
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp),
-                            color = MaterialTheme.colorScheme.errorContainer,
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Text(
-                                text = errorMessage ?: "",
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-                }
+                Spacer(modifier = Modifier.height(40.dp))
 
-                // Premium Header Section with Gradient
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(280.dp)
-                    ) {
-                        // Gradient Background
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    brush = Brush.linearGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.primary,
-                                            MaterialTheme.colorScheme.secondary
-                                        ),
-                                        start = androidx.compose.ui.geometry.Offset(0f, 0f),
-                                        end = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                                    )
-                                )
+                // Avatar qui chevauche le dégradé et la carte
+                Box(
+                    modifier = Modifier
+                        .offset(y = 16.dp)
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .border(4.dp, Color.White, CircleShape)
+                ) {
+                    val imageUrl = user?.profileImageUrl
+                    if (!imageUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = "Photo de profil",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            error = painterResource(id = R.drawable.avatar),
+                            placeholder = painterResource(id = R.drawable.avatar)
                         )
-                        
-                        // Content
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            // Premium Avatar with Glow Effect
-                            Box(
-                                modifier = Modifier
-                                    .size(120.dp)
-                                    .shadow(
-                                        elevation = 16.dp,
-                                        shape = CircleShape,
-                                        spotColor = Color.White.copy(alpha = 0.5f)
-                                    )
-                            ) {
-                                val imageUrl = user?.profileImageUrl
-                                if (imageUrl != null && imageUrl.isNotBlank()) {
-                                    AsyncImage(
-                                        model = imageUrl,
-                                        contentDescription = "Profile Picture",
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .clip(CircleShape)
-                                            .border(
-                                                width = 4.dp,
-                                                color = Color.White,
-                                                shape = CircleShape
-                                            ),
-                                        contentScale = ContentScale.Crop,
-                                        error = painterResource(id = R.drawable.avatar),
-                                        placeholder = painterResource(id = R.drawable.avatar)
-                                    )
-                                } else {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.avatar),
-                                        contentDescription = "Default Avatar",
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .clip(CircleShape)
-                                            .border(
-                                                width = 4.dp,
-                                                color = Color.White,
-                                                shape = CircleShape
-                                            ),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
-                            }
-                            
-                            Spacer(modifier = Modifier.height(20.dp))
-                            
-                            // Name
-                            Text(
-                                text = user?.fullName ?: "Recruiter Name",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                textAlign = TextAlign.Center
-                            )
-                            
-                            Spacer(modifier = Modifier.height(8.dp))
-                            
-                            // Email
-                            Text(
-                                text = user?.email ?: "-",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Color.White.copy(alpha = 0.9f),
-                                textAlign = TextAlign.Center
-                            )
-                            
-                            Spacer(modifier = Modifier.height(12.dp))
-                            
-                            // Joined Date Badge
-                            Surface(
-                                shape = RoundedCornerShape(20.dp),
-                                color = Color.White.copy(alpha = 0.2f),
-                                modifier = Modifier.padding(horizontal = 8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.CalendarToday,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = Color.White
-                                    )
-                                    Text(
-                                        text = "Membre depuis $joined",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
-                        }
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.avatar),
+                            contentDescription = "Avatar",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
                     }
                 }
 
-                // Information Sections
-                item {
+                Spacer(modifier = Modifier.height(40.dp))
+
+                // Carte principale type "About me"
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    color = Color.White,
+                    shadowElevation = 10.dp
+                ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                            .padding(horizontal = 20.dp, vertical = 22.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        // About Section
-                        if (!user?.description.isNullOrBlank()) {
-                            PremiumAboutSection(
-                                description = user?.description ?: ""
+                        // Nom
+                        Text(
+                            text = user?.fullName ?: "",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF333333),
+                            textAlign = TextAlign.Center
+                        )
+
+                        // Sous-titre (rôle + ville)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "Recruiter",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFF6F7FDB)
+                            )
+                            if (!user?.location.isNullOrBlank()) {
+                                Text(
+                                    text = "  •  ${user?.location}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color(0xFF9BA2C5)
+                                )
+                            }
+                        }
+
+                        // Bouton Edit profil
+                        Button(
+                            onClick = onEditProfile,
+                            shape = RoundedCornerShape(24.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF4A6BFF), // bouton bleu
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Edit,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = "Edit profile")
+                        }
+
+                        // Bloc "About me"
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "About me",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF333333)
+                            )
+
+                            Text(
+                                text = user?.description ?: "No description yet.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFF777777),
+                                textAlign = TextAlign.Start,
+                                lineHeight = 20.sp
                             )
                         }
 
-                        // Contact Information Section
-                        PremiumInfoSection(
-                            title = "Informations de contact",
-                            items = listOfNotNull(
-                                PremiumInfoItem(
-                                    icon = Icons.Filled.Email,
-                                    label = "Email",
-                                    value = user?.email ?: "-",
-                                    iconColor = MaterialTheme.colorScheme.primary
-                                ),
-                                PremiumInfoItem(
-                                    icon = Icons.Filled.Phone,
-                                    label = "Téléphone",
-                                    value = user?.phone ?: "-",
-                                    iconColor = MaterialTheme.colorScheme.secondary
-                                ),
-                                if (!user?.location.isNullOrBlank()) {
-                                    PremiumInfoItem(
-                                        icon = Icons.Filled.LocationOn,
-                                        label = "Localisation",
-                                        value = user?.location ?: "-",
-                                        iconColor = MaterialTheme.colorScheme.tertiary
-                                    )
-                                } else null
-                            )
+                        Divider(
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            color = Color(0xFFE6E6E6)
                         )
+
+                        // Titre infos de contact + contenu
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                text = "Contact info",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF333333)
+                            )
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Email,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = Color(0xFF5B6BFF)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = user?.email ?: "-",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color(0xFF555555)
+                                )
+                            }
+
+                            if (!user?.phone.isNullOrBlank()) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Phone,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = Color(0xFF5B6BFF)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = user?.phone ?: "-",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color(0xFF555555)
+                                    )
+                                }
+                            }
+
+                            // Ligne "Member since" supprimée comme demandé
+                        }
                     }
                 }
-            }
-        }
-    }
 
-    // Premium Bottom Sheet Menu
-    if (showMenuSheet) {
-        val sheetState = rememberModalBottomSheetState(
-            skipPartiallyExpanded = false
-        )
-        ModalBottomSheet(
-            onDismissRequest = { showMenuSheet = false },
-            sheetState = sheetState,
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            containerColor = Color.White,
-            dragHandle = {
-                Box(
-                    modifier = Modifier
-                        .width(48.dp)
-                        .height(5.dp)
-                        .padding(vertical = 16.dp)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(Color(0xFFE0E0E0))
-                )
-            }
-        ) {
-            PremiumMenuBottomSheetContent(
-                onEditProfile = {
-                    showMenuSheet = false
-                    onEditProfile()
-                },
-                onSettings = {
-                    showMenuSheet = false
-                    onSettings()
+                // Message d'erreur éventuel sous la carte
+                if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = errorMessage ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center
+                    )
                 }
-            )
+            }
         }
     }
 }

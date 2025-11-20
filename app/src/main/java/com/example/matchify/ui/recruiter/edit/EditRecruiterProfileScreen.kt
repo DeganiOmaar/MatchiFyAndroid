@@ -35,6 +35,7 @@ import coil.compose.AsyncImage
 import com.example.matchify.R
 import java.io.File
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,12 +64,16 @@ fun EditRecruiterProfileScreen(
         }
     }
 
+    // Couleur de fond douce (gris-vert très clair, reposant pour les yeux)
+    val calmBackground = Color(0xFFF2F6F5)
+
     Scaffold(
-        containerColor = Color(0xFFF5F7FA),
+        containerColor = calmBackground,
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color.White,
+                // Même couleur que le background pour un appbar fondu
+                color = calmBackground,
                 shadowElevation = 0.dp
             ) {
                 Row(
@@ -106,7 +111,7 @@ fun EditRecruiterProfileScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F7FA))
+                .background(calmBackground)
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
@@ -200,87 +205,195 @@ fun EditRecruiterProfileScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Full Name
-            OutlinedTextField(
-                value = viewModel.fullName.collectAsState().value,
-                onValueChange = { viewModel.fullName.value = it },
-                leadingIcon = {
-                    Icon(Icons.Filled.Person, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Full Name") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                singleLine = true,
-                shape = RoundedCornerShape(35.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
-                )
-            )
+            // Carte contenant les champs, avec fond blanc et ombre légère
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White,
+                shadowElevation = 6.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 18.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    // Full Name
+                    OutlinedTextField(
+                        value = viewModel.fullName.collectAsState().value,
+                        onValueChange = { viewModel.fullName.value = it },
+                        leadingIcon = {
+                            LeadingIconCircle(icon = Icons.Filled.Person)
+                        },
+                        placeholder = { Text("Full Name") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        singleLine = true,
+                        shape = RoundedCornerShape(30.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF4A6BFF),
+                            unfocusedBorderColor = Color(0xFFE0E3EB),
+                            focusedLeadingIconColor = Color(0xFF4A6BFF),
+                            unfocusedLeadingIconColor = Color(0xFF8C8FA5)
+                        )
+                    )
 
-            // Email
-            OutlinedTextField(
-                value = viewModel.email.collectAsState().value,
-                onValueChange = { viewModel.email.value = it },
-                leadingIcon = {
-                    Icon(Icons.Filled.Email, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Email") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email
-                ),
-                shape = RoundedCornerShape(35.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
-                )
-            )
+                    // Email
+                    OutlinedTextField(
+                        value = viewModel.email.collectAsState().value,
+                        onValueChange = { viewModel.email.value = it },
+                        leadingIcon = {
+                            LeadingIconCircle(icon = Icons.Filled.Email)
+                        },
+                        placeholder = { Text("Email") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email
+                        ),
+                        shape = RoundedCornerShape(30.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF4A6BFF),
+                            unfocusedBorderColor = Color(0xFFE0E3EB),
+                            focusedLeadingIconColor = Color(0xFF4A6BFF),
+                            unfocusedLeadingIconColor = Color(0xFF8C8FA5)
+                        )
+                    )
 
-            // Phone
-            OutlinedTextField(
-                value = viewModel.phone.collectAsState().value,
-                onValueChange = { viewModel.phone.value = it },
-                leadingIcon = {
-                    Icon(Icons.Filled.Phone, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Phone") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Phone
-                ),
-                shape = RoundedCornerShape(35.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
-                )
-            )
+                    // Phone
+                    OutlinedTextField(
+                        value = viewModel.phone.collectAsState().value,
+                        onValueChange = { newValue ->
+                            // Garder uniquement les chiffres et limiter à 8 caractères
+                            val digitsOnly = newValue.filter { it.isDigit() }
+                            val limited = digitsOnly.take(8)
+                            viewModel.phone.value = limited
+                        },
+                        leadingIcon = {
+                            LeadingIconCircle(icon = Icons.Filled.Phone)
+                        },
+                        placeholder = { Text("Phone") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Phone
+                        ),
+                        shape = RoundedCornerShape(30.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF4A6BFF),
+                            unfocusedBorderColor = Color(0xFFE0E3EB),
+                            focusedLeadingIconColor = Color(0xFF4A6BFF),
+                            unfocusedLeadingIconColor = Color(0xFF8C8FA5)
+                        )
+                    )
 
-            // Location
-            OutlinedTextField(
-                value = viewModel.location.collectAsState().value,
-                onValueChange = { viewModel.location.value = it },
-                leadingIcon = {
-                    Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Location") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                singleLine = true,
-                shape = RoundedCornerShape(35.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
-                )
-            )
+                    // Location (sélecteur intelligent de villes de Tunisie)
+                    val tunisianCities = listOf(
+                        "Tunis",
+                        "Ariana",
+                        "Ben Arous",
+                        "Manouba",
+                        "Sfax",
+                        "Sousse",
+                        "Monastir",
+                        "Mahdia",
+                        "Nabeul",
+                        "Bizerte",
+                        "Gabès",
+                        "Kairouan",
+                        "Gafsa",
+                        "Tozeur",
+                        "Médenine",
+                        "Tataouine",
+                        "Kasserine",
+                        "Kébili",
+                        "Jendouba",
+                        "Beja",
+                        "Siliana",
+                        "Kef",
+                        "Zaghouan"
+                    )
+                    var locationMenuExpanded by remember { mutableStateOf(false) }
+                    val currentLocation by viewModel.location.collectAsState()
+                    var locationQuery by remember { mutableStateOf(currentLocation) }
+
+                    // Filtrage dynamique en fonction de ce que l'utilisateur tape (début du nom)
+                    // Si le champ est vide -> aucune ville proposée (liste masquée)
+                    val filteredCities = remember(locationQuery) {
+                        if (locationQuery.isBlank()) emptyList()
+                        else tunisianCities.filter {
+                            it.startsWith(locationQuery.trim(), ignoreCase = true)
+                        }
+                    }
+
+                    ExposedDropdownMenuBox(
+                        expanded = locationMenuExpanded,
+                        onExpandedChange = {
+                            // Ne pas ouvrir la liste si aucun texte n'est saisi
+                            if (locationQuery.isNotBlank()) {
+                                locationMenuExpanded = !locationMenuExpanded
+                            }
+                        }
+                    ) {
+                        OutlinedTextField(
+                            value = locationQuery,
+                            onValueChange = { value ->
+                                locationQuery = value
+                                viewModel.location.value = value
+                                // Ouvrir/fermer automatiquement selon la présence de texte
+                                locationMenuExpanded = value.isNotBlank()
+                            },
+                            leadingIcon = {
+                                LeadingIconCircle(icon = Icons.Filled.LocationOn)
+                            },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = locationMenuExpanded)
+                            },
+                            placeholder = { Text("Choisissez votre ville (Tunisie)") },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            singleLine = true,
+                            shape = RoundedCornerShape(30.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF4A6BFF),
+                                unfocusedBorderColor = Color(0xFFE0E3EB),
+                                focusedLeadingIconColor = Color(0xFF4A6BFF),
+                                unfocusedLeadingIconColor = Color(0xFF8C8FA5)
+                            )
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = locationMenuExpanded,
+                            onDismissRequest = { locationMenuExpanded = false }
+                        ) {
+                            filteredCities.forEach { city ->
+                                DropdownMenuItem(
+                                    text = { Text(city) },
+                                    onClick = {
+                                        locationQuery = city
+                                        viewModel.location.value = city
+                                        locationMenuExpanded = false
+                                    }
+                                )
+                            }
+
+                            if (filteredCities.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text("Aucune ville trouvée") },
+                                    onClick = { }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
             // Description
             OutlinedTextField(
@@ -344,6 +457,24 @@ fun EditRecruiterProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+private fun LeadingIconCircle(icon: ImageVector) {
+    Surface(
+        modifier = Modifier.size(32.dp),
+        shape = CircleShape,
+        color = Color(0xFFF0F2FA)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color(0xFF4A6BFF),
+                modifier = Modifier.size(18.dp)
+            )
         }
     }
 }

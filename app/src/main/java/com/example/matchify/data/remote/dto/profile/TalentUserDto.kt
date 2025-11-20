@@ -10,7 +10,8 @@ data class TalentUserDto(
     @SerializedName("phone") val phone: String?,
     @SerializedName("profileImage") val profileImage: String?,
     @SerializedName("location") val location: String?,
-    @SerializedName("talent") val talent: String?,
+    // Ici aussi, "talent" est un tableau côté backend
+    @SerializedName("talent") val talent: List<String>?,
     @SerializedName("description") val description: String?,
     @SerializedName("skills") val skills: List<String>?,
     @SerializedName("portfolioLink") val portfolioLink: String?,

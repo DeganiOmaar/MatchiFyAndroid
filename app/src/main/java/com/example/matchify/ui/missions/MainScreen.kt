@@ -69,6 +69,13 @@ fun MainScreen(
     // Determine profile route based on role
     val profileRoute = if (userRole == "talent") "talent_profile" else "recruiter_profile"
 
+    // ViewModel de profil partagé pour le recruteur dans tout le NavHost interne.
+    // Cela permet de garder les mêmes données entre l'écran profil et l'écran d'édition,
+    // et de rafraîchir facilement le profil après une mise à jour.
+    val recruiterProfileViewModel: RecruiterProfileViewModel = viewModel(
+        factory = RecruiterProfileViewModelFactory()
+    )
+
     Scaffold(
         bottomBar = {
             // Show bottom bar on main screens (Missions, Proposals, Messages)
@@ -207,12 +214,8 @@ fun MainScreen(
             }
 
             composable("recruiter_profile") {
-                val context = LocalContext.current
-                val profileViewModel: RecruiterProfileViewModel = viewModel(
-                    factory = RecruiterProfileViewModelFactory()
-                )
                 RecruiterProfileScreen(
-                    viewModel = profileViewModel,
+                    viewModel = recruiterProfileViewModel,
                     onEditProfile = {
                         navController.navigate("edit_recruiter_profile")
                     },
@@ -251,10 +254,7 @@ fun MainScreen(
             
             composable("edit_recruiter_profile") {
                 val context = LocalContext.current
-                val profileViewModel: RecruiterProfileViewModel = viewModel(
-                    factory = RecruiterProfileViewModelFactory()
-                )
-                val user by profileViewModel.user.collectAsState()
+                val user by recruiterProfileViewModel.user.collectAsState()
                 
                 val editViewModel: EditRecruiterProfileViewModel = viewModel(
                     factory = EditRecruiterProfileViewModelFactory(context)
@@ -268,7 +268,7 @@ fun MainScreen(
                 EditRecruiterProfileScreen(
                     viewModel = editViewModel,
                     onBack = {
-                        profileViewModel.refreshProfile()
+                        recruiterProfileViewModel.refreshProfile()
                         navController.popBackStack()
                     }
                 )

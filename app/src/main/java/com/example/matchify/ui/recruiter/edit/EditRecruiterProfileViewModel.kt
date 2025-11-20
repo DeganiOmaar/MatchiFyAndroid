@@ -55,7 +55,8 @@ class EditRecruiterProfileViewModel(
         return try {
             val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
             inputStream?.use { stream ->
-                val tempFile = File(context.cacheDir, "temp_profile_image_${System.currentTimeMillis()}.jpg")
+                val tempFile =
+                    File(context.cacheDir, "temp_profile_image_${System.currentTimeMillis()}.jpg")
                 val outputStream = FileOutputStream(tempFile)
                 stream.copyTo(outputStream)
                 outputStream.close()
@@ -69,42 +70,58 @@ class EditRecruiterProfileViewModel(
     /** Submit update */
     fun submit() {
         error.value = null
-        
+
         // Validation
         if (fullName.value.isBlank() || email.value.isBlank()) {
             error.value = "Le nom et l'email sont requis."
             return
         }
-        
-        saving.value = true
 
-        viewModelScope.launch {
-            try {
-                // Convert URI to File if image is selected
-                val imageFile = selectedImageUri.value?.let { uriToFile(it) }
+        // Validation téléphone : facultatif mais s'il est rempli il doit contenir exactement 8 chiffres
+        val phoneValue = phone.value.trim()
+        if (phoneValue.isNotEmpty()) {
+            if (phoneValue.length != 8 || phoneValue.any { !it.isDigit() }) {
+                error.value = "Le numéro de téléphone doit contenir exactement 8 chiffres."
+                return
+            }
 
-                val response = repository.updateRecruiterProfile(
-                    fullName = fullName.value,
-                    email = email.value,
-                    phone = phone.value.ifBlank { null },
-                    location = location.value.ifBlank { null },
-                    description = description.value.ifBlank { null },
-                    imageFile = imageFile
-                )
+            saving.value = true
 
-                // Save updated user in DataStore
-                val updatedUser = response.user.toDomain()
-                repository.saveUpdatedUser(updatedUser)
-                
-                // Update current profile image URL
-                currentProfileImageUrl.value = updatedUser.profileImageUrl
+            viewModelScope.launch {
+                try {
+                    // Convert URI to File if image is selected
+                    val imageFile = selectedImageUri.value?.let { uriToFile(it) }
 
-                saving.value = false
-                saved.value = true
+                    // 1) Appel d'update : si cette requête réussit (code 2xx),
+                    // on considère l'opération comme un succès.
+                    repository.updateRecruiterProfile(
+                        fullName = fullName.value,
+                        email = email.value,
+                        phone = phone.value.ifBlank { null },
+                        location = location.value.ifBlank { null },
+                        description = description.value.ifBlank { null },
+                        imageFile = imageFile
+                    )
 
-            } catch (e: Exception) {
-                saving.value = false
-                error.value = ErrorHandler.getErrorMessage(e, ErrorContext.PROFILE_UPDATE)
+                    // 2) On essaie *en plus* de recharger le profil complet pour
+                    // mettre à jour le DataStore et l'image, mais sans faire échouer
+                    // l'update si ça plante.
+                    kotlin.runCatching {
+                        val refreshedUserDto = repository.getRecruiterProfile().user
+                        if (refreshedUserDto != null) {
+                            val refreshedUser = refreshedUserDto.toDomain()
+                            repository.saveUpdatedUser(refreshedUser)
+                            currentProfileImageUrl.value = refreshedUser.profileImageUrl
+                        }
+                    }
+
+                    saving.value = false
+                    saved.value = true
+
+                } catch (e: Exception) {
+                    saving.value = false
+                    error.value = ErrorHandler.getErrorMessage(e, ErrorContext.PROFILE_UPDATE)
+                }
             }
         }
     }

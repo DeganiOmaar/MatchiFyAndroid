@@ -54,6 +54,12 @@ fun AppNavGraph(
     navController: NavHostController,
     startDestination: String
 ) {
+    // ViewModel partagé pour le profil recruteur afin que les mises à jour
+    // effectuées depuis l'écran d'édition soient reflétées correctement.
+    val recruiterProfileViewModel: RecruiterProfileViewModel = viewModel(
+        factory = RecruiterProfileViewModelFactory()
+    )
+
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -221,9 +227,8 @@ fun AppNavGraph(
 
         // RECRUITER PROFILE (kept for backward compatibility)
         composable("recruiter_profile") {
-            val vm: RecruiterProfileViewModel = viewModel(factory = RecruiterProfileViewModelFactory())
             RecruiterProfileScreen(
-                viewModel = vm,
+                viewModel = recruiterProfileViewModel,
                 onEditProfile = { navController.navigate("edit_recruiter_profile") },
                 onSettings = { navController.navigate("settings") }
             )
@@ -232,8 +237,7 @@ fun AppNavGraph(
         // EDIT RECRUITER PROFILE
         composable("edit_recruiter_profile") {
             val context = LocalContext.current
-            val profileViewModel: RecruiterProfileViewModel = viewModel(factory = RecruiterProfileViewModelFactory())
-            val user by profileViewModel.user.collectAsState()
+            val user by recruiterProfileViewModel.user.collectAsState()
             
             val editViewModel: EditRecruiterProfileViewModel = viewModel(
                 factory = EditRecruiterProfileViewModelFactory(context)
@@ -248,7 +252,7 @@ fun AppNavGraph(
                 viewModel = editViewModel,
                 onBack = {
                     // Refresh profile after edit
-                    profileViewModel.refreshProfile()
+                    recruiterProfileViewModel.refreshProfile()
                     navController.popBackStack()
                 }
             )
