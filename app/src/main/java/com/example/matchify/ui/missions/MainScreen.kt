@@ -17,8 +17,8 @@ import com.example.matchify.ui.missions.add.MissionAddViewModelFactory
 import com.example.matchify.ui.missions.edit.MissionEditScreen
 import com.example.matchify.ui.missions.edit.MissionEditViewModel
 import com.example.matchify.ui.missions.edit.MissionEditViewModelFactory
-import com.example.matchify.ui.missions.list.MissionListScreen
 import com.example.matchify.ui.missions.list.MissionListScreenNew
+import com.example.matchify.ui.missions.detail.MissionDetailScreen
 import com.example.matchify.ui.missions.list.MissionListViewModel
 import com.example.matchify.ui.missions.list.MissionListViewModelFactory
 import com.example.matchify.ui.missions.navigation.MainBottomNavigation
@@ -57,6 +57,11 @@ fun MainScreen(
     // Determine profile route based on role
     val profileRoute = if (userRole == "talent") "talent_profile" else "recruiter_profile"
 
+    // ViewModel de missions partagé pour la liste et l'ajout/édition
+    val missionListViewModel: MissionListViewModel = viewModel(
+        factory = MissionListViewModelFactory()
+    )
+
     // ViewModel de profil partagé pour le recruteur dans tout le NavHost interne.
     // Cela permet de garder les mêmes données entre l'écran profil et l'écran d'édition,
     // et de rafraîchir facilement le profil après une mise à jour.
@@ -65,6 +70,8 @@ fun MainScreen(
     )
 
     Scaffold(
+        // Utiliser la même couleur que la section des onglets (surfaceContainerHighest)
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         bottomBar = {
             // Only show bottom bar on main screens
             if (currentRoute in listOf("missions_list", "recruiter_profile", "talent_profile")) {
@@ -90,9 +97,6 @@ fun MainScreen(
             modifier = Modifier.padding(paddingValues)
         ) {
             composable("missions_list") {
-                val listViewModel: MissionListViewModel = viewModel(
-                    factory = MissionListViewModelFactory()
-                )
                 MissionListScreenNew(
                     onAddMission = {
                         navController.navigate("mission_add")
@@ -101,7 +105,11 @@ fun MainScreen(
                         val missionJson = Gson().toJson(mission)
                         navController.navigate("mission_edit/$missionJson")
                     },
-                    viewModel = listViewModel
+                    onMissionClick = { mission ->
+                        val missionJson = Gson().toJson(mission)
+                        navController.navigate("mission_detail/$missionJson")
+                    },
+                    viewModel = missionListViewModel
                 )
             }
 
@@ -112,6 +120,8 @@ fun MainScreen(
                 MissionAddScreen(
                     onBack = { navController.popBackStack() },
                     onMissionCreated = {
+                        // Recharger les missions après la création pour mettre à jour la liste
+                        missionListViewModel.refreshMissions()
                         navController.popBackStack()
                     },
                     viewModel = addViewModel
@@ -134,12 +144,31 @@ fun MainScreen(
                         mission = missionData,
                         onBack = { navController.popBackStack() },
                         onMissionUpdated = {
+                            missionListViewModel.refreshMissions()
                             navController.popBackStack()
                         },
                         viewModel = editViewModel
                     )
                 } ?: run {
                     // Error state - go back
+                    navController.popBackStack()
+                }
+            }
+
+            composable("mission_detail/{missionJson}") { backStackEntry ->
+                val missionJson = backStackEntry.arguments?.getString("missionJson") ?: ""
+                val mission = try {
+                    Gson().fromJson(missionJson, Mission::class.java)
+                } catch (e: Exception) {
+                    null
+                }
+
+                mission?.let { missionData ->
+                    MissionDetailScreen(
+                        mission = missionData,
+                        onBack = { navController.popBackStack() }
+                    )
+                } ?: run {
                     navController.popBackStack()
                 }
             }

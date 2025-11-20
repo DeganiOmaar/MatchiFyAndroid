@@ -12,6 +12,7 @@ fun MissionDto.toDomain(): Mission {
         budget = budget,
         skills = skills,
         recruiterId = recruiterId,
+        experienceLevel = experienceLevel,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -23,7 +24,8 @@ fun Mission.toCreateRequest(): CreateMissionRequest {
         description = description,
         duration = duration,
         budget = budget,
-        skills = skills
+        skills = skills,
+        experienceLevel = "INTERMEDIATE"
     )
 }
 
@@ -33,7 +35,8 @@ fun Mission.toUpdateRequest(): UpdateMissionRequest {
         description = description,
         duration = duration,
         budget = budget,
-        skills = skills
+        skills = skills,
+        experienceLevel = experienceLevel
     )
 }
 

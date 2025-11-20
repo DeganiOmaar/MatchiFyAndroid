@@ -11,6 +11,7 @@ data class Mission(
     val duration: String,
     val budget: Int,
     val skills: List<String>,
+    val experienceLevel: String? = null,
     val recruiterId: String,
     val createdAt: String? = null,
     val updatedAt: String? = null

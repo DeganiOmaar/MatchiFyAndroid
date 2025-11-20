@@ -38,7 +38,8 @@ fun MainBottomNavigation(
     
     NavigationBar(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.surface,
+        // Même couleur que le fond des tabs / écran
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         NavigationBarItem(

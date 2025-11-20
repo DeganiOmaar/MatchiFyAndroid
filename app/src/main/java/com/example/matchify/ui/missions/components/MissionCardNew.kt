@@ -8,8 +8,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,14 +29,14 @@ import com.example.matchify.domain.model.timePostedText
 @Composable
 fun MissionCardNew(
     mission: Mission,
-    isFavorite: Boolean,
-    onFavoriteToggle: () -> Unit,
+    onMenuClick: () -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { /* Tappable but no action yet */ },
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -59,7 +58,7 @@ fun MissionCardNew(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 1. Posted time and Heart icon
+            // 1. Posted time and overflow menu
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -74,21 +73,17 @@ fun MissionCardNew(
                     modifier = Modifier.weight(1f)
                 )
                 
-                // Heart icon (outlined, clickable) - Material 3 IconButton
+                // Overflow 3-dots icon to edit
                 IconButton(
-                    onClick = onFavoriteToggle,
+                    onClick = onMenuClick,
                     modifier = Modifier.size(40.dp),
                     colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = if (isFavorite) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
                     Icon(
-                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Favorite",
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = "Plus d'actions",
                         modifier = Modifier.size(18.dp)
                     )
                 }

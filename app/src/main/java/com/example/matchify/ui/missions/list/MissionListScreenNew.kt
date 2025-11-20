@@ -15,11 +15,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.DismissDirection
+import androidx.compose.material.DismissValue
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Work
+import androidx.compose.material.rememberDismissState
+import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
@@ -45,11 +51,12 @@ import com.example.matchify.domain.model.Mission
 import com.example.matchify.ui.missions.components.MissionCardNew
 import com.example.matchify.ui.missions.components.ProfileDrawer
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun MissionListScreenNew(
     onAddMission: () -> Unit,
     onEditMission: (Mission) -> Unit,
+    onMissionClick: (Mission) -> Unit,
     viewModel: MissionListViewModel = viewModel(factory = MissionListViewModelFactory())
 ) {
     val missions by viewModel.filteredMissions.collectAsState()
@@ -64,6 +71,9 @@ fun MissionListScreenNew(
     val userRole by prefs.role.collectAsState(initial = "recruiter")
     val user by prefs.user.collectAsState(initial = null)
     val isRecruiter = userRole == "recruiter"
+
+    var missionToDelete by remember { mutableStateOf<Mission?>(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     
     val drawerWidth = 280.dp
     val drawerOffsetPx = with(LocalDensity.current) { drawerWidth.toPx() }
@@ -78,7 +88,8 @@ fun MissionListScreenNew(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                // Même couleur que les tabs et le fond principal
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
         ) {
             // Top Section - Profile Image (Left Aligned)
             Row(
@@ -117,14 +128,26 @@ fun MissionListScreenNew(
                 
                 // Add Mission button for Recruiters
                 if (isRecruiter) {
-                    IconButton(
+                    Button(
                         onClick = onAddMission,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.height(32.dp),
+                        shape = RoundedCornerShape(8.dp), // bouton plus carré
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = Color.White
+                        ),
+                        contentPadding = PaddingValues(horizontal = 10.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Add,
-                            contentDescription = "Add Mission",
-                            tint = MaterialTheme.colorScheme.primary
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Post a job",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -136,7 +159,7 @@ fun MissionListScreenNew(
                 onValueChange = { viewModel.updateSearchText(it) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
                 placeholder = {
                     Text(
                         text = "Search for jobs",
@@ -259,13 +282,98 @@ fun MissionListScreenNew(
                     ) {
                         items(missions.size) { index ->
                             val mission = missions[index]
-                            MissionCardNew(
-                                mission = mission,
-                                isFavorite = viewModel.isFavorite(mission),
-                                onFavoriteToggle = { viewModel.toggleFavorite(mission) },
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            val canDelete = isRecruiter && viewModel.isMissionOwner(mission)
+
+                            if (canDelete) {
+                                val dismissState = rememberDismissState { value ->
+                                    if (value == DismissValue.DismissedToStart) {
+                                        missionToDelete = mission
+                                        showDeleteDialog = true
+                                        false // ne pas retirer automatiquement, attendre la confirmation
+                                    } else {
+                                        false
+                                    }
+                                }
+
+                                SwipeToDismiss(
+                                    state = dismissState,
+                                    directions = setOf(DismissDirection.EndToStart),
+                                    background = {
+                                        val color = if (dismissState.dismissDirection == DismissDirection.EndToStart) {
+                                            Color(0xFFDC2626)
+                                        } else {
+                                            Color.Transparent
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(color)
+                                                .padding(horizontal = 24.dp),
+                                            contentAlignment = Alignment.CenterEnd
+                                        ) {
+                                            if (dismissState.dismissDirection == DismissDirection.EndToStart) {
+                                                Icon(
+                                                    imageVector = Icons.Filled.Delete,
+                                                    contentDescription = null,
+                                                    tint = Color.White
+                                                )
+                                            }
+                                        }
+                                    },
+                                    dismissContent = {
+                                        MissionCardNew(
+                                            mission = mission,
+                                            onMenuClick = { onEditMission(mission) },
+                                            onClick = { onMissionClick(mission) },
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                )
+                            } else {
+                                MissionCardNew(
+                                    mission = mission,
+                                    onMenuClick = { onEditMission(mission) },
+                                    onClick = { onMissionClick(mission) },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
+                    }
+
+                    if (showDeleteDialog && missionToDelete != null) {
+                        AlertDialog(
+                            onDismissRequest = {
+                                showDeleteDialog = false
+                                missionToDelete = null
+                            },
+                            title = {
+                                Text("Supprimer la mission ?")
+                            },
+                            text = {
+                                Text("Êtes-vous sûr de vouloir supprimer cette mission ? Cette action est irréversible.")
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        missionToDelete?.let { viewModel.deleteMission(it) }
+                                        showDeleteDialog = false
+                                        missionToDelete = null
+                                    }
+                                ) {
+                                    Text("Supprimer", color = Color(0xFFDC2626))
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(
+                                    onClick = {
+                                        showDeleteDialog = false
+                                        missionToDelete = null
+                                    }
+                                ) {
+                                    Text("Annuler")
+                                }
+                            }
+                        )
                     }
                 }
             }

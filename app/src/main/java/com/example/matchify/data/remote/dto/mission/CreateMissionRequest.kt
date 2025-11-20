@@ -5,6 +5,7 @@ data class CreateMissionRequest(
     val description: String,
     val duration: String,
     val budget: Int,
-    val skills: List<String>
+    val skills: List<String>,
+    val experienceLevel: String
 )
 

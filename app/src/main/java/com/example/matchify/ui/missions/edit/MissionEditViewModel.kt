@@ -21,6 +21,14 @@ class MissionEditViewModel(
     
     private val _currentMission = MutableStateFlow(mission)
     val currentMission: StateFlow<Mission> = _currentMission
+
+    val title = MutableStateFlow(mission.title)
+    val description = MutableStateFlow(mission.description)
+    val duration = MutableStateFlow(mission.duration)
+    val budget = MutableStateFlow(mission.budget.toString())
+    val skillInput = MutableStateFlow("")
+    val skills = MutableStateFlow(mission.skills)
+    val experienceLevel = MutableStateFlow(mission.experienceLevel ?: "INTERMEDIATE")
     
     init {
         observeRealtimeUpdates()
@@ -39,6 +47,7 @@ class MissionEditViewModel(
                             duration.value = event.mission.duration
                             budget.value = event.mission.budget.toString()
                             skills.value = event.mission.skills
+                            experienceLevel.value = event.mission.experienceLevel ?: experienceLevel.value
                         }
                     }
                     is MissionRealtimeEvent.MissionDeleted -> {
@@ -53,13 +62,6 @@ class MissionEditViewModel(
         }
     }
 
-    val title = MutableStateFlow(mission.title)
-    val description = MutableStateFlow(mission.description)
-    val duration = MutableStateFlow(mission.duration)
-    val budget = MutableStateFlow(mission.budget.toString())
-    val skillInput = MutableStateFlow("")
-    val skills = MutableStateFlow(mission.skills)
-
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving
 
@@ -71,7 +73,7 @@ class MissionEditViewModel(
 
     fun addSkill() {
         val trimmed = skillInput.value.trim()
-        if (trimmed.isNotEmpty() && skills.value.size < 10 && !skills.value.contains(trimmed)) {
+        if (trimmed.isNotEmpty() && !skills.value.contains(trimmed)) {
             skills.value = skills.value + trimmed
             skillInput.value = ""
         }
@@ -89,8 +91,7 @@ class MissionEditViewModel(
                     duration.value.isNotEmpty() &&
                     filteredBudget.isNotEmpty() &&
                     skills.value.isNotEmpty() &&
-                    filteredBudget.toIntOrNull() != null &&
-                    skills.value.size <= 10
+                    filteredBudget.toIntOrNull() != null
         }
 
     fun updateMission() {
@@ -116,7 +117,8 @@ class MissionEditViewModel(
                     description = description.value,
                     duration = duration.value,
                     budget = budgetValue,
-                    skills = skills.value
+                    skills = skills.value,
+                    experienceLevel = experienceLevel.value
                 )
 
                 repository.updateMission(mission.missionId, request)

@@ -5,6 +5,7 @@ data class UpdateMissionRequest(
     val description: String? = null,
     val duration: String? = null,
     val budget: Int? = null,
-    val skills: List<String>? = null
+    val skills: List<String>? = null,
+    val experienceLevel: String? = null
 )
 

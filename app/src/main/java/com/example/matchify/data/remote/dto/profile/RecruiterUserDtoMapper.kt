@@ -12,7 +12,8 @@ fun RecruiterUserDto.toDomain(): UserModel {
         profileImage = this.profileImage,
         bannerImage = null,
         location = this.location,
-        talent = this.talent?.let { listOf(it) },
+        // le backend renvoie déjà une List<String> pour talent
+        talent = this.talent,
         description = this.description,
         skills = null,
         portfolioLink = null,

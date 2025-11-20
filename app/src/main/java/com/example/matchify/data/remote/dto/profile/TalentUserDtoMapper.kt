@@ -12,7 +12,8 @@ fun TalentUserDto.toDomain(): UserModel {
         profileImage = this.profileImage,
         bannerImage = null,
         location = this.location,
-        talent = this.talent?.let { listOf(it) },
+        // ici aussi talent est déjà une List<String>
+        talent = this.talent,
         description = this.description,
         skills = this.skills,
         portfolioLink = this.portfolioLink,

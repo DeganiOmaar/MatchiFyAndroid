@@ -22,6 +22,7 @@ class MissionAddViewModel(
     val budget = MutableStateFlow("")
     val skillInput = MutableStateFlow("")
     val skills = MutableStateFlow<List<String>>(emptyList())
+    val experienceLevel = MutableStateFlow("INTERMEDIATE") // ENTRY, INTERMEDIATE, EXPERT
 
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving
@@ -52,8 +53,7 @@ class MissionAddViewModel(
                     duration.value.isNotEmpty() &&
                     filteredBudget.isNotEmpty() &&
                     skills.value.isNotEmpty() &&
-                    filteredBudget.toIntOrNull() != null &&
-                    skills.value.size <= 10
+                    filteredBudget.toIntOrNull() != null
         }
 
     fun createMission() {
@@ -79,7 +79,8 @@ class MissionAddViewModel(
                     description = description.value,
                     duration = duration.value,
                     budget = budgetValue,
-                    skills = skills.value
+                    skills = skills.value,
+                    experienceLevel = experienceLevel.value
                 )
 
                 repository.createMission(request)
@@ -106,6 +107,11 @@ class MissionAddViewModel(
 
     fun onSaveSuccessHandled() {
         _saveSuccess.value = false
+    }
+
+    // Permet de définir un message d'erreur depuis l'UI (validation par étape)
+    fun setInlineError(message: String) {
+        _errorMessage.value = message
     }
 }
 
