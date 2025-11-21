@@ -77,6 +77,9 @@ fun MainScreen(
         factory = RecruiterProfileViewModelFactory()
     )
 
+    // Scroll-to-top state for each screen
+    var scrollToTopKey by remember { mutableStateOf(0) }
+    
     Scaffold(
         bottomBar = {
             // Show bottom bar on main screens (Missions, Proposals, Alerts, Messages)
@@ -91,6 +94,10 @@ fun MainScreen(
                             launchSingleTop = true
                             restoreState = true
                         }
+                    },
+                    onScrollToTop = { route ->
+                        // Trigger scroll to top by updating key
+                        scrollToTopKey++
                     }
                 )
             }
