@@ -179,7 +179,7 @@ fun LoginScreenContent(
 
             Text(
                 text = "Reset Password",
-                color = MaterialTheme.colorScheme.primary,
+                color = Color(0xFF007AFF),
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable { onForgotPassword() }
             )
@@ -196,19 +196,19 @@ fun LoginScreenContent(
                 .height(55.dp),
             shape = RoundedCornerShape(30.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+                containerColor = Color(0xFF007AFF),
+                disabledContainerColor = Color(0xFFBAD7FF)
             )
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = Color.White,
                     strokeWidth = 2.dp
                 )
             } else {
                 Text(
                     "Login",
-                    color = MaterialTheme.colorScheme.onPrimary
+                    color = Color.White
                 )
             }
         }
@@ -222,7 +222,7 @@ fun LoginScreenContent(
             )
             Text(
                 "Sign Up",
-                color = MaterialTheme.colorScheme.primary,
+                color = Color(0xFF007AFF),
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable { onSignUp() }
             )

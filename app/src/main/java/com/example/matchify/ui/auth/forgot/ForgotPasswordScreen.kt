@@ -87,19 +87,19 @@ fun ForgotPasswordScreen(
                 .padding(bottom = 30.dp),
             shape = RoundedCornerShape(30.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+                containerColor = Color(0xFF007AFF),
+                disabledContainerColor = Color(0xFFBAD7FF)
             )
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = Color.White,
                     strokeWidth = 2.dp
                 )
             } else {
                 Text(
                     "Continue",
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = Color.White,
                     fontWeight = FontWeight.SemiBold
                 )
             }

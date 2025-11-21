@@ -82,7 +82,7 @@ fun VerifyCodeScreenContent(
 
         Text(
             text = email,
-            color = MaterialTheme.colorScheme.primary,
+            color = Color(0xFF007AFF),
             fontWeight = FontWeight.Medium
         )
 
@@ -129,7 +129,7 @@ fun VerifyCodeScreenContent(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // CONTINUE BUTTON - MD3 Primary Button
+        // CONTINUE BUTTON
         Button(
             onClick = onVerifyClick,
             enabled = code.length == 6 && !loading,
@@ -139,19 +139,19 @@ fun VerifyCodeScreenContent(
                 .padding(bottom = 30.dp),
             shape = RoundedCornerShape(30.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+                containerColor = Color(0xFF007AFF),
+                disabledContainerColor = Color(0xFFBAD7FF)
             )
         ) {
             if (loading) {
                 CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = Color.White,
                     strokeWidth = 2.dp
                 )
             } else {
                 Text(
                     "Continue",
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = Color.White,
                     fontWeight = FontWeight.SemiBold
                 )
             }
