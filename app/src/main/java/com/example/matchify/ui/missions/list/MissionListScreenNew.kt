@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -45,7 +46,8 @@ import com.example.matchify.R
 import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.domain.model.Mission
 import com.example.matchify.ui.missions.components.MissionCardNew
-import com.example.matchify.ui.missions.components.ProfileDrawer
+import com.example.matchify.ui.missions.components.NavigationDrawerContent
+import com.example.matchify.ui.missions.components.DrawerMenuItemType
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,13 +74,33 @@ fun MissionListScreenNew(
     val isRecruiter = userRole == "recruiter"
     val isTalent = userRole == "talent"
     
-    val drawerWidth = 280.dp
-    val drawerOffsetPx = with(LocalDensity.current) { drawerWidth.toPx() }
-    val drawerOffset = animateFloatAsState(
-        targetValue = if (showDrawer) 0f else -drawerOffsetPx,
-        animationSpec = tween(durationMillis = 300),
-        label = "drawer_animation"
-    )
+    // Material 3 Drawer State
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    
+    // Sync drawer state with ViewModel
+    LaunchedEffect(showDrawer) {
+        if (showDrawer && drawerState.isClosed) {
+            drawerState.open()
+        } else if (!showDrawer && drawerState.isOpen) {
+            drawerState.close()
+        }
+    }
+    
+    // Sync ViewModel with drawer state changes (e.g., swipe to dismiss)
+    LaunchedEffect(drawerState.currentValue) {
+        val isOpen = drawerState.isOpen
+        if (isOpen != showDrawer) {
+            if (isOpen) {
+                viewModel.openProfileDrawer()
+            } else {
+                viewModel.closeProfileDrawer()
+            }
+        }
+    }
+    
+    // Current route for drawer item selection (passed from parent or null)
+    val currentRoute: String? = null // Will be passed from parent if needed
     
     // Material 3 Primary Tabs - Always show tabs for talent, structure ready for recruiters too
     val tabs = listOf("Best Matches", "Most Recent", "Favorites")
@@ -126,73 +148,96 @@ fun MissionListScreenNew(
         MissionTab.FAVORITES -> 2
     }
     
-    Scaffold(
-        topBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                // Top App Bar with profile and actions
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "Missions",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    },
-                    navigationIcon = {
-                        // Profile Image on the left
-                        Surface(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .padding(4.dp)
-                                .clickable { viewModel.openProfileDrawer() },
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surface
-                        ) {
-                            Box {
-                                val profileImageUrl = user?.profileImageUrl
-                                if (profileImageUrl != null) {
-                                    AsyncImage(
-                                        model = profileImageUrl,
-                                        contentDescription = "Profile",
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    Image(
-                                        painter = painterResource(R.drawable.avatar),
-                                        contentDescription = "Avatar",
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
+    // Material 3 Navigation Drawer wraps the entire Scaffold
+    NavigationDrawerContent(
+        drawerState = drawerState,
+        currentRoute = currentRoute,
+        onClose = {
+            scope.launch {
+                drawerState.close()
+            }
+            viewModel.closeProfileDrawer()
+        },
+        onMenuItemSelected = { itemType ->
+            scope.launch {
+                drawerState.close()
+            }
+            viewModel.closeProfileDrawer()
+            onDrawerItemSelected(itemType)
+        }
+    ) {
+        Scaffold(
+            topBar = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                ) {
+                    // Top App Bar with profile and actions
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = "Missions",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        },
+                        navigationIcon = {
+                            // Profile Image on the left
+                            Surface(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .padding(4.dp)
+                                    .clickable { 
+                                        scope.launch {
+                                            drawerState.open()
+                                        }
+                                        viewModel.openProfileDrawer()
+                                    },
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surface
+                            ) {
+                                Box {
+                                    val profileImageUrl = user?.profileImageUrl
+                                    if (profileImageUrl != null) {
+                                        AsyncImage(
+                                            model = profileImageUrl,
+                                            contentDescription = "Profile",
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    } else {
+                                        Image(
+                                            painter = painterResource(R.drawable.avatar),
+                                            contentDescription = "Avatar",
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        actions = {
+                            if (isRecruiter) {
+                                IconButton(
+                                    onClick = onAddMission
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Add,
+                                        contentDescription = "Add Mission",
+                                        tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
-                        }
-                    },
-                    actions = {
-                        if (isRecruiter) {
-                            IconButton(
-                                onClick = onAddMission
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Add,
-                                    contentDescription = "Add Mission",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                        actionIconContentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            titleContentColor = MaterialTheme.colorScheme.onSurface,
+                            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                            actionIconContentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 
                 // Search Bar
                 OutlinedTextField(
@@ -301,12 +346,12 @@ fun MissionListScreenNew(
                     }
                 }
             }
-        },
-        containerColor = MaterialTheme.colorScheme.surface
-    ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            // Main content with swipe navigation support
-            if (isTalent) {
+            },
+            containerColor = MaterialTheme.colorScheme.surface
+        ) { paddingValues ->
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Main content with swipe navigation support
+                if (isTalent) {
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier
@@ -373,48 +418,13 @@ fun MissionListScreenNew(
                         .padding(paddingValues)
                 )
             }
-            
-            // Drawer Overlay
-            AnimatedVisibility(
-                visible = showDrawer,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(1000f)
-            ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    // Background overlay
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.3f))
-                            .clickable { viewModel.closeProfileDrawer() }
-                    )
-                    
-                    // Drawer content sliding from left
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(drawerWidth)
-                            .offset(x = drawerOffset.value.dp)
-                            .zIndex(1001f)
-                    ) {
-                        ProfileDrawer(
-                            onClose = { viewModel.closeProfileDrawer() },
-                            onMenuItemSelected = { itemType ->
-                                viewModel.closeProfileDrawer()
-                                onDrawerItemSelected(itemType)
-                            },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-                }
-            }
         }
+    }
     }
 }
 
 @Composable
-private fun MissionTabContent(
+fun MissionTabContent(
     missions: List<Mission>,
     isLoading: Boolean,
     isLoadingFavorites: Boolean,
