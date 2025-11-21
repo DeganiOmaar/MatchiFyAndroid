@@ -6,6 +6,7 @@ import com.example.matchify.common.ErrorContext
 import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.local.AuthPreferences
 import com.example.matchify.data.remote.PortfolioRepository
+import com.example.matchify.data.remote.SkillRepository
 import com.example.matchify.data.remote.TalentRepository
 import com.example.matchify.data.remote.dto.profile.toDomain
 import com.example.matchify.data.realtime.ProfileRealtimeClient
@@ -22,6 +23,7 @@ class TalentProfileViewModel(
     private val prefs: AuthPreferences,
     private val repository: TalentRepository,
     private val portfolioRepository: PortfolioRepository,
+    private val skillRepository: SkillRepository,
     private val realtimeClient: ProfileRealtimeClient
 ) : ViewModel() {
 
@@ -39,6 +41,9 @@ class TalentProfileViewModel(
     
     private val _isLoadingProjects = MutableStateFlow(false)
     val isLoadingProjects: StateFlow<Boolean> = _isLoadingProjects
+    
+    private val _skillNames = MutableStateFlow<List<String>>(emptyList())
+    val skillNames: StateFlow<List<String>> = _skillNames
 
     init {
         // Load user data from local preferences first
@@ -47,6 +52,8 @@ class TalentProfileViewModel(
         loadProfile()
         // Load projects
         loadProjects()
+        // Load skill names
+        loadSkillNames()
         // Observe realtime updates
         observeRealtimeUpdates()
     }
@@ -63,6 +70,7 @@ class TalentProfileViewModel(
                             _user.value = event.user
                             prefs.saveUser(event.user)
                             updateJoinedDate(event.user.createdAt)
+                            loadSkillNames() // Reload skill names when profile is updated
                             Log.d("TalentProfileViewModel", "Profile updated via realtime: ${event.user.fullName}")
                         }
                     }
@@ -83,6 +91,7 @@ class TalentProfileViewModel(
                 if (localUser != null) {
                     _user.value = localUser
                     updateJoinedDate(localUser.createdAt)
+                    loadSkillNames() // Load skill names when user is loaded from preferences
                     Log.d("TalentProfileViewModel", "Loaded user from preferences: ${localUser.fullName}")
                 }
             } catch (e: Exception) {
@@ -112,6 +121,7 @@ class TalentProfileViewModel(
                 prefs.saveUser(userData)
 
                 updateJoinedDate(userData.createdAt)
+                loadSkillNames() // Load skill names after profile is loaded
                 _errorMessage.value = null
             } catch (e: Exception) {
                 Log.e("TalentProfileViewModel", "Error loading profile: ${e.message}", e)
@@ -161,6 +171,26 @@ class TalentProfileViewModel(
                 // Silently fail - projects will remain empty
             } finally {
                 _isLoadingProjects.value = false
+            }
+        }
+    }
+    
+    fun loadSkillNames() {
+        val skillIds = _user.value?.skills
+        if (skillIds.isNullOrEmpty()) {
+            _skillNames.value = emptyList()
+            return
+        }
+        
+        viewModelScope.launch {
+            try {
+                val skills = skillRepository.getSkillsByIds(skillIds)
+                _skillNames.value = skills.map { it.name }
+                Log.d("TalentProfileViewModel", "Loaded skill names: ${_skillNames.value}")
+            } catch (e: Exception) {
+                Log.e("TalentProfileViewModel", "Failed to load skill names: ${e.message}", e)
+                // Fallback: use IDs if loading names fails
+                _skillNames.value = skillIds
             }
         }
     }

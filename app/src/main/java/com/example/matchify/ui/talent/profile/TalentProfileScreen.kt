@@ -48,13 +48,19 @@ fun TalentProfileScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
     val projects by viewModel.projects.collectAsState()
     val isLoadingProjects by viewModel.isLoadingProjects.collectAsState()
+    val skillNames by viewModel.skillNames.collectAsState()
     
     var showMenuSheet by remember { mutableStateOf(false) }
     var isBioExpanded by remember { mutableStateOf(false) }
     
-    // Refresh projects when screen appears
+    // Refresh projects and skill names when screen appears
     LaunchedEffect(Unit) {
         viewModel.loadProjects()
+    }
+    
+    // Reload skill names when user changes
+    LaunchedEffect(user) {
+        viewModel.loadSkillNames()
     }
 
     Scaffold(
@@ -142,11 +148,11 @@ fun TalentProfileScreen(
                 }
             }
 
-            // Skills Section
-            if (!user?.skills.isNullOrEmpty()) {
+            // Skills Section (using skill names instead of IDs)
+            if (skillNames.isNotEmpty()) {
                 item {
                     SkillsSection(
-                        skills = user?.skills ?: emptyList(),
+                        skills = skillNames,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
