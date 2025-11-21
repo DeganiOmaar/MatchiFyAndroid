@@ -85,7 +85,7 @@ fun SettingsScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(28.dp),
-                    color = Color.White,
+                    color = Color(0xFFF2F2F2),
                     tonalElevation = 4.dp,
                     shadowElevation = 6.dp
                 ) {

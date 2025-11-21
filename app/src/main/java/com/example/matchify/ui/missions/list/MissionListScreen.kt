@@ -105,13 +105,13 @@ fun MissionListScreen(
                 }
             }
         },
-        containerColor = Color.White
+        containerColor = Color(0xFFF2F2F2)
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
+                .background(Color(0xFFF2F2F2))
         ) {
             when {
                 isLoading && missions.isEmpty() -> {

@@ -140,7 +140,7 @@ fun RecruiterProfileScreen(
                     modifier = Modifier
                         .fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    color = Color.White,
+                    color = Color(0xFFF2F2F2),
                     shadowElevation = 10.dp
                 ) {
                     Column(
@@ -298,7 +298,7 @@ fun PremiumInfoSection(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = Color.White
+        color = Color(0xFFF2F2F2)
     ) {
         Column(
             modifier = Modifier
@@ -381,7 +381,7 @@ fun PremiumAboutSection(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = Color.White
+        color = Color(0xFFF2F2F2)
     ) {
         Column(
             modifier = Modifier

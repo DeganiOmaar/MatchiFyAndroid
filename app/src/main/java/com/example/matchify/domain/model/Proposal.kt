@@ -31,6 +31,7 @@ data class Proposal(
     @SerializedName("message") val message: String,
     @SerializedName("proposedBudget") val proposedBudget: Int? = null,
     @SerializedName("estimatedDuration") val estimatedDuration: String? = null,
+    @SerializedName("archived") val archived: Boolean? = null,
     @SerializedName("createdAt") val createdAt: String? = null,
     @SerializedName("updatedAt") val updatedAt: String? = null
 ) {
@@ -50,5 +51,8 @@ data class Proposal(
                 "-"
             }
         }
+    
+    val isArchived: Boolean
+        get() = archived ?: false
 }
 

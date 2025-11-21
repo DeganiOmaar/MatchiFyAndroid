@@ -209,7 +209,7 @@ fun EditRecruiterProfileScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                color = Color.White,
+                color = Color(0xFFF2F2F2),
                 shadowElevation = 6.dp
             ) {
                 Column(
@@ -444,13 +444,13 @@ fun EditRecruiterProfileScreen(
             ) {
                 if (isSaving) {
                     CircularProgressIndicator(
-                        color = Color.White,
+                        color = Color(0xFFF2F2F2),
                         strokeWidth = 2.dp
                     )
                 } else {
                     Text(
                         text = "Save Changes",
-                        color = Color.White,
+                        color = Color(0xFFF2F2F2),
                         fontWeight = FontWeight.SemiBold
                     )
                 }

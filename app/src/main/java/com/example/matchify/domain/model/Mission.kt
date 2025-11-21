@@ -17,7 +17,8 @@ data class Mission(
     val proposalsCount: Int? = null,
     val interviewingCount: Int? = null,
     val hasApplied: Boolean? = null,
-    val isFavorite: Boolean? = null
+    val isFavorite: Boolean? = null,
+    val status: String? = null
 ) {
     val missionId: String
         get() = id ?: _id ?: ""
@@ -53,6 +54,19 @@ data class Mission(
     
     val isFavorited: Boolean
         get() = isFavorite ?: false
+    
+    val missionStatus: MissionStatus
+        get() = when (status) {
+            "started" -> MissionStatus.STARTED
+            "completed" -> MissionStatus.COMPLETED
+            else -> MissionStatus.IN_PROGRESS
+        }
+}
+
+enum class MissionStatus(val displayName: String) {
+    IN_PROGRESS("En cours"),
+    STARTED("Démarrée"),
+    COMPLETED("Terminée")
 }
 
 

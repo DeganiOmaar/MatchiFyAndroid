@@ -45,10 +45,10 @@ fun MissionListItem(
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
             )
             .background(
-                color = Color.White,
+                color = Color(0xFFF2F2F2),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
             ),
-        color = Color.White,
+        color = Color(0xFFF2F2F2),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
         shadowElevation = 2.dp
     ) {

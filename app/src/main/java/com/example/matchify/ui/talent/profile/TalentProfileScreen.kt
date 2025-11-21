@@ -64,7 +64,7 @@ fun TalentProfileScreen(
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color.White,
+                color = Color(0xFFF2F2F2),
                 shadowElevation = 0.dp
             ) {
                 Row(
@@ -187,7 +187,7 @@ fun TalentProfileScreen(
                                             .clip(CircleShape)
                                             .border(
                                                 width = 4.dp,
-                                                color = Color.White,
+                                                color = Color(0xFFF2F2F2),
                                                 shape = CircleShape
                                             ),
                                         contentScale = ContentScale.Crop,
@@ -203,7 +203,7 @@ fun TalentProfileScreen(
                                             .clip(CircleShape)
                                             .border(
                                                 width = 4.dp,
-                                                color = Color.White,
+                                                color = Color(0xFFF2F2F2),
                                                 shape = CircleShape
                                             ),
                                         contentScale = ContentScale.Crop
@@ -218,7 +218,7 @@ fun TalentProfileScreen(
                                 text = user?.fullName ?: "Talent Name",
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = Color(0xFFF2F2F2),
                                 textAlign = TextAlign.Center
                             )
                             
@@ -228,7 +228,7 @@ fun TalentProfileScreen(
                             Text(
                                 text = user?.email ?: "-",
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = Color.White.copy(alpha = 0.9f),
+                                color = Color(0xFFF2F2F2).copy(alpha = 0.9f),
                                 textAlign = TextAlign.Center
                             )
                             
@@ -237,7 +237,7 @@ fun TalentProfileScreen(
                             // Joined Date Badge
                             Surface(
                                 shape = RoundedCornerShape(20.dp),
-                                color = Color.White.copy(alpha = 0.2f),
+                                color = Color(0xFFF2F2F2).copy(alpha = 0.2f),
                                 modifier = Modifier.padding(horizontal = 8.dp)
                             ) {
                                 Row(
@@ -254,7 +254,7 @@ fun TalentProfileScreen(
                                     Text(
                                         text = "Membre depuis $joined",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = Color.White,
+                                        color = Color(0xFFF2F2F2),
                                         fontWeight = FontWeight.Medium
                                     )
                                 }
@@ -325,7 +325,7 @@ fun TalentProfileScreen(
             onDismissRequest = { showMenuSheet = false },
             sheetState = sheetState,
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            containerColor = Color.White,
+            containerColor = Color(0xFFF2F2F2),
             dragHandle = {
                 Box(
                     modifier = Modifier
@@ -358,7 +358,7 @@ fun PremiumTalentCategorySection(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = Color.White
+        color = Color(0xFFF2F2F2)
     ) {
         Row(
             modifier = Modifier
@@ -410,7 +410,7 @@ fun PremiumSkillsSection(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = Color.White
+        color = Color(0xFFF2F2F2)
     ) {
         Column(
             modifier = Modifier
@@ -456,7 +456,7 @@ fun PremiumInfoSection(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = Color.White
+        color = Color(0xFFF2F2F2)
     ) {
         Column(
             modifier = Modifier
@@ -539,7 +539,7 @@ fun PremiumAboutSection(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = Color.White
+        color = Color(0xFFF2F2F2)
     ) {
         Column(
             modifier = Modifier

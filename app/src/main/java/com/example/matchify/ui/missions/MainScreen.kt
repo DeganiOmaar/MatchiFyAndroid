@@ -51,6 +51,7 @@ import kotlinx.coroutines.launch
 import com.example.matchify.ui.stats.MyStatsScreen
 import com.example.matchify.ui.stats.MyStatsViewModel
 import com.example.matchify.ui.stats.MyStatsViewModelFactory
+import androidx.compose.runtime.LaunchedEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,8 +79,8 @@ fun MainScreen(
 
     Scaffold(
         bottomBar = {
-            // Show bottom bar on main screens (Missions, Proposals, Messages)
-            if (currentRoute in listOf("missions_list", "proposals_list", "messages_list")) {
+            // Show bottom bar on main screens (Missions, Proposals, Alerts, Messages)
+            if (currentRoute in listOf("missions_list", "proposals_list", "alerts_list", "messages_list")) {
                 MainBottomNavigation(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
@@ -307,6 +308,14 @@ fun MainScreen(
                 )
             }
             
+            composable("alerts_list") {
+                com.example.matchify.ui.alerts.AlertsScreen(
+                    onAlertClick = { proposalId ->
+                        navController.navigate("proposal_details/$proposalId")
+                    }
+                )
+            }
+            
             composable("proposal_details/{proposalId}") { backStackEntry ->
                 val proposalId = backStackEntry.arguments?.getString("proposalId") ?: ""
                 com.example.matchify.ui.proposals.details.ProposalDetailsScreen(
@@ -496,6 +505,62 @@ fun MainScreen(
                 com.example.matchify.ui.chatbot.ChatBotScreen(
                     onBack = { navController.popBackStack() }
                 )
+            }
+            
+            // Contracts
+            composable("create_contract/{missionId}/{talentId}") { backStackEntry ->
+                val missionId = backStackEntry.arguments?.getString("missionId") ?: ""
+                val talentId = backStackEntry.arguments?.getString("talentId") ?: ""
+                com.example.matchify.ui.contracts.CreateContractScreen(
+                    missionId = missionId,
+                    talentId = talentId,
+                    onBack = { navController.popBackStack() },
+                    onContractCreated = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+            
+            composable("contract_detail/{contractId}") { backStackEntry ->
+                val contractId = backStackEntry.arguments?.getString("contractId") ?: ""
+                com.example.matchify.ui.contracts.ContractDetailScreen(
+                    contractId = contractId,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            
+            composable("contract_review/{contractId}") { backStackEntry ->
+                val contractId = backStackEntry.arguments?.getString("contractId") ?: ""
+                // Load contract first
+                val contractDetailViewModel: com.example.matchify.ui.contracts.ContractDetailViewModel = 
+                    androidx.lifecycle.viewmodel.compose.viewModel(
+                        factory = com.example.matchify.ui.contracts.ContractDetailViewModelFactory(contractId)
+                    )
+                val contract by contractDetailViewModel.contract.collectAsState()
+                
+                LaunchedEffect(Unit) {
+                    contractDetailViewModel.loadContract()
+                }
+                
+                if (contract != null) {
+                    com.example.matchify.ui.contracts.ContractReviewScreen(
+                        contract = contract!!,
+                        onBack = { navController.popBackStack() },
+                        onSigned = {
+                            navController.popBackStack()
+                        },
+                        onDeclined = {
+                            navController.popBackStack()
+                        }
+                    )
+                } else {
+                    Box(
+                        modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+                        contentAlignment = androidx.compose.ui.Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
             }
         }
     }

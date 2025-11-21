@@ -75,7 +75,7 @@ fun EditTalentProfileScreen(
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color.White,
+                color = Color(0xFFF2F2F2),
                 shadowElevation = 0.dp
             ) {
                 Row(
@@ -519,13 +519,13 @@ fun EditTalentProfileScreen(
             ) {
                 if (isSaving) {
                     CircularProgressIndicator(
-                        color = Color.White,
+                        color = Color(0xFFF2F2F2),
                         strokeWidth = 2.dp
                     )
                 } else {
                     Text(
                         text = "Save Changes",
-                        color = Color.White,
+                        color = Color(0xFFF2F2F2),
                         fontWeight = FontWeight.SemiBold
                     )
                 }

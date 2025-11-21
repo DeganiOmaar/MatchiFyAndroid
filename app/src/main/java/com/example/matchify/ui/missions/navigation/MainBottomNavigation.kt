@@ -3,6 +3,7 @@ package com.example.matchify.ui.missions.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -33,6 +34,7 @@ fun MainBottomNavigation(
 ) {
     val isMissionsSelected = currentRoute == "missions_list"
     val isProposalsSelected = currentRoute == "proposals_list"
+    val isAlertsSelected = currentRoute == "alerts_list"
     val isMessagesSelected = currentRoute == "messages_list"
     
     NavigationBar(
@@ -79,6 +81,30 @@ fun MainBottomNavigation(
             },
             selected = isProposalsSelected,
             onClick = { onNavigate("proposals_list") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        )
+        
+        NavigationBarItem(
+            icon = {
+                Icon(
+                    imageVector = if (isAlertsSelected) Icons.Rounded.Notifications else Icons.Outlined.Notifications,
+                    contentDescription = "Alerts"
+                )
+            },
+            label = {
+                Text(
+                    text = "Alerts",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            },
+            selected = isAlertsSelected,
+            onClick = { onNavigate("alerts_list") },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = MaterialTheme.colorScheme.primary,
                 selectedTextColor = MaterialTheme.colorScheme.primary,

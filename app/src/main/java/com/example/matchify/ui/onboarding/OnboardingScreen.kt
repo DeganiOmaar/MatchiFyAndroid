@@ -53,7 +53,7 @@ fun OnboardingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Color(0xFFF2F2F2))
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -84,7 +84,7 @@ fun OnboardingScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
+                    .background(Color(0xFFF2F2F2))
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -186,7 +186,7 @@ fun OnboardingPage(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White),
+            .background(Color(0xFFF2F2F2)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Image

@@ -55,7 +55,7 @@ fun PortfolioSection(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = Color.White,
+        color = Color(0xFFF2F2F2),
         shadowElevation = 2.dp
     ) {
         Column(
