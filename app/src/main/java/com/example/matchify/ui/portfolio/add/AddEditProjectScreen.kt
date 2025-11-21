@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -22,10 +23,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.matchify.domain.model.Project
+import com.example.matchify.ui.components.MD3OutlinedTextField
 import com.example.matchify.ui.skills.SkillPickerView
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -183,36 +186,53 @@ fun AddEditProjectScreen(
                                 fontWeight = FontWeight.SemiBold
                             )
                             
-                            OutlinedTextField(
+                            // Title - MD3 Outlined Text Field
+                            MD3OutlinedTextField(
                                 value = title,
                                 onValueChange = { viewModel.setTitle(it) },
+                                label = "Title",
+                                placeholder = "Title *",
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                                 modifier = Modifier.fillMaxWidth(),
-                                label = { Text("Title *") },
+                                errorText = null,
                                 singleLine = true
                             )
                             
-                            OutlinedTextField(
+                            // Role - MD3 Outlined Text Field
+                            MD3OutlinedTextField(
                                 value = role,
                                 onValueChange = { viewModel.setRole(it) },
+                                label = "Role",
+                                placeholder = "Role (e.g., Lead Developer)",
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                                 modifier = Modifier.fillMaxWidth(),
-                                label = { Text("Role (e.g., Lead Developer)") },
+                                errorText = null,
                                 singleLine = true
                             )
                             
-                            OutlinedTextField(
+                            // Description - MD3 Outlined Text Field (multi-line)
+                            MD3OutlinedTextField(
                                 value = description,
                                 onValueChange = { viewModel.setDescription(it) },
+                                label = "Description",
+                                placeholder = "Description",
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                                 modifier = Modifier.fillMaxWidth(),
-                                label = { Text("Description") },
+                                errorText = null,
+                                singleLine = false,
                                 minLines = 3,
                                 maxLines = 10
                             )
                             
-                            OutlinedTextField(
+                            // Project Link - MD3 Outlined Text Field
+                            MD3OutlinedTextField(
                                 value = projectLink,
                                 onValueChange = { viewModel.setProjectLink(it) },
+                                label = "Project Link",
+                                placeholder = "Project Link (e.g., GitHub URL)",
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                                 modifier = Modifier.fillMaxWidth(),
-                                label = { Text("Project Link (e.g., GitHub URL)") },
+                                errorText = null,
                                 singleLine = true
                             )
                         }
@@ -354,18 +374,26 @@ fun AddEditProjectScreen(
                     Column(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        OutlinedTextField(
+                        // External Link URL - MD3 Outlined Text Field
+                        MD3OutlinedTextField(
                             value = externalLinkInput,
                             onValueChange = { viewModel.setExternalLinkInput(it) },
-                            label = { Text("URL *") },
+                            label = "URL",
+                            placeholder = "URL *",
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                             modifier = Modifier.fillMaxWidth(),
+                            errorText = null,
                             singleLine = true
                         )
-                        OutlinedTextField(
+                        // External Link Title - MD3 Outlined Text Field
+                        MD3OutlinedTextField(
                             value = externalLinkTitle,
                             onValueChange = { viewModel.setExternalLinkTitle(it) },
-                            label = { Text("Title (optional)") },
+                            label = "Title",
+                            placeholder = "Title (optional)",
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                             modifier = Modifier.fillMaxWidth(),
+                            errorText = null,
                             singleLine = true
                         )
                     }

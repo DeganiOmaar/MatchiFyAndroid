@@ -1,14 +1,18 @@
 package com.example.matchify.ui.auth.forgot
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -16,6 +20,7 @@ import com.example.matchify.R
 import com.example.matchify.data.remote.AuthApi
 import com.example.matchify.data.remote.AuthRepository
 import com.example.matchify.data.remote.dto.auth.*
+import com.example.matchify.ui.components.MD3OutlinedTextField
 
 @Composable
 fun ForgotPasswordScreen(
@@ -35,6 +40,7 @@ fun ForgotPasswordScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.Start
     ) {
@@ -43,51 +49,30 @@ fun ForgotPasswordScreen(
         Text(
             text = "Reset your password",
             style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Bold
         )
 
         Text(
             text = "Please enter your email and we will send an OTP\ncode in the next step to reset your password",
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp)
         )
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        Text(
-            text = "Email Address",
-            fontWeight = FontWeight.SemiBold,
-            color = Color.Black
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        OutlinedTextField(
+        // EMAIL - MD3 Outlined Text Field
+        MD3OutlinedTextField(
             value = email,
             onValueChange = { viewModel.setEmail(it) },
-            placeholder = { Text("Enter your email", color = Color.Gray) },
-            singleLine = true,
-            leadingIcon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_email),
-                    contentDescription = null,
-                    tint = Color.Gray
-                )
-            },
-            shape = RoundedCornerShape(35.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color(0xFFD0D0D0),
-                focusedBorderColor = Color(0xFF007AFF)
-            )
+            label = "Email Address",
+            placeholder = "Enter your email",
+            leadingIcon = Icons.Default.Email,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            modifier = Modifier.fillMaxWidth(),
+            errorText = error,
+            singleLine = true
         )
-
-        if (error != null) {
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(error ?: "", color = Color.Red)
-        }
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -102,14 +87,21 @@ fun ForgotPasswordScreen(
                 .padding(bottom = 30.dp),
             shape = RoundedCornerShape(30.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF007AFF),
-                disabledContainerColor = Color(0xFFBAD7FF)
+                containerColor = MaterialTheme.colorScheme.primary,
+                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
             )
         ) {
             if (isLoading) {
-                CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
             } else {
-                Text("Continue", color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text(
+                    "Continue",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }

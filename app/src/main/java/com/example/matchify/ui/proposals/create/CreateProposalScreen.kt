@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.matchify.ui.components.MD3OutlinedTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,14 +93,20 @@ fun CreateProposalScreen(
                     fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                 )
                 
-                TextField(
+                // Cover Letter - MD3 Outlined Text Field (multi-line)
+                MD3OutlinedTextField(
                     value = message,
                     onValueChange = { viewModel.updateMessage(it) },
+                    label = "Cover letter",
+                    placeholder = "Introduce yourself, highlight experience, explain your approach...",
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(160.dp),
-                    placeholder = { Text("Introduce yourself, highlight experience, explain your approach...") },
-                    shape = RoundedCornerShape(16.dp)
+                    errorText = null,
+                    singleLine = false,
+                    minLines = 6,
+                    maxLines = 8
                 )
             }
             
@@ -111,21 +118,28 @@ fun CreateProposalScreen(
                     fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                 )
                 
-                TextField(
+                // Proposed Budget - MD3 Outlined Text Field
+                MD3OutlinedTextField(
                     value = proposedBudget,
                     onValueChange = { viewModel.updateProposedBudget(it) },
-                    label = { Text("Proposed budget (€)") },
+                    label = "Proposed budget",
+                    placeholder = "Proposed budget (€)",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    errorText = null,
+                    singleLine = true
                 )
                 
-                TextField(
+                // Estimated Duration - MD3 Outlined Text Field
+                MD3OutlinedTextField(
                     value = estimatedDuration,
                     onValueChange = { viewModel.updateEstimatedDuration(it) },
-                    label = { Text("Estimated duration (e.g. 8 weeks)") },
+                    label = "Estimated duration",
+                    placeholder = "Estimated duration (e.g. 8 weeks)",
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    errorText = null,
+                    singleLine = true
                 )
             }
             

@@ -25,6 +25,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.matchify.ui.components.MD3OutlinedTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,84 +88,62 @@ fun MissionAddScreen(
         ) {
             Spacer(modifier = Modifier.height(20.dp))
             
-            // Title
-            OutlinedTextField(
+            // Title - MD3 Outlined Text Field
+            MD3OutlinedTextField(
                 value = title,
                 onValueChange = { viewModel.title.value = it },
-                leadingIcon = {
-                    Icon(Icons.Rounded.Description, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Mission title") },
-                singleLine = true,
-                shape = RoundedCornerShape(35.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
-                )
+                label = "Mission title",
+                placeholder = "Mission title",
+                leadingIcon = Icons.Rounded.Description,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                modifier = Modifier.fillMaxWidth(),
+                errorText = null,
+                singleLine = true
             )
 
-            // Description
-            OutlinedTextField(
+            // Description - MD3 Outlined Text Field (multi-line)
+            MD3OutlinedTextField(
                 value = description,
                 onValueChange = { viewModel.description.value = it },
-                leadingIcon = {
-                    Icon(Icons.Rounded.Description, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Mission description") },
+                label = "Mission description",
+                placeholder = "Mission description",
+                leadingIcon = Icons.Rounded.Description,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
-                maxLines = 5,
-                shape = RoundedCornerShape(20.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
-                )
+                errorText = null,
+                singleLine = false,
+                maxLines = 5
             )
 
-            // Duration
-            OutlinedTextField(
+            // Duration - MD3 Outlined Text Field
+            MD3OutlinedTextField(
                 value = duration,
                 onValueChange = { viewModel.duration.value = it },
-                leadingIcon = {
-                    Icon(Icons.Rounded.Schedule, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("e.g., 6 mois") },
-                singleLine = true,
-                shape = RoundedCornerShape(35.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
-                )
+                label = "Duration",
+                placeholder = "e.g., 6 mois",
+                leadingIcon = Icons.Rounded.Schedule,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                modifier = Modifier.fillMaxWidth(),
+                errorText = null,
+                singleLine = true
             )
 
-            // Budget
-            OutlinedTextField(
+            // Budget - MD3 Outlined Text Field
+            MD3OutlinedTextField(
                 value = budget,
                 onValueChange = { 
                     // Filter out non-numeric characters
                     viewModel.budget.value = it.filter { char -> char.isDigit() }
                 },
-                leadingIcon = {
-                    Icon(Icons.Rounded.AttachMoney, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Budget in euros") },
-                singleLine = true,
+                label = "Budget",
+                placeholder = "Budget in euros",
+                leadingIcon = Icons.Rounded.AttachMoney,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                shape = RoundedCornerShape(35.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
-                )
+                modifier = Modifier.fillMaxWidth(),
+                errorText = null,
+                singleLine = true
             )
 
             // Skills Section

@@ -57,6 +57,7 @@ fun VerifyCodeScreenContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.Start
     ) {
@@ -67,6 +68,7 @@ fun VerifyCodeScreenContent(
         Text(
             text = "OTP code verification",
             style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Bold
         )
 
@@ -75,18 +77,18 @@ fun VerifyCodeScreenContent(
         // SUBTITLE
         Text(
             text = "A verification code has been sent to: ",
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Text(
             text = email,
-            color = Color(0xFF007AFF),
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Medium
         )
 
         Text(
             text = " Enter the OTP code below to verify",
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(40.dp))
@@ -119,12 +121,15 @@ fun VerifyCodeScreenContent(
 
         if (error != null) {
             Spacer(modifier = Modifier.height(10.dp))
-            Text(error, color = Color.Red)
+            Text(
+                error,
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // CONTINUE BUTTON (iOS Blue)
+        // CONTINUE BUTTON - MD3 Primary Button
         Button(
             onClick = onVerifyClick,
             enabled = code.length == 6 && !loading,
@@ -134,14 +139,21 @@ fun VerifyCodeScreenContent(
                 .padding(bottom = 30.dp),
             shape = RoundedCornerShape(30.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF007AFF),
-                disabledContainerColor = Color(0xFFBAD7FF)
+                containerColor = MaterialTheme.colorScheme.primary,
+                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
             )
         ) {
             if (loading) {
-                CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
             } else {
-                Text("Continue", color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text(
+                    "Continue",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }
@@ -152,13 +164,21 @@ fun OtpBox(char: String) {
     Box(
         modifier = Modifier
             .size(48.dp)
-            .background(Color(0xFFF3F3F7), RoundedCornerShape(10.dp))
-            .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(10.dp)),
+            .background(
+                MaterialTheme.colorScheme.surfaceContainerHighest,
+                RoundedCornerShape(10.dp)
+            )
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.outline,
+                RoundedCornerShape(10.dp)
+            ),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = char,
             style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Medium
         )
     }

@@ -12,10 +12,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,11 +22,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.matchify.R
+import com.example.matchify.ui.components.MD3OutlinedTextField
 
 @Composable
 fun TalentSignupScreen(
@@ -58,7 +55,7 @@ fun TalentSignupScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF2F2F2))
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -74,7 +71,7 @@ fun TalentSignupScreen(
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.Black
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
         }
@@ -96,13 +93,14 @@ fun TalentSignupScreen(
             text = "Sign Up Talent",
             fontWeight = FontWeight.SemiBold,
             fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Left,
             modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
         )
 
         Text(
             text = "Create your talent profile",
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = MaterialTheme.typography.bodyMedium.fontSize,
             textAlign = TextAlign.Left,
             modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
@@ -110,149 +108,84 @@ fun TalentSignupScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // FULL NAME
-        OutlinedTextField(
+        // FULL NAME - MD3 Outlined Text Field
+        MD3OutlinedTextField(
             value = fullName,
             onValueChange = { viewModel.setFullName(it) },
-            leadingIcon = {
-                Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray)
-            },
-            placeholder = { Text("Full Name") },
-            singleLine = true,
-            shape = RoundedCornerShape(35.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFCCCCCC),
-                unfocusedBorderColor = Color(0xFFDDDDDD)
-            )
+            label = "Full Name",
+            placeholder = "Full Name",
+            leadingIcon = Icons.Default.Person,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+            modifier = Modifier.fillMaxWidth(),
+            errorText = null,
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // EMAIL
-        OutlinedTextField(
+        // EMAIL - MD3 Outlined Text Field
+        MD3OutlinedTextField(
             value = email,
             onValueChange = { viewModel.setEmail(it) },
-            leadingIcon = {
-                Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray)
-            },
-            placeholder = { Text("Email") },
-            singleLine = true,
-            shape = RoundedCornerShape(35.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFCCCCCC),
-                unfocusedBorderColor = Color(0xFFDDDDDD)
-            )
+            label = "Email",
+            placeholder = "Email",
+            leadingIcon = Icons.Default.Email,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            modifier = Modifier.fillMaxWidth(),
+            errorText = null,
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // PHONE
-        OutlinedTextField(
+        // PHONE - MD3 Outlined Text Field
+        MD3OutlinedTextField(
             value = phone,
             onValueChange = { viewModel.setPhone(it) },
-            leadingIcon = {
-                Icon(Icons.Default.Phone, contentDescription = null, tint = Color.Gray)
-            },
-            placeholder = { Text("Phone") },
-            singleLine = true,
+            label = "Phone",
+            placeholder = "Phone",
+            leadingIcon = Icons.Default.Phone,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            shape = RoundedCornerShape(35.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFCCCCCC),
-                unfocusedBorderColor = Color(0xFFDDDDDD)
-            )
+            modifier = Modifier.fillMaxWidth(),
+            errorText = null,
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // PASSWORD
-        OutlinedTextField(
+        // PASSWORD - MD3 Outlined Text Field with password toggle
+        MD3OutlinedTextField(
             value = password,
             onValueChange = { viewModel.setPassword(it) },
-            leadingIcon = {
-                Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray)
-            },
-            placeholder = { Text("Password") },
-            singleLine = true,
+            label = "Password",
+            placeholder = "Password",
+            leadingIcon = Icons.Default.Lock,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            visualTransformation =
-            if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-            trailingIcon = {
-                IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
-                    Icon(
-                        painter = painterResource(
-                            id = if (showPassword) R.drawable.visibility else R.drawable.visibility_off
-                        ),
-                        contentDescription = null,
-                        tint = Color.Gray
-                    )
-                }
-            },
-            shape = RoundedCornerShape(35.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFCCCCCC),
-                unfocusedBorderColor = Color(0xFFDDDDDD)
-            )
+            modifier = Modifier.fillMaxWidth(),
+            errorText = null,
+            isPassword = true,
+            showPassword = showPassword,
+            onPasswordToggle = { viewModel.togglePasswordVisibility() },
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // CONFIRM PASSWORD
-        OutlinedTextField(
+        // CONFIRM PASSWORD - MD3 Outlined Text Field with password toggle
+        MD3OutlinedTextField(
             value = confirmPassword,
             onValueChange = { viewModel.setConfirmPassword(it) },
-            leadingIcon = {
-                Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray)
-            },
-            placeholder = { Text("Confirm Password") },
-            singleLine = true,
+            label = "Confirm Password",
+            placeholder = "Confirm Password",
+            leadingIcon = Icons.Default.Lock,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            visualTransformation =
-            if (showConfirmPassword) VisualTransformation.None else PasswordVisualTransformation(),
-            trailingIcon = {
-                IconButton(onClick = { viewModel.toggleConfirmPasswordVisibility() }) {
-                    Icon(
-                        painter = painterResource(
-                            id = if (showConfirmPassword) R.drawable.visibility else R.drawable.visibility_off
-                        ),
-                        contentDescription = null,
-                        tint = Color.Gray
-                    )
-                }
-            },
-            shape = RoundedCornerShape(35.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFCCCCCC),
-                unfocusedBorderColor = Color(0xFFDDDDDD)
-            )
+            modifier = Modifier.fillMaxWidth(),
+            errorText = if (error != null && (password != confirmPassword || confirmPassword.isEmpty())) error else null,
+            isPassword = true,
+            showPassword = showConfirmPassword,
+            onPasswordToggle = { viewModel.toggleConfirmPasswordVisibility() },
+            singleLine = true
         )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // ERROR
-        error?.let {
-            Text(
-                text = it,
-                color = Color.Red,
-                fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -267,24 +200,33 @@ fun TalentSignupScreen(
                 .height(55.dp),
             shape = RoundedCornerShape(30.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF007AFF),
-                disabledContainerColor = Color(0xFFBAD7FF)
+                containerColor = MaterialTheme.colorScheme.primary,
+                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
             )
         ) {
             if (loading) {
-                CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
             } else {
-                Text("Sign Up", color = Color.White)
+                Text(
+                    "Sign Up",
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
         Row {
-            Text("Already have an account? ", color = Color.Gray)
+            Text(
+                "Already have an account? ",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Text(
                 "Login",
-                color = Color(0xFF007AFF),
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable { onLogin() }
             )

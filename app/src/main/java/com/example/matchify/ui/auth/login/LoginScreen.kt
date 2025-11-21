@@ -17,12 +17,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.matchify.R
+import com.example.matchify.ui.components.MD3OutlinedTextField
 
 /**
  * Stateful Composable: Manages state and passes it to the stateless UI.
@@ -86,7 +85,7 @@ fun LoginScreenContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF2F2F2))
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -108,13 +107,14 @@ fun LoginScreenContent(
             text = "Connecting Talent With Opportunity",
             fontWeight = FontWeight.SemiBold,
             fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Left,
-                    modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
+            modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
         )
 
         Text(
             text = "Please sign in to continue",
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = MaterialTheme.typography.bodyMedium.fontSize,
             textAlign = TextAlign.Left,
             modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
@@ -122,71 +122,36 @@ fun LoginScreenContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // EMAIL
-        OutlinedTextField(
+        // EMAIL - MD3 Outlined Text Field
+        MD3OutlinedTextField(
             value = email,
             onValueChange = onEmailChange,
-            leadingIcon = {
-                Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray)
-            },
-            placeholder = { Text("Email") },
-            singleLine = true,
-            shape = RoundedCornerShape(35.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFCCCCCC),
-                unfocusedBorderColor = Color(0xFFDDDDDD)
-            )
+            label = "Email",
+            placeholder = "Email",
+            leadingIcon = Icons.Default.Email,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            modifier = Modifier.fillMaxWidth(),
+            errorText = null,
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // PASSWORD
-        OutlinedTextField(
+        // PASSWORD - MD3 Outlined Text Field with password toggle
+        MD3OutlinedTextField(
             value = password,
             onValueChange = onPasswordChange,
-            leadingIcon = {
-                Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray)
-            },
-            placeholder = { Text("Password") },
-            singleLine = true,
+            label = "Password",
+            placeholder = "Password",
+            leadingIcon = Icons.Default.Lock,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            visualTransformation =
-            if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-            trailingIcon = {
-                IconButton(onClick = onTogglePasswordVisibility) {
-                    Icon(
-                        painter = painterResource(
-                            id = if (showPassword) R.drawable.visibility else R.drawable.visibility_off
-                        ),
-                        contentDescription = null,
-                        tint = Color.Gray
-                    )
-                }
-            },
-            shape = RoundedCornerShape(35.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFCCCCCC),
-                unfocusedBorderColor = Color(0xFFDDDDDD)
-            )
+            modifier = Modifier.fillMaxWidth(),
+            errorText = error,
+            isPassword = true,
+            showPassword = showPassword,
+            onPasswordToggle = onTogglePasswordVisibility,
+            singleLine = true
         )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // ERROR
-        error?.let {
-            Text(
-                text = it,
-                color = Color.Red,
-                fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -204,14 +169,17 @@ fun LoginScreenContent(
                     checked = rememberMe,
                     onCheckedChange = { rememberMe = it }
                 )
-                Text("Remember Me", color = Color.Gray)
+                Text(
+                    "Remember Me",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
             Text(
                 text = "Reset Password",
-                color = Color(0xFF007AFF),
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable { onForgotPassword() }
             )
@@ -228,24 +196,33 @@ fun LoginScreenContent(
                 .height(55.dp),
             shape = RoundedCornerShape(30.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF007AFF),
-                disabledContainerColor = Color(0xFFBAD7FF)
+                containerColor = MaterialTheme.colorScheme.primary,
+                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
             )
         ) {
             if (isLoading) {
-                CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
             } else {
-                Text("Login", color = Color.White)
+                Text(
+                    "Login",
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
         Row {
-            Text("Don’t have an account? ", color = Color.Gray)
+            Text(
+                "Don't have an account? ",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Text(
                 "Sign Up",
-                color = Color(0xFF007AFF),
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable { onSignUp() }
             )
