@@ -9,7 +9,14 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import com.example.matchify.data.local.AuthPreferencesProvider
 
 private val DarkColorScheme = darkColorScheme(
     primary = md_theme_dark_primary,
@@ -82,13 +89,38 @@ fun MatchiFyTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
+    val systemIsDark = isSystemInDarkTheme()
+    
+    // Get theme preference from AuthPreferences
+    var themePreference by remember { mutableStateOf<String?>(null) }
+    
+    LaunchedEffect(Unit) {
+        try {
+            val prefs = AuthPreferencesProvider.getInstance().get()
+            prefs.theme.collect { theme ->
+                themePreference = theme
+            }
+        } catch (e: IllegalStateException) {
+            // If not initialized, default to system
+            themePreference = null
+        }
+    }
+    
+    // Determine if we should use dark theme based on user preference
+    val shouldUseDarkTheme = when (themePreference) {
+        "LIGHT" -> false
+        "DARK" -> true
+        "SYSTEM", null -> systemIsDark
+        else -> systemIsDark
+    }
+    
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (shouldUseDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
+        shouldUseDarkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 

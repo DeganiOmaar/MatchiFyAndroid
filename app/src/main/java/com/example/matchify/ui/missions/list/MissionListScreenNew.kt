@@ -11,6 +11,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -44,6 +46,7 @@ import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.domain.model.Mission
 import com.example.matchify.ui.missions.components.MissionCardNew
 import com.example.matchify.ui.missions.components.ProfileDrawer
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,250 +80,389 @@ fun MissionListScreenNew(
         label = "drawer_animation"
     )
     
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Main content
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            // Top Section - Profile Image (Left Aligned)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Profile Image
-                Surface(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clickable { viewModel.openProfileDrawer() },
-                    shape = CircleShape
-                ) {
-                    Box {
-                        val profileImageUrl = user?.profileImageUrl
-                        if (profileImageUrl != null) {
-                            AsyncImage(
-                                model = profileImageUrl,
-                                contentDescription = "Profile",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Image(
-                                painter = painterResource(R.drawable.avatar),
-                                contentDescription = "Avatar",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                    }
-                }
-                
-                // Add Mission button for Recruiters
-                if (isRecruiter) {
-                    IconButton(
-                        onClick = onAddMission,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "Add Mission",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+    // Material 3 Primary Tabs - Always show tabs for talent, structure ready for recruiters too
+    val tabs = listOf("Best Matches", "Most Recent", "Favorites")
+    val pagerState = rememberPagerState(
+        initialPage = when (selectedTab) {
+            MissionTab.BEST_MATCHES -> 0
+            MissionTab.MOST_RECENT -> 1
+            MissionTab.FAVORITES -> 2
+        },
+        pageCount = { if (isTalent) 3 else 1 }
+    )
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Sync pager state with ViewModel tab selection
+    LaunchedEffect(selectedTab) {
+        val targetPage = when (selectedTab) {
+            MissionTab.BEST_MATCHES -> 0
+            MissionTab.MOST_RECENT -> 1
+            MissionTab.FAVORITES -> 2
+        }
+        if (pagerState.currentPage != targetPage) {
+            pagerState.animateScrollToPage(targetPage)
+        }
+    }
+    
+    // Sync ViewModel with pager state changes (swipe navigation)
+    LaunchedEffect(pagerState.currentPage) {
+        val newTab = when (pagerState.currentPage) {
+            0 -> MissionTab.BEST_MATCHES
+            1 -> MissionTab.MOST_RECENT
+            2 -> MissionTab.FAVORITES
+            else -> MissionTab.MOST_RECENT
+        }
+        if (selectedTab != newTab) {
+            viewModel.selectTab(newTab)
+            if (newTab == MissionTab.FAVORITES) {
+                viewModel.loadFavorites()
             }
-            
-            // Search Bar - Material 3 FilledTextField
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = { viewModel.updateSearchText(it) },
+        }
+    }
+    
+    val selectedTabIndex = when (selectedTab) {
+        MissionTab.BEST_MATCHES -> 0
+        MissionTab.MOST_RECENT -> 1
+        MissionTab.FAVORITES -> 2
+    }
+    
+    Scaffold(
+        topBar = {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                placeholder = {
-                    Text(
-                        text = "Search for jobs",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                trailingIcon = {
-                    if (searchText.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.updateSearchText("") }) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = "Clear",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                ),
-                textStyle = MaterialTheme.typography.bodyMedium,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { /* Handle search */ })
-            )
-            
-            // Tabs Section - Material 3 TabRow (Talent only)
-            if (isTalent) {
-                val tabs = listOf("Best Matches", "Most Recent", "Favorites")
-                val selectedTabIndex = when (selectedTab) {
-                    MissionTab.BEST_MATCHES -> 0
-                    MissionTab.MOST_RECENT -> 1
-                    MissionTab.FAVORITES -> 2
-                }
-                
-                TabRow(
-                    selectedTabIndex = selectedTabIndex,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    indicator = { tabPositions ->
-                        if (selectedTabIndex < tabPositions.size) {
-                            TabRowDefaults.Indicator(
-                                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                                color = MaterialTheme.colorScheme.primary,
-                                height = 3.dp
-                            )
+                    .background(MaterialTheme.colorScheme.surface)
+            ) {
+                // Top App Bar with profile and actions
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Missions",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    },
+                    navigationIcon = {
+                        // Profile Image on the left
+                        Surface(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .padding(4.dp)
+                                .clickable { viewModel.openProfileDrawer() },
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surface
+                        ) {
+                            Box {
+                                val profileImageUrl = user?.profileImageUrl
+                                if (profileImageUrl != null) {
+                                    AsyncImage(
+                                        model = profileImageUrl,
+                                        contentDescription = "Profile",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Image(
+                                        painter = painterResource(R.drawable.avatar),
+                                        contentDescription = "Avatar",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
                         }
                     },
-                    divider = {
-                        HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
-                        )
-                    }
-                ) {
-                    tabs.forEachIndexed { index, title ->
-                        Tab(
-                            selected = selectedTabIndex == index,
-                            onClick = {
-                                val newTab = when (index) {
-                                    0 -> MissionTab.BEST_MATCHES
-                                    1 -> MissionTab.MOST_RECENT
-                                    2 -> MissionTab.FAVORITES
-                                    else -> MissionTab.MOST_RECENT
-                                }
-                                viewModel.selectTab(newTab)
-                                // Load favorites if switching to Favorites tab
-                                if (newTab == MissionTab.FAVORITES) {
-                                    viewModel.loadFavorites()
-                                }
-                            },
-                            text = {
-                                Text(
-                                    text = title,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = if (selectedTabIndex == index) {
-                                        FontWeight.SemiBold
-                                    } else {
-                                        FontWeight.Medium
-                                    }
+                    actions = {
+                        if (isRecruiter) {
+                            IconButton(
+                                onClick = onAddMission
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Add,
+                                    contentDescription = "Add Mission",
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
-                            },
-                            selectedContentColor = MaterialTheme.colorScheme.primary,
-                            unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                        actionIconContentColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                // Search Bar
+                OutlinedTextField(
+                    value = searchText,
+                    onValueChange = { viewModel.updateSearchText(it) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    placeholder = {
+                        Text(
+                            text = "Search for jobs",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchText.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.updateSearchText("") }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = "Clear",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { /* Handle search */ })
+                )
+                
+                // Material 3 Primary Tabs - Below toolbar
+                if (isTalent) {
+                    ScrollableTabRow(
+                        selectedTabIndex = selectedTabIndex,
+                        modifier = Modifier.fillMaxWidth(),
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        edgePadding = 52.dp, // Material 3 standard leading offset for scrollable tabs
+                        indicator = { tabPositions ->
+                            if (selectedTabIndex < tabPositions.size) {
+                                TabRowDefaults.SecondaryIndicator(
+                                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    height = 3.dp
+                                )
+                            }
+                        },
+                        divider = {
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f),
+                                thickness = 0.5.dp
+                            )
+                        }
+                    ) {
+                        tabs.forEachIndexed { index, title ->
+                            Tab(
+                                selected = selectedTabIndex == index,
+                                onClick = {
+                                    coroutineScope.launch {
+                                        val newTab = when (index) {
+                                            0 -> MissionTab.BEST_MATCHES
+                                            1 -> MissionTab.MOST_RECENT
+                                            2 -> MissionTab.FAVORITES
+                                            else -> MissionTab.MOST_RECENT
+                                        }
+                                        viewModel.selectTab(newTab)
+                                        pagerState.animateScrollToPage(index)
+                                        if (newTab == MissionTab.FAVORITES) {
+                                            viewModel.loadFavorites()
+                                        }
+                                    }
+                                },
+                                text = {
+                                    Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = if (selectedTabIndex == index) {
+                                            FontWeight.SemiBold
+                                        } else {
+                                            FontWeight.Medium
+                                        }
+                                    )
+                                },
+                                selectedContentColor = MaterialTheme.colorScheme.primary,
+                                unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
-            
-            // Missions List
-            val isLoadingList = isLoading || (isTalent && selectedTab == MissionTab.FAVORITES && isLoadingFavorites)
-            when {
-                isLoadingList && missions.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.primary
+        },
+        containerColor = MaterialTheme.colorScheme.surface
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Main content with swipe navigation support
+            if (isTalent) {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    userScrollEnabled = true
+                ) { page ->
+                    when (page) {
+                        0 -> MissionTabContent(
+                            missions = missions,
+                            isLoading = isLoading,
+                            isLoadingFavorites = false,
+                            isTalent = isTalent,
+                            viewModel = viewModel,
+                            onMissionClick = onMissionClick,
+                            onAddMission = if (isRecruiter) onAddMission else null,
+                            isFavoritesTab = false
+                        )
+                        1 -> MissionTabContent(
+                            missions = missions,
+                            isLoading = isLoading,
+                            isLoadingFavorites = false,
+                            isTalent = isTalent,
+                            viewModel = viewModel,
+                            onMissionClick = onMissionClick,
+                            onAddMission = if (isRecruiter) onAddMission else null,
+                            isFavoritesTab = false
+                        )
+                        2 -> MissionTabContent(
+                            missions = missions,
+                            isLoading = isLoading,
+                            isLoadingFavorites = isLoadingFavorites,
+                            isTalent = isTalent,
+                            viewModel = viewModel,
+                            onMissionClick = onMissionClick,
+                            onAddMission = if (isRecruiter) onAddMission else null,
+                            isFavoritesTab = true
+                        )
+                        else -> MissionTabContent(
+                            missions = missions,
+                            isLoading = isLoading,
+                            isLoadingFavorites = false,
+                            isTalent = isTalent,
+                            viewModel = viewModel,
+                            onMissionClick = onMissionClick,
+                            onAddMission = if (isRecruiter) onAddMission else null,
+                            isFavoritesTab = false
                         )
                     }
                 }
-                missions.isEmpty() -> {
-                    EmptyStateViewNew(
-                        onAddMission = if (isRecruiter) onAddMission else null,
-                        isTalent = isTalent,
-                        isFavoritesTab = isTalent && selectedTab == MissionTab.FAVORITES
+            } else {
+                // Recruiter view (no tabs)
+                MissionTabContent(
+                    missions = missions,
+                    isLoading = isLoading,
+                    isLoadingFavorites = false,
+                    isTalent = isTalent,
+                    viewModel = viewModel,
+                    onMissionClick = onMissionClick,
+                    onAddMission = if (isRecruiter) onAddMission else null,
+                    isFavoritesTab = false,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                )
+            }
+            
+            // Drawer Overlay
+            AnimatedVisibility(
+                visible = showDrawer,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(1000f)
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // Background overlay
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.3f))
+                            .clickable { viewModel.closeProfileDrawer() }
                     )
-                }
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(
-                            horizontal = 20.dp,
-                            vertical = 20.dp
-                        )
+                    
+                    // Drawer content sliding from left
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(drawerWidth)
+                            .offset(x = drawerOffset.value.dp)
+                            .zIndex(1001f)
                     ) {
-                        items(missions.size) { index ->
-                            val mission = missions[index]
-                            MissionCardNew(
-                                mission = mission,
-                                isFavorite = viewModel.isFavorite(mission),
-                                onFavoriteToggle = { viewModel.toggleFavorite(mission) },
-                                onClick = { onMissionClick(mission) },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+                        ProfileDrawer(
+                            onClose = { viewModel.closeProfileDrawer() },
+                            onMenuItemSelected = { itemType ->
+                                viewModel.closeProfileDrawer()
+                                onDrawerItemSelected(itemType)
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
                 }
             }
         }
-        
-        // Drawer Overlay
-        AnimatedVisibility(
-            visible = showDrawer,
-            modifier = Modifier
-                .fillMaxSize()
-                .zIndex(1000f)
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                // Background overlay
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f))
-                        .clickable { viewModel.closeProfileDrawer() }
+    }
+}
+
+@Composable
+private fun MissionTabContent(
+    missions: List<Mission>,
+    isLoading: Boolean,
+    isLoadingFavorites: Boolean,
+    isTalent: Boolean,
+    viewModel: MissionListViewModel,
+    onMissionClick: (Mission) -> Unit,
+    onAddMission: (() -> Unit)?,
+    isFavoritesTab: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val isLoadingList = isLoading || (isTalent && isFavoritesTab && isLoadingFavorites)
+    
+    when {
+        isLoadingList && missions.isEmpty() -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.primary
                 )
-                
-                // Drawer content sliding from left
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(drawerWidth)
-                        .offset(x = drawerOffset.value.dp)
-                        .zIndex(1001f)
-                ) {
-                    ProfileDrawer(
-                        onClose = { viewModel.closeProfileDrawer() },
-                        onMenuItemSelected = { itemType ->
-                            viewModel.closeProfileDrawer()
-                            onDrawerItemSelected(itemType)
-                        },
-                        modifier = Modifier.fillMaxSize()
+            }
+        }
+        missions.isEmpty() -> {
+            EmptyStateViewNew(
+                onAddMission = onAddMission,
+                isTalent = isTalent,
+                isFavoritesTab = isFavoritesTab,
+                modifier = modifier
+            )
+        }
+        else -> {
+            LazyColumn(
+                modifier = modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(
+                    horizontal = 20.dp,
+                    vertical = 20.dp
+                )
+            ) {
+                items(missions.size) { index ->
+                    val mission = missions[index]
+                    MissionCardNew(
+                        mission = mission,
+                        isFavorite = viewModel.isFavorite(mission),
+                        onFavoriteToggle = { viewModel.toggleFavorite(mission) },
+                        onClick = { onMissionClick(mission) },
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -333,10 +475,11 @@ fun MissionListScreenNew(
 fun EmptyStateViewNew(
     onAddMission: (() -> Unit)?,
     isTalent: Boolean = false,
-    isFavoritesTab: Boolean = false
+    isFavoritesTab: Boolean = false,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

@@ -17,13 +17,35 @@ class ThemeViewModel(
     
     init {
         loadCurrentTheme()
+        // Observe theme changes from preferences
+        viewModelScope.launch {
+            prefs.theme.collect { themeString ->
+                if (themeString != null) {
+                    try {
+                        _currentTheme.value = ThemeType.valueOf(themeString)
+                    } catch (e: IllegalArgumentException) {
+                        _currentTheme.value = ThemeType.SYSTEM
+                    }
+                } else {
+                    _currentTheme.value = ThemeType.SYSTEM
+                }
+            }
+        }
     }
     
     private fun loadCurrentTheme() {
         viewModelScope.launch {
             // Load theme from preferences
-            // For now, default to SYSTEM
-            _currentTheme.value = ThemeType.SYSTEM
+            val themeString = prefs.getThemeValue()
+            _currentTheme.value = if (themeString != null) {
+                try {
+                    ThemeType.valueOf(themeString)
+                } catch (e: IllegalArgumentException) {
+                    ThemeType.SYSTEM
+                }
+            } else {
+                ThemeType.SYSTEM
+            }
         }
     }
     
@@ -31,7 +53,7 @@ class ThemeViewModel(
         viewModelScope.launch {
             _currentTheme.value = theme
             // Save theme preference
-            // TODO: Save to AuthPreferences or DataStore
+            prefs.saveTheme(theme.name)
         }
     }
 }
