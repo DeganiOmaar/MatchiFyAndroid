@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -51,11 +52,12 @@ fun MainBottomNavigation(
     val proposalsUnreadCount by badgeViewModel.proposalsUnreadCount.collectAsState()
     val conversationsUnreadCount by badgeViewModel.conversationsWithUnreadCount.collectAsState()
     
+    // Bottom Navigation Bar - Black background with white items
     NavigationBar(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        tonalElevation = 3.dp
+        containerColor = Color.Black,
+        contentColor = Color.White,
+        tonalElevation = 0.dp
     ) {
         // Missions Tab
         NavigationBarItem(
@@ -84,11 +86,11 @@ fun MainBottomNavigation(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                selectedIconColor = Color.White,
+                selectedTextColor = Color.White,
+                indicatorColor = Color(0xFF007AFF), // Blue indicator for selected item
+                unselectedIconColor = Color.White.copy(alpha = 0.6f),
+                unselectedTextColor = Color.White.copy(alpha = 0.6f)
             )
         )
         
@@ -119,11 +121,11 @@ fun MainBottomNavigation(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                selectedIconColor = Color.White,
+                selectedTextColor = Color.White,
+                indicatorColor = Color(0xFF007AFF), // Blue indicator for selected item
+                unselectedIconColor = Color.White.copy(alpha = 0.6f),
+                unselectedTextColor = Color.White.copy(alpha = 0.6f)
             )
         )
         
@@ -154,11 +156,11 @@ fun MainBottomNavigation(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                selectedIconColor = Color.White,
+                selectedTextColor = Color.White,
+                indicatorColor = Color(0xFF007AFF), // Blue indicator for selected item
+                unselectedIconColor = Color.White.copy(alpha = 0.6f),
+                unselectedTextColor = Color.White.copy(alpha = 0.6f)
             )
         )
         
@@ -189,11 +191,11 @@ fun MainBottomNavigation(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                selectedIconColor = Color.White,
+                selectedTextColor = Color.White,
+                indicatorColor = Color(0xFF007AFF), // Blue indicator for selected item
+                unselectedIconColor = Color.White.copy(alpha = 0.6f),
+                unselectedTextColor = Color.White.copy(alpha = 0.6f)
             )
         )
     }
@@ -226,12 +228,13 @@ private fun NavigationBarIcon(
         if (badgeCount != null && badgeCount > 0) {
             val badgeText = if (badgeCount > 99) "99+" else badgeCount.toString()
             
+            // Badge color stays red/pink as shown in design
             Badge(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .offset(x = 8.dp, y = (-4).dp),
-                containerColor = MaterialTheme.colorScheme.error,
-                contentColor = MaterialTheme.colorScheme.onError
+                containerColor = Color(0xFFFF6B9D), // Pink/red badge color
+                contentColor = Color.White
             ) {
                 Text(
                     text = badgeText,

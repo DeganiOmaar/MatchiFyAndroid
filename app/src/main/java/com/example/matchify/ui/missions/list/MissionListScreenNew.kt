@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -171,14 +172,15 @@ fun MissionListScreenNew(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 ) {
-                    // Top App Bar with profile and actions
+                    // Top App Bar with profile and actions - MD3 filled style matching mission cards
                     TopAppBar(
                         title = {
                             Text(
                                 text = "Missions",
                                 style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.SemiBold
                             )
                         },
@@ -195,7 +197,7 @@ fun MissionListScreenNew(
                                         viewModel.openProfileDrawer()
                                     },
                                 shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surface
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh
                             ) {
                                 Box {
                                     val profileImageUrl = user?.profileImageUrl
@@ -231,7 +233,7 @@ fun MissionListScreenNew(
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surface,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             titleContentColor = MaterialTheme.colorScheme.onSurface,
                             navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
                             actionIconContentColor = MaterialTheme.colorScheme.onSurface
@@ -239,7 +241,7 @@ fun MissionListScreenNew(
                         modifier = Modifier.fillMaxWidth()
                     )
                 
-                // Search Bar
+                // Search Bar - MD3 filled style matching mission cards
                 OutlinedTextField(
                     value = searchText,
                     onValueChange = { viewModel.updateSearchText(it) },
@@ -274,9 +276,9 @@ fun MissionListScreenNew(
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        focusedBorderColor = MaterialTheme.colorScheme.outline,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface
@@ -286,12 +288,12 @@ fun MissionListScreenNew(
                     keyboardActions = KeyboardActions(onSearch = { /* Handle search */ })
                 )
                 
-                // Material 3 Primary Tabs - Below toolbar
+                // Material 3 Primary Tabs - Below toolbar - MD3 filled style matching mission cards
                 if (isTalent) {
                     ScrollableTabRow(
                         selectedTabIndex = selectedTabIndex,
                         modifier = Modifier.fillMaxWidth(),
-                        containerColor = MaterialTheme.colorScheme.surface,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         contentColor = MaterialTheme.colorScheme.primary,
                         edgePadding = 52.dp, // Material 3 standard leading offset for scrollable tabs
                         indicator = { tabPositions ->
@@ -368,7 +370,8 @@ fun MissionListScreenNew(
                             viewModel = viewModel,
                             onMissionClick = onMissionClick,
                             onAddMission = if (isRecruiter) onAddMission else null,
-                            isFavoritesTab = false
+                            isFavoritesTab = false,
+                            onEditMission = onEditMission
                         )
                         1 -> MissionTabContent(
                             missions = missions,
@@ -378,7 +381,8 @@ fun MissionListScreenNew(
                             viewModel = viewModel,
                             onMissionClick = onMissionClick,
                             onAddMission = if (isRecruiter) onAddMission else null,
-                            isFavoritesTab = false
+                            isFavoritesTab = false,
+                            onEditMission = onEditMission
                         )
                         2 -> MissionTabContent(
                             missions = missions,
@@ -388,7 +392,8 @@ fun MissionListScreenNew(
                             viewModel = viewModel,
                             onMissionClick = onMissionClick,
                             onAddMission = if (isRecruiter) onAddMission else null,
-                            isFavoritesTab = true
+                            isFavoritesTab = true,
+                            onEditMission = onEditMission
                         )
                         else -> MissionTabContent(
                             missions = missions,
@@ -398,7 +403,8 @@ fun MissionListScreenNew(
                             viewModel = viewModel,
                             onMissionClick = onMissionClick,
                             onAddMission = if (isRecruiter) onAddMission else null,
-                            isFavoritesTab = false
+                            isFavoritesTab = false,
+                            onEditMission = onEditMission
                         )
                     }
                 }
@@ -413,6 +419,7 @@ fun MissionListScreenNew(
                     onMissionClick = onMissionClick,
                     onAddMission = if (isRecruiter) onAddMission else null,
                     isFavoritesTab = false,
+                    onEditMission = onEditMission,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -433,6 +440,7 @@ fun MissionTabContent(
     onMissionClick: (Mission) -> Unit,
     onAddMission: (() -> Unit)?,
     isFavoritesTab: Boolean,
+    onEditMission: ((Mission) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val isLoadingList = isLoading || (isTalent && isFavoritesTab && isLoadingFavorites)
@@ -459,21 +467,41 @@ fun MissionTabContent(
         else -> {
             LazyColumn(
                 modifier = modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(
-                    horizontal = 20.dp,
-                    vertical = 20.dp
-                )
+                contentPadding = PaddingValues(vertical = 0.dp)
             ) {
-                items(missions.size) { index ->
-                    val mission = missions[index]
+                itemsIndexed(missions) { index, mission ->
+                    // Check if current user is owner of this mission
+                    val isOwner = viewModel.isMissionOwner(mission)
+                    val isRecruiter = !isTalent
+                    
                     MissionCardNew(
                         mission = mission,
                         isFavorite = viewModel.isFavorite(mission),
                         onFavoriteToggle = { viewModel.toggleFavorite(mission) },
                         onClick = { onMissionClick(mission) },
+                        isOwner = isOwner,
+                        isRecruiter = isRecruiter,
+                        onEdit = {
+                            if (isRecruiter && isOwner && onEditMission != null) {
+                                onEditMission(mission)
+                            }
+                        },
+                        onDelete = {
+                            if (isRecruiter && isOwner) {
+                                viewModel.deleteMission(mission)
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
+                    
+                    // MD3 Divider between cards (except after the last item)
+                    if (index < missions.size - 1) {
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                            thickness = 1.dp
+                        )
+                    }
                 }
             }
         }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
@@ -128,23 +129,30 @@ fun MissionListScreen(
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(vertical = 16.dp, horizontal = 16.dp)
+                        contentPadding = PaddingValues(vertical = 0.dp)
                     ) {
-                        items(missions.size) { index ->
-                            val mission = missions[index]
+                        itemsIndexed(missions) { index, mission ->
                             val isOwner = viewModel.isMissionOwner(mission)
                             
                             MissionListItem(
                                 mission = mission,
                                 isOwner = isOwner && isRecruiter, // Only show actions if owner AND recruiter
-                                isEven = index % 2 == 0,
+                                isEven = false, // Not used anymore with MD3 cards
                                 onEdit = { onEditMission(mission) },
                                 onDelete = {
                                     missionToDelete = mission
                                     showDeleteDialog = true
                                 }
                             )
+                            
+                            // MD3 Divider between cards (except after the last item)
+                            if (index < missions.size - 1) {
+                                HorizontalDivider(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = MaterialTheme.colorScheme.outlineVariant,
+                                    thickness = 1.dp
+                                )
+                            }
                         }
                     }
                 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.NavigateNext
@@ -35,22 +36,21 @@ fun MissionListItem(
 ) {
     var showMenuSheet by remember { mutableStateOf(false) }
 
-    Surface(
+    // MD3 Filled Card - no elevation, no border
+    Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { /* Handle click if needed */ }
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-            )
-            .background(
-                color = Color(0xFFF2F2F2),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-            ),
-        color = Color(0xFFF2F2F2),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-        shadowElevation = 2.dp
+            .clickable { /* Handle click if needed */ },
+        shape = RoundedCornerShape(0.dp), // No rounded corners for filled cards
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 0.dp,
+            pressedElevation = 0.dp,
+            hoveredElevation = 0.dp,
+            focusedElevation = 0.dp
+        )
     ) {
         Row(
             modifier = Modifier
