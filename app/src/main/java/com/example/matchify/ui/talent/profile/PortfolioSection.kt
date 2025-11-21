@@ -18,16 +18,30 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import com.example.matchify.domain.model.Project
 
 /**
- * Portfolio Section View for Talent Profile
- * Displays projects in a 2x2 grid with pagination (similar to iOS PortfolioSectionView)
+ * Material Design 3 Portfolio Section
+ * 
+ * Fully compliant with MD3 guidelines:
+ * - MD3 Cards with proper elevation (1-3dp)
+ * - Rounded corners (12-16dp)
+ * - Image as main media with proper clipping
+ * - MD3 typography (Headline Small / Title Medium)
+ * - MD3 spacing (16dp padding, 8dp between lines, 16dp between cards)
+ * - Adaptive grid (2 columns mobile, 3-4 columns tablet)
+ * - MD3 colors (surface, onSurface) with dark mode support
+ * - Full card tappable with proper ripple feedback
+ * - No extra animations or non-MD3 effects
  */
 @Composable
 fun PortfolioSection(
@@ -52,16 +66,25 @@ fun PortfolioSection(
     val canGoBack = currentPage > 1
     val canGoNext = currentPage < totalPages
     
+    // Adaptive grid columns based on screen width
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
+    val columns = when {
+        screenWidthDp >= 840 -> 4 // Expanded screens (tablets landscape)
+        screenWidthDp >= 600 -> 3 // Medium screens (tablets)
+        else -> 2 // Compact screens (phones)
+    }
+    
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = Color(0xFFF2F2F2),
-        shadowElevation = 2.dp
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Header with Title and Add Button
@@ -72,15 +95,15 @@ fun PortfolioSection(
             ) {
                 Text(
                     text = "Projects",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1A1A1A)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 if (showAddButton) {
                     IconButton(
                         onClick = onAddProject,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
@@ -99,7 +122,9 @@ fun PortfolioSection(
                         .height(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             } else if (projects.isEmpty()) {
                 EmptyPortfolioState(
@@ -107,15 +132,15 @@ fun PortfolioSection(
                     onAddProject = onAddProject
                 )
             } else {
-                // 2x2 Grid
+                // MD3 Grid with adaptive columns
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    columns = GridCells.Fixed(columns),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.height(400.dp)
                 ) {
                     items(currentPageProjects) { project ->
-                        ProjectGridItem(
+                        MD3ProjectCard(
                             project = project,
                             onClick = { onProjectTap(project) }
                         )
@@ -125,23 +150,21 @@ fun PortfolioSection(
                 // Pagination Controls
                 if (totalPages > 1) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         TextButton(
                             onClick = { if (canGoBack) currentPage-- },
-                            enabled = canGoBack
+                            enabled = canGoBack,
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
                         ) {
                             Text(
                                 text = "Back",
-                                color = if (canGoBack) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    Color(0xFF6B6B6B).copy(alpha = 0.5f)
-                                }
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Medium
                             )
                         }
                         
@@ -149,20 +172,20 @@ fun PortfolioSection(
                             text = "$currentPage/$totalPages",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF1A1A1A)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         
                         TextButton(
                             onClick = { if (canGoNext) currentPage++ },
-                            enabled = canGoNext
+                            enabled = canGoNext,
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
                         ) {
                             Text(
                                 text = "Next",
-                                color = if (canGoNext) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    Color(0xFF6B6B6B).copy(alpha = 0.5f)
-                                }
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }
@@ -172,59 +195,102 @@ fun PortfolioSection(
     }
 }
 
+/**
+ * Material Design 3 Project Card
+ * 
+ * MD3 Card with:
+ * - Image as main media (top element)
+ * - Image respects card rounded corners
+ * - Consistent aspect ratio (4:3)
+ * - MD3 typography (Title Medium for title)
+ * - 16dp padding inside card
+ * - 8dp spacing between image and title
+ * - Full card tappable with ripple
+ * - Proper elevation (2dp default)
+ */
 @Composable
-private fun ProjectGridItem(
+fun MD3ProjectCard(
     project: Project,
     onClick: () -> Unit
 ) {
-    Column(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        // Project Image
-        val imageUrl = project.getFirstMediaUrl("http://10.0.2.2:3000")
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(4f / 3f)
-                .background(
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                    RoundedCornerShape(12.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            if (imageUrl != null) {
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.Folder,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                )
-            }
-        }
-        
-        // Project Title (Blue)
-        Text(
-            text = project.title,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary,
-            maxLines = 2
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 4.dp
+        ),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
         )
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Project Image - Top element with proper clipping
+            val imageUrl = project.getFirstMediaUrl("http://10.0.2.2:3000")
+            
+            SubcomposeAsyncImage(
+                model = imageUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(4f / 3f)
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                contentScale = ContentScale.Crop,
+                loading = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(32.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
+                error = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Folder,
+                            contentDescription = null,
+                            modifier = Modifier.size(40.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
+                },
+                success = {
+                    SubcomposeAsyncImageContent()
+                }
+            )
+            
+            // Project Title - MD3 Typography
+            Text(
+                text = project.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
     }
 }
 
 @Composable
-private fun EmptyPortfolioState(
+fun EmptyPortfolioState(
     showAddButton: Boolean,
     onAddProject: () -> Unit
 ) {
@@ -235,24 +301,36 @@ private fun EmptyPortfolioState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Icon(
-            imageVector = Icons.Default.Folder,
-            contentDescription = null,
-            modifier = Modifier.size(60.dp),
-            tint = Color(0xFF6B6B6B).copy(alpha = 0.5f)
-        )
+        Surface(
+            modifier = Modifier.size(80.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+            tonalElevation = 0.dp
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Folder,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
+        }
         
         Text(
             text = "No Projects Yet",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF1A1A1A)
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
         )
         
         Text(
             text = "Add your first project to showcase your work",
-            style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF6B6B6B),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 20.dp)
         )
         
@@ -263,12 +341,20 @@ private fun EmptyPortfolioState(
                 onClick = onAddProject,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 2.dp,
+                    pressedElevation = 4.dp
                 )
             ) {
-                Text("Add Project")
+                Text(
+                    text = "Add Project",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }
 }
-
