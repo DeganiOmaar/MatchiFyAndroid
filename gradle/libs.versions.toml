@@ -12,6 +12,7 @@ material = "<version>"
 navigationCompose = "2.9.6"
 navigationRuntimeKtx = "2.9.6"
 uiText = "1.9.4"
+playServicesMaps = "19.2.0"
 
 [libraries]
 androidx-compose-material = { module = "androidx.compose.material:material", version.ref = "material" }
@@ -32,6 +33,7 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
 androidx-compose-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" }
+play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

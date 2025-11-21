@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -29,8 +31,10 @@ import com.example.matchify.domain.model.timePostedText
 @Composable
 fun MissionCardNew(
     mission: Mission,
-    onMenuClick: () -> Unit,
-    onClick: () -> Unit,
+    isFavorite: Boolean,
+    onFavoriteToggle: () -> Unit,
+    onClick: () -> Unit = {},
+    onMenuClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -119,31 +123,64 @@ fun MissionCardNew(
                 overflow = TextOverflow.Ellipsis
             )
             
-            // 5. Skills (rounded pill-shaped tags, neutral gray background)
-            if (mission.skills.isNotEmpty()) {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(horizontal = 1.dp)
-                ) {
-                    items(mission.skills) { skill ->
-                        // Material 3 Assist Chip style for skills
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            tonalElevation = 0.dp
-                        ) {
-                            Text(
-                                text = skill,
-                                modifier = Modifier.padding(
-                                    horizontal = 12.dp,
-                                    vertical = 6.dp
-                                ),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+            // 5. Skills and Favorite icon row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Skills (rounded pill-shaped tags, neutral gray background)
+                if (mission.skills.isNotEmpty()) {
+                    LazyRow(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(horizontal = 1.dp)
+                    ) {
+                        items(mission.skills) { skill ->
+                            // Material 3 Assist Chip style for skills
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                tonalElevation = 0.dp
+                            ) {
+                                Text(
+                                    text = skill,
+                                    modifier = Modifier.padding(
+                                        horizontal = 12.dp,
+                                        vertical = 6.dp
+                                    ),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+                
+                // Heart icon for favorites
+                IconButton(
+                    onClick = { onFavoriteToggle() },
+                    modifier = Modifier.size(40.dp),
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = if (isFavorite) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) {
+                            Icons.Filled.Favorite
+                        } else {
+                            Icons.Filled.FavoriteBorder
+                        },
+                        contentDescription = if (isFavorite) "Retirer des favoris" else "Ajouter aux favoris",
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }

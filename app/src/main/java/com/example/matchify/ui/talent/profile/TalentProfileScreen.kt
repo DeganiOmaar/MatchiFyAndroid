@@ -21,6 +21,8 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,19 +37,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.matchify.R
+import com.example.matchify.domain.model.Project
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TalentProfileScreen(
     viewModel: TalentProfileViewModel,
     onEditProfile: () -> Unit,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onProjectClick: (Project) -> Unit = {},
+    onAddProject: () -> Unit = {}
 ) {
     val user by viewModel.user.collectAsState()
     val joined by viewModel.joinedDate.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     
     var showMenuSheet by remember { mutableStateOf(false) }
+    
+    // Refresh projects when screen appears
+    LaunchedEffect(Unit) {
+        viewModel.loadProjects()
+    }
 
     Scaffold(
         containerColor = Color(0xFFF5F7FA),
@@ -281,42 +291,26 @@ fun TalentProfileScreen(
                                 skills = user?.skills ?: emptyList()
                             )
                         }
-
-                        // Contact Information Section
-                        PremiumInfoSection(
-                            title = "Informations de contact",
-                            items = listOfNotNull(
-                                PremiumInfoItem(
-                                    icon = Icons.Filled.Email,
-                                    label = "Email",
-                                    value = user?.email ?: "-",
-                                    iconColor = MaterialTheme.colorScheme.primary
-                                ),
-                                PremiumInfoItem(
-                                    icon = Icons.Filled.Phone,
-                                    label = "Téléphone",
-                                    value = user?.phone ?: "-",
-                                    iconColor = MaterialTheme.colorScheme.secondary
-                                ),
-                                if (!user?.location.isNullOrBlank()) {
-                                    PremiumInfoItem(
-                                        icon = Icons.Filled.LocationOn,
-                                        label = "Localisation",
-                                        value = user?.location ?: "-",
-                                        iconColor = MaterialTheme.colorScheme.tertiary
-                                    )
-                                } else null,
-                                if (!user?.portfolioLink.isNullOrBlank()) {
-                                    PremiumInfoItem(
-                                        icon = Icons.Filled.Link,
-                                        label = "Portfolio",
-                                        value = user?.portfolioLink ?: "-",
-                                        iconColor = MaterialTheme.colorScheme.primary
-                                    )
-                                } else null
-                            )
-                        )
                     }
+                }
+                
+                // Portfolio Section (instead of Information Section for Talent)
+                item {
+                    val projects by viewModel.projects.collectAsState()
+                    val isLoadingProjects by viewModel.isLoadingProjects.collectAsState()
+                    
+                    PortfolioSection(
+                        projects = projects,
+                        isLoading = isLoadingProjects,
+                        onProjectTap = { project ->
+                            onProjectClick(project)
+                        },
+                        onAddProject = {
+                            onAddProject()
+                        },
+                        showAddButton = true,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
                 }
             }
         }

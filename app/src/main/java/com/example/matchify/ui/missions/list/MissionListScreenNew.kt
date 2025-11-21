@@ -56,11 +56,13 @@ import com.example.matchify.ui.missions.components.ProfileDrawer
 fun MissionListScreenNew(
     onAddMission: () -> Unit,
     onEditMission: (Mission) -> Unit,
-    onMissionClick: (Mission) -> Unit,
+    onMissionClick: (Mission) -> Unit = {},
+    onDrawerItemSelected: (com.example.matchify.ui.missions.components.DrawerMenuItemType) -> Unit = {},
     viewModel: MissionListViewModel = viewModel(factory = MissionListViewModelFactory())
 ) {
     val missions by viewModel.filteredMissions.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val isLoadingFavorites by viewModel.isLoadingFavorites.collectAsState()
     val searchText by viewModel.searchText.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
     val showDrawer by viewModel.showProfileDrawer.collectAsState()
@@ -71,6 +73,7 @@ fun MissionListScreenNew(
     val userRole by prefs.role.collectAsState(initial = "recruiter")
     val user by prefs.user.collectAsState(initial = null)
     val isRecruiter = userRole == "recruiter"
+    val isTalent = userRole == "talent"
 
     var missionToDelete by remember { mutableStateOf<Mission?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -200,63 +203,75 @@ fun MissionListScreenNew(
                 keyboardActions = KeyboardActions(onSearch = { /* Handle search */ })
             )
             
-            // Tabs Section - Material 3 TabRow
-            val tabs = listOf("Best Matches", "Most Recent")
-            val selectedTabIndex = when (selectedTab) {
-                MissionTab.BEST_MATCHES -> 0
-                MissionTab.MOST_RECENT -> 1
-            }
-            
-            TabRow(
-                selectedTabIndex = selectedTabIndex,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                contentColor = MaterialTheme.colorScheme.primary,
-                indicator = { tabPositions ->
-                    if (selectedTabIndex < tabPositions.size) {
-                        TabRowDefaults.Indicator(
-                            modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                            color = MaterialTheme.colorScheme.primary,
-                            height = 3.dp
+            // Tabs Section - Material 3 TabRow (Talent only)
+            if (isTalent) {
+                val tabs = listOf("Best Matches", "Most Recent", "Favorites")
+                val selectedTabIndex = when (selectedTab) {
+                    MissionTab.BEST_MATCHES -> 0
+                    MissionTab.MOST_RECENT -> 1
+                    MissionTab.FAVORITES -> 2
+                }
+                
+                TabRow(
+                    selectedTabIndex = selectedTabIndex,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    indicator = { tabPositions ->
+                        if (selectedTabIndex < tabPositions.size) {
+                            TabRowDefaults.Indicator(
+                                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                                color = MaterialTheme.colorScheme.primary,
+                                height = 3.dp
+                            )
+                        }
+                    },
+                    divider = {
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
                         )
                     }
-                },
-                divider = {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
-                    )
-                }
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = {
-                            viewModel.selectTab(
-                                if (index == 0) MissionTab.BEST_MATCHES else MissionTab.MOST_RECENT
-                            )
-                        },
-                        text = {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = if (selectedTabIndex == index) {
-                                    FontWeight.SemiBold
-                                } else {
-                                    FontWeight.Medium
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTabIndex == index,
+                            onClick = {
+                                val newTab = when (index) {
+                                    0 -> MissionTab.BEST_MATCHES
+                                    1 -> MissionTab.MOST_RECENT
+                                    2 -> MissionTab.FAVORITES
+                                    else -> MissionTab.MOST_RECENT
                                 }
-                            )
-                        },
-                        selectedContentColor = MaterialTheme.colorScheme.primary,
-                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                                viewModel.selectTab(newTab)
+                                // Load favorites if switching to Favorites tab
+                                if (newTab == MissionTab.FAVORITES) {
+                                    viewModel.loadFavorites()
+                                }
+                            },
+                            text = {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = if (selectedTabIndex == index) {
+                                        FontWeight.SemiBold
+                                    } else {
+                                        FontWeight.Medium
+                                    }
+                                )
+                            },
+                            selectedContentColor = MaterialTheme.colorScheme.primary,
+                            unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
             
             // Missions List
+            val isLoadingList = isLoading || (isTalent && selectedTab == MissionTab.FAVORITES && isLoadingFavorites)
             when {
-                isLoading && missions.isEmpty() -> {
+                isLoadingList && missions.isEmpty() -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -268,7 +283,9 @@ fun MissionListScreenNew(
                 }
                 missions.isEmpty() -> {
                     EmptyStateViewNew(
-                        onAddMission = if (isRecruiter) onAddMission else null
+                        onAddMission = if (isRecruiter) onAddMission else null,
+                        isTalent = isTalent,
+                        isFavoritesTab = isTalent && selectedTab == MissionTab.FAVORITES
                     )
                 }
                 else -> {
@@ -282,98 +299,25 @@ fun MissionListScreenNew(
                     ) {
                         items(missions.size) { index ->
                             val mission = missions[index]
-                            val canDelete = isRecruiter && viewModel.isMissionOwner(mission)
-
-                            if (canDelete) {
-                                val dismissState = rememberDismissState { value ->
-                                    if (value == DismissValue.DismissedToStart) {
-                                        missionToDelete = mission
-                                        showDeleteDialog = true
-                                        false // ne pas retirer automatiquement, attendre la confirmation
-                                    } else {
-                                        false
+                            val isOwner = viewModel.isMissionOwner(mission)
+                            
+                            MissionCardNew(
+                                mission = mission,
+                                isFavorite = viewModel.isFavorite(mission),
+                                onFavoriteToggle = { viewModel.toggleFavorite(mission) },
+                                onClick = {
+                                    onMissionClick(mission)
+                                },
+                                onMenuClick = {
+                                    if (isRecruiter && isOwner) {
+                                        // Show menu for recruiter owners
+                                        // For now, just navigate to edit
+                                        onEditMission(mission)
                                     }
-                                }
-
-                                SwipeToDismiss(
-                                    state = dismissState,
-                                    directions = setOf(DismissDirection.EndToStart),
-                                    background = {
-                                        val color = if (dismissState.dismissDirection == DismissDirection.EndToStart) {
-                                            Color(0xFFDC2626)
-                                        } else {
-                                            Color.Transparent
-                                        }
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .background(color)
-                                                .padding(horizontal = 24.dp),
-                                            contentAlignment = Alignment.CenterEnd
-                                        ) {
-                                            if (dismissState.dismissDirection == DismissDirection.EndToStart) {
-                                                Icon(
-                                                    imageVector = Icons.Filled.Delete,
-                                                    contentDescription = null,
-                                                    tint = Color.White
-                                                )
-                                            }
-                                        }
-                                    },
-                                    dismissContent = {
-                                        MissionCardNew(
-                                            mission = mission,
-                                            onMenuClick = { onEditMission(mission) },
-                                            onClick = { onMissionClick(mission) },
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    }
-                                )
-                            } else {
-                                MissionCardNew(
-                                    mission = mission,
-                                    onMenuClick = { onEditMission(mission) },
-                                    onClick = { onMissionClick(mission) },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
-                    }
-
-                    if (showDeleteDialog && missionToDelete != null) {
-                        AlertDialog(
-                            onDismissRequest = {
-                                showDeleteDialog = false
-                                missionToDelete = null
-                            },
-                            title = {
-                                Text("Supprimer la mission ?")
-                            },
-                            text = {
-                                Text("Êtes-vous sûr de vouloir supprimer cette mission ? Cette action est irréversible.")
-                            },
-                            confirmButton = {
-                                TextButton(
-                                    onClick = {
-                                        missionToDelete?.let { viewModel.deleteMission(it) }
-                                        showDeleteDialog = false
-                                        missionToDelete = null
-                                    }
-                                ) {
-                                    Text("Supprimer", color = Color(0xFFDC2626))
-                                }
-                            },
-                            dismissButton = {
-                                TextButton(
-                                    onClick = {
-                                        showDeleteDialog = false
-                                        missionToDelete = null
-                                    }
-                                ) {
-                                    Text("Annuler")
-                                }
-                            }
-                        )
                     }
                 }
             }
@@ -405,6 +349,10 @@ fun MissionListScreenNew(
                 ) {
                     ProfileDrawer(
                         onClose = { viewModel.closeProfileDrawer() },
+                        onMenuItemSelected = { itemType ->
+                            viewModel.closeProfileDrawer()
+                            onDrawerItemSelected(itemType)
+                        },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -415,7 +363,11 @@ fun MissionListScreenNew(
 
 
 @Composable
-fun EmptyStateViewNew(onAddMission: (() -> Unit)?) {
+fun EmptyStateViewNew(
+    onAddMission: (() -> Unit)?,
+    isTalent: Boolean = false,
+    isFavoritesTab: Boolean = false
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -455,7 +407,11 @@ fun EmptyStateViewNew(onAddMission: (() -> Unit)?) {
         Spacer(modifier = Modifier.height(12.dp))
         
         Text(
-            text = "Create your first mission offer to get started",
+            text = when {
+                isFavoritesTab -> "You can save your favourite or wait until there a new missions for best match and most recent missions"
+                isTalent -> "You can save your favourite or wait until there a new missions for best match and most recent missions"
+                else -> "Create your first mission offer to get started"
+            },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center

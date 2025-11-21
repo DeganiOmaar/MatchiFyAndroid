@@ -13,6 +13,10 @@ data class MissionDto(
     val experienceLevel: String? = null,
     val recruiterId: String,
     val createdAt: String? = null,
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
+    @SerializedName("proposalsCount") val proposalsCount: Int? = null,
+    @SerializedName("interviewingCount") val interviewingCount: Int? = null,
+    @SerializedName("hasApplied") val hasApplied: Boolean? = null,
+    @SerializedName("isFavorite") val isFavorite: Boolean? = null
 )
 
