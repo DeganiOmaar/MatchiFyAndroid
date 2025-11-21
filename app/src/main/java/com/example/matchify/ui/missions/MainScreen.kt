@@ -247,6 +247,9 @@ fun MainScreen(
                         navController.navigate("edit_talent_profile")
                     },
                     onSettings = onOpenSettings,
+                    onBack = {
+                        navController.popBackStack()
+                    },
                     onProjectClick = { project ->
                         // Use actual ID (_id or id), not projectId which can be a random UUID
                         val actualId = project.id ?: project.id_alt ?: ""

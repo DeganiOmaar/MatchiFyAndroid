@@ -2,7 +2,6 @@ package com.example.matchify.ui.talent.profile
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,13 +10,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.NavigateNext
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,9 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +30,10 @@ import coil.compose.AsyncImage
 import com.example.matchify.R
 import com.example.matchify.domain.model.Project
 
+/**
+ * Talent Profile Screen avec Material Design 3
+ * Implémente toutes les spécifications M3 pour le profil talent
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TalentProfileScreen(
@@ -46,13 +41,16 @@ fun TalentProfileScreen(
     onEditProfile: () -> Unit,
     onSettings: () -> Unit,
     onProjectClick: (Project) -> Unit = {},
-    onAddProject: () -> Unit = {}
+    onAddProject: () -> Unit = {},
+    onBack: () -> Unit = {}
 ) {
     val user by viewModel.user.collectAsState()
-    val joined by viewModel.joinedDate.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val projects by viewModel.projects.collectAsState()
+    val isLoadingProjects by viewModel.isLoadingProjects.collectAsState()
     
     var showMenuSheet by remember { mutableStateOf(false) }
+    var isBioExpanded by remember { mutableStateOf(false) }
     
     // Refresh projects when screen appears
     LaunchedEffect(Unit) {
@@ -60,263 +58,129 @@ fun TalentProfileScreen(
     }
 
     Scaffold(
-        containerColor = Color(0xFFF5F7FA),
+        containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFFF2F2F2),
-                shadowElevation = 0.dp
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Profil",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A1A)
-                    )
-                    
+            // M3 Top App Bar (Center-Aligned)
+            M3TopAppBar(
+                onBack = onBack,
+                onMoreClick = { showMenuSheet = true }
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentPadding = PaddingValues(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp)
+        ) {
+            // Error message
+            if (errorMessage != null) {
+                item {
                     Surface(
                         modifier = Modifier
-                            .size(44.dp)
-                            .clickable { showMenuSheet = true },
-                        shape = CircleShape,
-                        color = Color(0xFFF5F7FA)
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Rounded.MoreVert,
-                                contentDescription = "Menu",
-                                modifier = Modifier.size(24.dp),
-                                tint = Color(0xFF1A1A1A)
-                            )
-                        }
+                        Text(
+                            text = errorMessage ?: "",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color(0xFFF5F7FA))
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                // Error message
-                if (errorMessage != null) {
-                    item {
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp),
-                            color = MaterialTheme.colorScheme.errorContainer,
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Text(
-                                text = errorMessage ?: "",
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-                }
 
-                // Premium Header Section with Gradient
+            // Top spacing for App Bar (8dp)
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Profile Avatar (centré, grandes dimensions)
+            item {
+                ProfileAvatar(
+                    imageUrl = user?.profileImageUrl,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 40.dp, bottom = 12.dp) // M3 spacing: 32-48dp top, 8-16dp bottom
+                )
+            }
+
+            // User Name (centré)
+            item {
+                Text(
+                    text = user?.fullName ?: "Talent Name",
+                    style = MaterialTheme.typography.headlineSmall, // Headline Small ou Title Medium M3
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface, // onBackground / onSurface (adaptatif)
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 32.dp) // Spacing avant About Me
+                )
+            }
+
+            // About Me Section
+            if (!user?.description.isNullOrBlank()) {
                 item {
-                    Box(
+                    AboutMeSection(
+                        description = user?.description ?: "",
+                        isExpanded = isBioExpanded,
+                        onExpandedChange = { isBioExpanded = it },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(280.dp)
-                    ) {
-                        // Gradient Background
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    brush = Brush.linearGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.primary,
-                                            MaterialTheme.colorScheme.secondary
-                                        ),
-                                        start = androidx.compose.ui.geometry.Offset(0f, 0f),
-                                        end = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                                    )
-                                )
-                        )
-                        
-                        // Content
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            // Premium Avatar with Glow Effect
-                            Box(
-                                modifier = Modifier
-                                    .size(120.dp)
-                                    .shadow(
-                                        elevation = 16.dp,
-                                        shape = CircleShape,
-                                        spotColor = Color.White.copy(alpha = 0.5f)
-                                    )
-                            ) {
-                                val imageUrl = user?.profileImageUrl
-                                if (imageUrl != null && imageUrl.isNotBlank()) {
-                                    AsyncImage(
-                                        model = imageUrl,
-                                        contentDescription = "Profile Picture",
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .clip(CircleShape)
-                                            .border(
-                                                width = 4.dp,
-                                                color = Color(0xFFF2F2F2),
-                                                shape = CircleShape
-                                            ),
-                                        contentScale = ContentScale.Crop,
-                                        error = painterResource(id = R.drawable.avatar),
-                                        placeholder = painterResource(id = R.drawable.avatar)
-                                    )
-                                } else {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.avatar),
-                                        contentDescription = "Default Avatar",
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .clip(CircleShape)
-                                            .border(
-                                                width = 4.dp,
-                                                color = Color(0xFFF2F2F2),
-                                                shape = CircleShape
-                                            ),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
-                            }
-                            
-                            Spacer(modifier = Modifier.height(20.dp))
-                            
-                            // Name
-                            Text(
-                                text = user?.fullName ?: "Talent Name",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFF2F2F2),
-                                textAlign = TextAlign.Center
-                            )
-                            
-                            Spacer(modifier = Modifier.height(8.dp))
-                            
-                            // Email
-                            Text(
-                                text = user?.email ?: "-",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Color(0xFFF2F2F2).copy(alpha = 0.9f),
-                                textAlign = TextAlign.Center
-                            )
-                            
-                            Spacer(modifier = Modifier.height(12.dp))
-                            
-                            // Joined Date Badge
-                            Surface(
-                                shape = RoundedCornerShape(20.dp),
-                                color = Color(0xFFF2F2F2).copy(alpha = 0.2f),
-                                modifier = Modifier.padding(horizontal = 8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.CalendarToday,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = Color.White
-                                    )
-                                    Text(
-                                        text = "Membre depuis $joined",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color(0xFFF2F2F2),
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Information Sections
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        // About Section
-                        if (!user?.description.isNullOrBlank()) {
-                            PremiumAboutSection(
-                                description = user?.description ?: ""
-                            )
-                        }
-
-                        // Talent Category Section
-                        if (!user?.skills.isNullOrEmpty()) {
-                            PremiumSkillsSection(
-                                skills = user?.skills ?: emptyList()
-                            )
-                        }
-
-                        // Skills Section
-                        if (!user?.skills.isNullOrEmpty()) {
-                            PremiumSkillsSection(
-                                skills = user?.skills ?: emptyList()
-                            )
-                        }
-                    }
-                }
-                
-                // Portfolio Section (instead of Information Section for Talent)
-                item {
-                    val projects by viewModel.projects.collectAsState()
-                    val isLoadingProjects by viewModel.isLoadingProjects.collectAsState()
-                    
-                    PortfolioSection(
-                        projects = projects,
-                        isLoading = isLoadingProjects,
-                        onProjectTap = { project ->
-                            onProjectClick(project)
-                        },
-                        onAddProject = {
-                            onAddProject()
-                        },
-                        showAddButton = true,
-                        modifier = Modifier.padding(horizontal = 24.dp)
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 32.dp) // Spacing avant Skills
                     )
                 }
+            }
+
+            // Skills Section
+            if (!user?.skills.isNullOrEmpty()) {
+                item {
+                    SkillsSection(
+                        skills = user?.skills ?: emptyList(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 24.dp) // Spacing avant Portfolio
+                    )
+                }
+            }
+
+            // Portfolio Section
+            item {
+                PortfolioSection(
+                    projects = projects,
+                    isLoading = isLoadingProjects,
+                    onProjectTap = { project ->
+                        onProjectClick(project)
+                    },
+                    onAddProject = {
+                        onAddProject()
+                    },
+                    showAddButton = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                )
+            }
+
+            // Bottom spacing
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
 
-    // Premium Bottom Sheet Menu
+    // More Menu Bottom Sheet
     if (showMenuSheet) {
         val sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = false
@@ -325,19 +189,19 @@ fun TalentProfileScreen(
             onDismissRequest = { showMenuSheet = false },
             sheetState = sheetState,
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            containerColor = Color(0xFFF2F2F2),
+            containerColor = MaterialTheme.colorScheme.surface,
             dragHandle = {
                 Box(
                     modifier = Modifier
                         .width(48.dp)
-                        .height(5.dp)
-                        .padding(vertical = 16.dp)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(Color(0xFFE0E0E0))
+                        .height(4.dp)
+                        .padding(vertical = 12.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                 )
             }
         ) {
-            PremiumMenuBottomSheetContent(
+            MenuBottomSheetContent(
                 onEditProfile = {
                     showMenuSheet = false
                     onEditProfile()
@@ -351,318 +215,307 @@ fun TalentProfileScreen(
     }
 }
 
+/**
+ * M3 Top App Bar (Center-Aligned)
+ * - Titre centré "Profile"
+ * - Bouton retour à gauche
+ * - Bouton "More" à droite
+ * - Élévation 0 (flat)
+ */
 @Composable
-fun PremiumTalentCategorySection(
-    talent: String
+private fun M3TopAppBar(
+    onBack: () -> Unit,
+    onMoreClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = Color(0xFFF2F2F2)
+        color = MaterialTheme.colorScheme.surface, // Surface color adaptatif
+        shadowElevation = 0.dp, // Élévation 0 (flat)
+        tonalElevation = 0.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(horizontal = 16.dp)
+                .padding(vertical = 12.dp)
+                .padding(top = 8.dp), // Safe area top padding
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                modifier = Modifier.size(52.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            // Back Navigation Icon (gauche)
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.size(40.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Filled.Star,
-                        contentDescription = null,
-                        modifier = Modifier.size(26.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-            
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Text(
-                    text = "Spécialité",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Color(0xFF6B6B6B),
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = talent,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color(0xFF1A1A1A),
-                    fontWeight = FontWeight.Normal
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun PremiumSkillsSection(
-    skills: List<String>
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = Color(0xFFF2F2F2)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = "Compétences",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A)
-            )
-            
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 0.dp)
-            ) {
-                items(skills) { skill ->
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                    ) {
-                        Text(
-                            text = skill,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun PremiumInfoSection(
-    title: String,
-    items: List<PremiumInfoItem>
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = Color(0xFFF2F2F2)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A)
-            )
-            
-            items.forEachIndexed { index, item ->
-                if (index > 0) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        color = Color(0xFFE8E8E8),
-                        thickness = 1.dp
-                    )
-                }
-                
-                PremiumInfoRow(item = item)
-            }
-        }
-    }
-}
-
-@Composable
-fun PremiumInfoRow(
-    item: PremiumInfoItem
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Premium Icon Container
-        Surface(
-            modifier = Modifier.size(52.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = item.iconColor.copy(alpha = 0.12f)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    imageVector = item.icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(26.dp),
-                    tint = item.iconColor
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Centered Title
+            Text(
+                text = "Profile",
+                style = MaterialTheme.typography.titleLarge, // Title Large M3
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // More actions button (droite)
+            IconButton(
+                onClick = onMoreClick,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "More",
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
-        
-        // Label and Value
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(
-                text = item.label,
-                style = MaterialTheme.typography.labelLarge,
-                color = Color(0xFF6B6B6B),
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                text = item.value,
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFF1A1A1A),
-                fontWeight = FontWeight.Normal
-            )
-        }
+
+        // Ligne de séparation subtile
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f),
+            thickness = 1.dp
+        )
     }
 }
 
+/**
+ * Profile Avatar (circulaire, centré, grandes dimensions)
+ * M3: 120dp x 120dp, forme circulaire, sans bordure
+ */
 @Composable
-fun PremiumAboutSection(
-    description: String
+private fun ProfileAvatar(
+    imageUrl: String?,
+    modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = Color(0xFFF2F2F2)
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = "À propos",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A)
+        if (imageUrl != null && imageUrl.isNotBlank()) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = "Profile Picture",
+                modifier = Modifier
+                    .size(120.dp) // Large circular avatar
+                    .clip(CircleShape), // Material shape system - full circle
+                contentScale = ContentScale.Crop,
+                error = painterResource(id = R.drawable.avatar),
+                placeholder = painterResource(id = R.drawable.avatar)
             )
-            
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFF4A4A4A),
-                lineHeight = 26.sp
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.avatar),
+                contentDescription = "Default Avatar",
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
             )
         }
     }
 }
 
+/**
+ * About Me Section
+ * M3: Title Medium pour le titre, Body Medium pour le texte
+ * Support "Read More" avec troncature personnalisée
+ */
 @Composable
-fun PremiumMenuBottomSheetContent(
+private fun AboutMeSection(
+    description: String,
+    isExpanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val maxChars = 200
+    val shouldTruncate = !isExpanded && description.length > maxChars
+    val displayText = if (shouldTruncate) {
+        description.take(maxChars) + "..."
+    } else {
+        description
+    }
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Section Title
+        Text(
+            text = "About Me",
+            style = MaterialTheme.typography.titleMedium, // Title Medium M3
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp) // Bottom spacing 8-12dp
+        )
+
+        // Body Text avec "Read More"
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = displayText,
+                style = MaterialTheme.typography.bodyMedium, // Body Medium M3
+                color = MaterialTheme.colorScheme.onSurfaceVariant, // onSurfaceVariant tone
+                lineHeight = 24.sp, // Paragraph spacing confortable
+                textAlign = TextAlign.Start // Align to start (left)
+            )
+
+            if (description.length > maxChars) {
+                TextButton(
+                    onClick = { onExpandedChange(!isExpanded) },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(
+                        text = if (isExpanded) "Read Less" else "Read More",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Skills Section
+ * M3: Title Medium pour le titre, Assist Chips pour les skills
+ */
+@Composable
+private fun SkillsSection(
+    skills: List<String>,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Section Header
+        Text(
+            text = "Skills",
+            style = MaterialTheme.typography.titleMedium, // Title Medium M3
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp) // Bottom spacing 12dp
+        )
+
+        // Skills Chips (M3 Assist Chips) - Horizontal wrapping layout
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp), // 8-12dp between chips
+            contentPadding = PaddingValues(0.dp)
+        ) {
+            items(skills) { skill ->
+                SkillChip(skill = skill)
+            }
+        }
+    }
+}
+
+/**
+ * Skill Chip (M3 Assist Chip)
+ * - Pas d'icône (label seulement)
+ * - Forme arrondie (M3 default)
+ * - Surface container high color
+ * - Élévation subtile (1-2dp)
+ */
+@Composable
+private fun SkillChip(skill: String) {
+    Surface(
+        shape = RoundedCornerShape(20.dp), // Rounded shape M3 default
+        color = MaterialTheme.colorScheme.surfaceContainerHigh, // Surface container high
+        tonalElevation = 1.dp, // Subtle elevation 1-2dp
+        shadowElevation = 1.dp
+    ) {
+        Text(
+            text = skill,
+            style = MaterialTheme.typography.bodyMedium, // Body Medium
+            color = MaterialTheme.colorScheme.onSurface, // onSurface text
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 10.dp) // Horizontal and vertical padding
+        )
+    }
+}
+
+/**
+ * Menu Bottom Sheet Content
+ */
+@Composable
+private fun MenuBottomSheetContent(
     onEditProfile: () -> Unit,
     onSettings: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 40.dp, top = 8.dp)
+            .padding(bottom = 32.dp, top = 8.dp)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        PremiumMenuItem(
+        MenuItem(
             icon = Icons.Rounded.Edit,
-            title = "Modifier le profil",
-            subtitle = "Mettre à jour vos informations",
+            title = "Edit Profile",
             onClick = onEditProfile,
             iconColor = MaterialTheme.colorScheme.primary
         )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        PremiumMenuItem(
+
+        MenuItem(
             icon = Icons.Rounded.Settings,
-            title = "Paramètres",
-            subtitle = "Gérer vos préférences",
+            title = "Settings",
             onClick = onSettings,
             iconColor = MaterialTheme.colorScheme.secondary
         )
     }
 }
 
+/**
+ * Menu Item
+ */
 @Composable
-fun PremiumMenuItem(
+private fun MenuItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
-    subtitle: String,
     onClick: () -> Unit,
-    iconColor: Color
+    iconColor: androidx.compose.ui.graphics.Color
 ) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 24.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(20.dp),
-        color = Color.Transparent
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surface
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                modifier = Modifier.size(56.dp),
-                shape = RoundedCornerShape(18.dp),
-                color = iconColor.copy(alpha = 0.15f)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(28.dp),
-                        tint = iconColor
-                    )
-                }
-            }
-            
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A)
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF6B6B6B)
-                )
-            }
-            
             Icon(
-                imageVector = Icons.Filled.NavigateNext,
+                imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = iconColor
+            )
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
 }
-
-data class PremiumInfoItem(
-    val icon: androidx.compose.ui.graphics.vector.ImageVector,
-    val label: String,
-    val value: String,
-    val iconColor: Color
-)
-

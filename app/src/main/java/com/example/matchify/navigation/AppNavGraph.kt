@@ -214,7 +214,8 @@ fun AppNavGraph(
             TalentProfileScreen(
                 viewModel = vm,
                 onEditProfile = { navController.navigate("edit_talent_profile") },
-                onSettings = { navController.navigate("settings") }
+                onSettings = { navController.navigate("settings") },
+                onBack = { navController.popBackStack() }
             )
         }
 
