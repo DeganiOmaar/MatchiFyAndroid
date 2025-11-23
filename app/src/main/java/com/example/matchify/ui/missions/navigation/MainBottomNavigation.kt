@@ -52,11 +52,26 @@ fun MainBottomNavigation(
     val proposalsUnreadCount by badgeViewModel.proposalsUnreadCount.collectAsState()
     val conversationsUnreadCount by badgeViewModel.conversationsWithUnreadCount.collectAsState()
     
-    // Bottom Navigation Bar - Black background with white items
+    // Icon colors: white in dark mode, black in light mode
+    // Use MaterialTheme colorScheme to detect current theme (respects user preference from drawer)
+    val colorScheme = MaterialTheme.colorScheme
+    // Check if current theme is dark by comparing surface color brightness
+    // Dark theme surface is typically darker (lower brightness)
+    val surfaceColor = colorScheme.surface
+    val isDarkMode = (surfaceColor.red + surfaceColor.green + surfaceColor.blue) / 3f < 0.5f
+    
+    val iconColorSelected = if (isDarkMode) Color.White else Color.Black
+    val iconColorUnselected = if (isDarkMode) Color.White.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.6f)
+    val textColorSelected = if (isDarkMode) Color.White else Color.Black
+    val textColorUnselected = if (isDarkMode) Color.White.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.6f)
+    
+    // Use MD3 surface token for background - automatically adapts to app theme (from drawer settings)
+    val backgroundColor = colorScheme.surface
+    
     NavigationBar(
         modifier = modifier,
-        containerColor = Color.Black,
-        contentColor = Color.White,
+        containerColor = backgroundColor,
+        contentColor = iconColorSelected, // Use explicit icon color to ensure proper theming
         tonalElevation = 0.dp
     ) {
         // Missions Tab
@@ -86,11 +101,11 @@ fun MainBottomNavigation(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color.White,
-                selectedTextColor = Color.White,
-                indicatorColor = Color(0xFF007AFF), // Blue indicator for selected item
-                unselectedIconColor = Color.White.copy(alpha = 0.6f),
-                unselectedTextColor = Color.White.copy(alpha = 0.6f)
+                selectedIconColor = iconColorSelected,
+                selectedTextColor = textColorSelected,
+                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                unselectedIconColor = iconColorUnselected,
+                unselectedTextColor = textColorUnselected
             )
         )
         
@@ -121,11 +136,11 @@ fun MainBottomNavigation(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color.White,
-                selectedTextColor = Color.White,
-                indicatorColor = Color(0xFF007AFF), // Blue indicator for selected item
-                unselectedIconColor = Color.White.copy(alpha = 0.6f),
-                unselectedTextColor = Color.White.copy(alpha = 0.6f)
+                selectedIconColor = iconColorSelected,
+                selectedTextColor = textColorSelected,
+                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                unselectedIconColor = iconColorUnselected,
+                unselectedTextColor = textColorUnselected
             )
         )
         
@@ -156,11 +171,11 @@ fun MainBottomNavigation(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color.White,
-                selectedTextColor = Color.White,
-                indicatorColor = Color(0xFF007AFF), // Blue indicator for selected item
-                unselectedIconColor = Color.White.copy(alpha = 0.6f),
-                unselectedTextColor = Color.White.copy(alpha = 0.6f)
+                selectedIconColor = iconColorSelected,
+                selectedTextColor = textColorSelected,
+                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                unselectedIconColor = iconColorUnselected,
+                unselectedTextColor = textColorUnselected
             )
         )
         
@@ -191,11 +206,11 @@ fun MainBottomNavigation(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color.White,
-                selectedTextColor = Color.White,
-                indicatorColor = Color(0xFF007AFF), // Blue indicator for selected item
-                unselectedIconColor = Color.White.copy(alpha = 0.6f),
-                unselectedTextColor = Color.White.copy(alpha = 0.6f)
+                selectedIconColor = iconColorSelected,
+                selectedTextColor = textColorSelected,
+                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                unselectedIconColor = iconColorUnselected,
+                unselectedTextColor = textColorUnselected
             )
         )
     }
