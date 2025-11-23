@@ -89,10 +89,10 @@ fun NavigationDrawerContent(
     
     // Group menu items into sections for better organization
     val primarySection = menuItems.filter { 
-        it.type != DrawerMenuItemType.THEME && it.type != DrawerMenuItemType.LOG_OUT
+        it.type != DrawerMenuItemType.THEME
     }
     val secondarySection = menuItems.filter { 
-        it.type == DrawerMenuItemType.THEME || it.type == DrawerMenuItemType.LOG_OUT
+        it.type == DrawerMenuItemType.THEME
     }
     
     // Drawer content composable
@@ -109,7 +109,7 @@ fun NavigationDrawerContent(
                 bottomStart = if (layoutDirection == LayoutDirection.Rtl) 16.dp else 0.dp
             ),
             color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 1.dp
+            tonalElevation = 3.dp
         ) {
             Column(
                 modifier = Modifier
@@ -125,10 +125,10 @@ fun NavigationDrawerContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            top = 24.dp,
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 16.dp
+                            top = 28.dp,
+                            start = 20.dp,
+                            end = 20.dp,
+                            bottom = 20.dp
                         )
                 )
                 
@@ -144,8 +144,8 @@ fun NavigationDrawerContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    contentPadding = PaddingValues(vertical = 8.dp)
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp, horizontal = 8.dp)
                 ) {
                     // Primary Section
                     items(primarySection) { item ->
@@ -205,7 +205,7 @@ fun NavigationDrawerContent(
             drawerState = drawerState,
             drawerContent = { DrawerContent() },
             modifier = modifier,
-            scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)
+            scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)
         ) {
             content()
         }
@@ -217,6 +217,7 @@ fun NavigationDrawerContent(
  * 
  * Material 3 compliant user header for drawer
  * Displays profile image, name, and role/talent type
+ * Fully supports light and dark mode with proper MD3 colors
  */
 @Composable
 private fun NavigationDrawerUserSection(
@@ -231,9 +232,9 @@ private fun NavigationDrawerUserSection(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Profile Image
+        // Profile Image with proper MD3 styling
         Surface(
-            modifier = Modifier.size(56.dp),
+            modifier = Modifier.size(64.dp),
             shape = CircleShape,
             color = MaterialTheme.colorScheme.surfaceContainerHighest,
             tonalElevation = 0.dp
@@ -255,14 +256,14 @@ private fun NavigationDrawerUserSection(
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
-                        modifier = Modifier.size(28.dp),
+                        modifier = Modifier.size(32.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
         }
         
-        // Name and Role/Talent Type
+        // Name and Role/Talent Type with proper MD3 typography and colors
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -305,6 +306,7 @@ private fun NavigationDrawerUserSection(
  * - Badge support (optional)
  * - Proper spacing and animations
  * - Motion animation when switching selection
+ * - Full light/dark mode support with proper MD3 colors
  */
 @Composable
 private fun NavigationDrawerMenuItem(
@@ -314,6 +316,9 @@ private fun NavigationDrawerMenuItem(
     modifier: Modifier = Modifier,
     badgeCount: Int? = null
 ) {
+    // Get color scheme for proper light/dark mode support
+    val colorScheme = MaterialTheme.colorScheme
+    
     NavigationDrawerItem(
         label = {
             Text(
@@ -323,9 +328,9 @@ private fun NavigationDrawerMenuItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 color = if (selected) {
-                    MaterialTheme.colorScheme.onSecondaryContainer
+                    colorScheme.onSecondaryContainer
                 } else {
-                    MaterialTheme.colorScheme.onSurface
+                    colorScheme.onSurface
                 }
             )
         },
@@ -336,9 +341,9 @@ private fun NavigationDrawerMenuItem(
                     contentDescription = item.title,
                     modifier = Modifier.size(24.dp),
                     tint = if (selected) {
-                        MaterialTheme.colorScheme.onSecondaryContainer
+                        colorScheme.onSecondaryContainer
                     } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                        colorScheme.onSurfaceVariant
                     }
                 )
                 
@@ -348,8 +353,8 @@ private fun NavigationDrawerMenuItem(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .offset(x = 8.dp, y = (-4).dp),
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
+                        containerColor = colorScheme.error,
+                        contentColor = colorScheme.onError
                     ) {
                         Text(
                             text = if (badgeCount > 99) "99+" else badgeCount.toString(),
@@ -362,14 +367,14 @@ private fun NavigationDrawerMenuItem(
         },
         selected = selected,
         onClick = onClick,
-        modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+        modifier = modifier.padding(horizontal = 8.dp, vertical = 4.dp),
         colors = NavigationDrawerItemDefaults.colors(
-            selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            selectedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            unselectedContainerColor = MaterialTheme.colorScheme.surface,
-            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            unselectedTextColor = MaterialTheme.colorScheme.onSurface
+            selectedContainerColor = colorScheme.secondaryContainer,
+            selectedIconColor = colorScheme.onSecondaryContainer,
+            selectedTextColor = colorScheme.onSecondaryContainer,
+            unselectedContainerColor = colorScheme.surface,
+            unselectedIconColor = colorScheme.onSurfaceVariant,
+            unselectedTextColor = colorScheme.onSurface
         ),
         shape = MaterialTheme.shapes.medium
     )

@@ -43,8 +43,7 @@ data class DrawerMenuItem(
             DrawerMenuItem("Profile", Icons.Default.Person, DrawerMenuItemType.PROFILE),
             DrawerMenuItem("Chat Bot", Icons.Default.Message, DrawerMenuItemType.CHAT_BOT),
             DrawerMenuItem("Settings", Icons.Default.Settings, DrawerMenuItemType.SETTINGS),
-            DrawerMenuItem("Theme", Icons.Default.Palette, DrawerMenuItemType.THEME),
-            DrawerMenuItem("Log out", Icons.Default.ExitToApp, DrawerMenuItemType.LOG_OUT)
+            DrawerMenuItem("Theme", Icons.Default.Palette, DrawerMenuItemType.THEME)
         )
         
         fun talentItems(): List<DrawerMenuItem> = listOf(
@@ -52,8 +51,7 @@ data class DrawerMenuItem(
             DrawerMenuItem("My Stats", Icons.Default.Assessment, DrawerMenuItemType.MY_STATS),
             DrawerMenuItem("Chat Bot", Icons.Default.Message, DrawerMenuItemType.CHAT_BOT),
             DrawerMenuItem("Settings", Icons.Default.Settings, DrawerMenuItemType.SETTINGS),
-            DrawerMenuItem("Theme", Icons.Default.Palette, DrawerMenuItemType.THEME),
-            DrawerMenuItem("Log out", Icons.Default.ExitToApp, DrawerMenuItemType.LOG_OUT)
+            DrawerMenuItem("Theme", Icons.Default.Palette, DrawerMenuItemType.THEME)
         )
     }
 }
