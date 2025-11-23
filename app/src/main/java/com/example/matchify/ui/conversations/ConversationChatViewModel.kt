@@ -105,6 +105,22 @@ class ConversationChatViewModel(
     fun isMessageFromCurrentUser(message: Message): Boolean {
         return message.senderId == currentUserId
     }
+    
+    fun markMessagesAsViewed() {
+        viewModelScope.launch {
+            try {
+                val prefs = AuthPreferencesProvider.getInstance().get()
+                // Sauvegarder la date/heure actuelle comme dernière consultation
+                val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
+                dateFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
+                val now = java.util.Date()
+                val timestamp = dateFormat.format(now)
+                prefs.saveLastMessagesViewed(timestamp)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 }
 
 class ConversationChatViewModelFactory(

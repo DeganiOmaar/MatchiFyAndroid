@@ -52,6 +52,8 @@ import kotlinx.coroutines.launch
 import com.example.matchify.ui.stats.MyStatsScreen
 import com.example.matchify.ui.stats.MyStatsViewModel
 import com.example.matchify.ui.stats.MyStatsViewModelFactory
+import com.example.matchify.ui.alerts.BadgeCountViewModel
+import com.example.matchify.ui.alerts.BadgeCountViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +83,12 @@ fun MainScreen(
     val recruiterProfileViewModel: RecruiterProfileViewModel = viewModel(
         factory = RecruiterProfileViewModelFactory()
     )
+    
+    // ViewModel pour les badges de notification (messages non lus, alertes, etc.)
+    val badgeCountViewModel: BadgeCountViewModel = viewModel(
+        factory = BadgeCountViewModelFactory()
+    )
+    val unreadMessagesCount by badgeCountViewModel.conversationsWithUnreadCount.collectAsState()
 
     Scaffold(
         // Utiliser la même couleur que la section des onglets (surfaceContainerHighest)
@@ -102,7 +110,8 @@ fun MainScreen(
                             launchSingleTop = true
                             restoreState = true
                         }
-                    }
+                    },
+                    unreadMessagesCount = unreadMessagesCount
                 )
             }
         }
@@ -360,6 +369,7 @@ fun MainScreen(
                 )
             }
             
+            // Écran des alertes - utilise AlertsScreen.kt
             composable("alerts_list") {
                 com.example.matchify.ui.alerts.AlertsScreen(
                     onAlertClick = { proposalId ->
@@ -372,6 +382,10 @@ fun MainScreen(
                 com.example.matchify.ui.messages.MessagesScreen(
                     onConversationClick = { conversationId ->
                         navController.navigate("conversation_chat/$conversationId")
+                    },
+                    onMessagesViewed = {
+                        // Rafraîchir le compteur de messages non lus après consultation
+                        badgeCountViewModel.refreshUnreadCount()
                     }
                 )
             }
@@ -385,6 +399,10 @@ fun MainScreen(
                             popUpTo("messages_list") { inclusive = false }
                             launchSingleTop = true
                         }
+                    },
+                    onMessagesViewed = {
+                        // Rafraîchir le compteur de messages non lus après consultation
+                        badgeCountViewModel.refreshUnreadCount()
                     }
                 )
             }

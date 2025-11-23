@@ -12,6 +12,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
+import java.util.Date
 
 class BadgeCountViewModel(
     private val alertRepository: AlertRepository,
@@ -62,9 +66,48 @@ class BadgeCountViewModel(
             
             // Load conversations with unread count
             try {
-                // Note: This would need to be implemented in ConversationRepository
-                // For now, we'll leave it at 0
-                _conversationsWithUnreadCount.value = 0
+                val conversations = conversationRepository.getConversations()
+                val prefs = AuthPreferencesProvider.getInstance().get()
+                val lastViewedTimestamp = prefs.getLastMessagesViewedValue()
+                
+                // Si l'utilisateur n'a jamais vu les messages, compter toutes les conversations avec des messages
+                val lastViewedDate = if (lastViewedTimestamp != null) {
+                    try {
+                        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+                        dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+                        dateFormat.parse(lastViewedTimestamp)
+                    } catch (e: Exception) {
+                        null
+                    }
+                } else {
+                    null
+                }
+                
+                // Compter les conversations avec des messages plus récents que la dernière consultation
+                val unreadCount = conversations.count { conversation ->
+                    conversation.lastMessageAt?.let { lastMessageAt ->
+                        try {
+                            val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+                            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+                            val messageDate = dateFormat.parse(lastMessageAt)
+                            
+                            // Si on a une date de dernière consultation, comparer
+                            // Sinon, compter toutes les conversations avec des messages
+                            if (lastViewedDate != null && messageDate != null) {
+                                messageDate.after(lastViewedDate)
+                            } else if (messageDate != null) {
+                                // Si pas de date de consultation, compter toutes les conversations avec messages
+                                true
+                            } else {
+                                false
+                            }
+                        } catch (e: Exception) {
+                            false
+                        }
+                    } ?: false
+                }
+                
+                _conversationsWithUnreadCount.value = unreadCount
             } catch (e: Exception) {
                 // Silently fail
             }
@@ -78,6 +121,10 @@ class BadgeCountViewModel(
                 loadCounts()
             }
         }
+    }
+    
+    fun refreshUnreadCount() {
+        loadCounts()
     }
 }
 

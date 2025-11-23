@@ -29,6 +29,7 @@ class AuthPreferences(private val context: Context) {
         private val REMEMBER = booleanPreferencesKey("remember_me")
         private val HAS_SEEN_ONBOARDING = booleanPreferencesKey("has_seen_onboarding")
         private val LANGUAGE = stringPreferencesKey("app_language")
+        private val LAST_MESSAGES_VIEWED = stringPreferencesKey("last_messages_viewed")
     }
 
     // Define the token flow before the init block
@@ -50,6 +51,8 @@ class AuthPreferences(private val context: Context) {
     }
 
     val language: Flow<String?> = context.dataStore.data.map { it[LANGUAGE] }
+    
+    val lastMessagesViewed: Flow<String?> = context.dataStore.data.map { it[LAST_MESSAGES_VIEWED] }
 
     private val _currentAccessToken = MutableStateFlow<String?>(null)
     val currentAccessToken: StateFlow<String?> = _currentAccessToken
@@ -140,6 +143,12 @@ class AuthPreferences(private val context: Context) {
     suspend fun saveLanguage(code: String) {
         context.dataStore.edit { it[LANGUAGE] = code }
     }
+    
+    suspend fun saveLastMessagesViewed(timestamp: String) {
+        context.dataStore.edit { it[LAST_MESSAGES_VIEWED] = timestamp }
+    }
+    
+    suspend fun getLastMessagesViewedValue(): String? = lastMessagesViewed.first()
 
     // Startup helpers
     suspend fun getTokenValue(): String? = token.first()

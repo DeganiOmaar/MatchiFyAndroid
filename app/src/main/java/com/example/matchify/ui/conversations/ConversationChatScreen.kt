@@ -30,6 +30,7 @@ import coil.compose.AsyncImage
 fun ConversationChatScreen(
     conversationId: String,
     onBack: () -> Unit,
+    onMessagesViewed: () -> Unit = {},
     viewModel: ConversationChatViewModel = viewModel(
         factory = ConversationChatViewModelFactory(conversationId)
     )
@@ -45,6 +46,10 @@ fun ConversationChatScreen(
     LaunchedEffect(Unit) {
         viewModel.loadConversation()
         viewModel.loadMessages()
+        // Marquer les messages comme vus quand l'utilisateur ouvre la conversation
+        viewModel.markMessagesAsViewed()
+        // Rafraîchir le compteur de badge
+        onMessagesViewed()
     }
     
     LaunchedEffect(messages.size) {

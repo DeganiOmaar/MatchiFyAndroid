@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 fun MainBottomNavigation(
     currentRoute: String?,
     onNavigate: (String) -> Unit,
+    unreadMessagesCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val isMissionsSelected = currentRoute == "missions_list"
@@ -202,11 +203,28 @@ fun MainBottomNavigation(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = if (isMessagesSelected) Icons.Filled.Message else Icons.Outlined.Message,
-                            contentDescription = "Messages",
-                            modifier = Modifier.size(22.dp)
-                        )
+                        Box {
+                            Icon(
+                                imageVector = if (isMessagesSelected) Icons.Filled.Message else Icons.Outlined.Message,
+                                contentDescription = "Messages",
+                                modifier = Modifier.size(22.dp)
+                            )
+                            // Badge pour les messages non lus
+                            if (unreadMessagesCount > 0) {
+                                Badge(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .offset(x = 8.dp, y = (-4).dp),
+                                    containerColor = MaterialTheme.colorScheme.error
+                                ) {
+                                    Text(
+                                        text = if (unreadMessagesCount > 99) "99+" else unreadMessagesCount.toString(),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.White
+                                    )
+                                }
+                            }
+                        }
                     }
                 },
                 label = {
