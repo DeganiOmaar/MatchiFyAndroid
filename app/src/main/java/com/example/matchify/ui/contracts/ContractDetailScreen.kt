@@ -1,5 +1,8 @@
 package com.example.matchify.ui.contracts
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,9 +16,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.graphics.BitmapFactory
+import android.util.Base64
 import com.example.matchify.domain.model.Contract
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,6 +98,8 @@ private fun ContractDetailContent(
     contract: Contract,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(24.dp)) {
         // Title Section
         Section(title = "Title") {
@@ -155,18 +165,20 @@ private fun ContractDetailContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "Signatures",
+                    text = "Signatures:",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 
-                // Recruiter Signature
-                SignatureDisplay(
-                    label = "Recruiter:",
-                    signature = contract.recruiterSignature
-                )
+                // Recruiter Signature - always show if present (matching iOS)
+                if (contract.recruiterSignature.isNotEmpty()) {
+                    SignatureDisplay(
+                        label = "Recruiter:",
+                        signature = contract.recruiterSignature
+                    )
+                }
                 
-                // Talent Signature
+                // Talent Signature - matching iOS logic exactly
                 if (contract.status == Contract.ContractStatus.SIGNED_BY_BOTH &&
                     !contract.talentSignature.isNullOrEmpty()) {
                     SignatureDisplay(
@@ -174,23 +186,66 @@ private fun ContractDetailContent(
                         signature = contract.talentSignature!!
                     )
                 } else if (contract.status != Contract.ContractStatus.SIGNED_BY_BOTH) {
-                    Text(
-                        text = "Talent: Pending signature",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    // Show placeholder if contract not yet signed by talent - matching iOS exactly
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Talent:",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(80.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.Gray.copy(alpha = 0.1f)
+                            )
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = androidx.compose.ui.Alignment.CenterStart
+                            ) {
+                                Text(
+                                    text = "Pending signature",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
         
-        // PDF Link
+        // PDF Link - matching iOS behavior exactly
         val pdfUrl = contract.signedPdfUrl ?: contract.pdfUrl
         if (pdfUrl != null) {
+            // Build full URL - matching iOS logic
+            val fullUrl = if (pdfUrl.startsWith("http")) {
+                pdfUrl
+            } else {
+                "http://10.0.2.2:3000$pdfUrl"
+            }
+            
             Button(
-                onClick = { /* Open PDF */ },
-                modifier = Modifier.fillMaxWidth()
+                onClick = {
+                    // Open PDF in browser/viewer - matching iOS Link behavior
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(fullUrl))
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                )
             ) {
-                Text("View PDF")
+                Text(
+                    "View PDF",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }
@@ -242,24 +297,56 @@ private fun SignatureDisplay(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        // Display signature image from base64
-        // Note: You'll need to decode base64 and display as image
+        // Display signature image from base64 - matching iOS imageFromBase64 behavior
+        val signatureBitmap = decodeBase64ToBitmap(signature)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp),
-            shape = RoundedCornerShape(8.dp)
+                .height(80.dp),
+            shape = RoundedCornerShape(8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.Gray.copy(alpha = 0.1f)
+            )
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = androidx.compose.ui.Alignment.Center
-            ) {
-                Text(
-                    text = "Signature Image",
-                    style = MaterialTheme.typography.bodySmall
+            if (signatureBitmap != null) {
+                Image(
+                    bitmap = signatureBitmap.asImageBitmap(),
+                    contentDescription = "Signature",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
                 )
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = androidx.compose.ui.Alignment.Center
+                ) {
+                    Text(
+                        text = "Invalid signature",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
+    }
+}
+
+/**
+ * Decode base64 string to Bitmap - matching iOS imageFromBase64 function
+ * Removes data URL prefix if present (e.g., "data:image/png;base64,")
+ */
+private fun decodeBase64ToBitmap(base64String: String): android.graphics.Bitmap? {
+    return try {
+        // Remove data URL prefix if present - matching iOS regex behavior
+        val base64 = base64String.replace(
+            Regex("data:image/[^;]+;base64,"),
+            ""
+        )
+        
+        val imageBytes = Base64.decode(base64, Base64.DEFAULT)
+        BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+    } catch (e: Exception) {
+        null
     }
 }
 
