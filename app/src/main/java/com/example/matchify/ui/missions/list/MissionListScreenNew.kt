@@ -12,7 +12,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -46,7 +45,7 @@ import coil.compose.AsyncImage
 import com.example.matchify.R
 import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.domain.model.Mission
-import com.example.matchify.ui.missions.components.MissionCardNew
+import com.example.matchify.ui.missions.components.MissionRow
 import com.example.matchify.ui.missions.components.NavigationDrawerContent
 import com.example.matchify.ui.missions.components.DrawerMenuItemType
 import kotlinx.coroutines.launch
@@ -170,22 +169,13 @@ fun MissionListScreenNew(
         Scaffold(
             topBar = {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Top App Bar with profile and actions - MD3 filled style matching mission cards
+                    // Top App Bar - matching Alerts/Proposals exactly
                     TopAppBar(
-                        title = {
-                            Text(
-                                text = "Missions",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        },
+                        title = { Text("Missions") },
                         navigationIcon = {
-                            // Profile Image on the left
+                            // Profile Image on the left - clickable to open drawer
                             Surface(
                                 modifier = Modifier
                                     .size(40.dp)
@@ -197,7 +187,7 @@ fun MissionListScreenNew(
                                         viewModel.openProfileDrawer()
                                     },
                                 shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surfaceContainerHigh
+                                color = MaterialTheme.colorScheme.surface
                             ) {
                                 Box {
                                     val profileImageUrl = user?.profileImageUrl
@@ -218,136 +208,116 @@ fun MissionListScreenNew(
                                     }
                                 }
                             }
+                        }
+                    )
+                    
+                    // Search Bar - matching Material 3 design patterns
+                    OutlinedTextField(
+                        value = searchText,
+                        onValueChange = { viewModel.updateSearchText(it) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        placeholder = {
+                            Text(
+                                text = "Search for jobs",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         },
-                        actions = {
-                            if (isRecruiter) {
-                                IconButton(
-                                    onClick = onAddMission
-                                ) {
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Filled.Search,
+                                contentDescription = "Search",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
+                        trailingIcon = {
+                            if (searchText.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.updateSearchText("") }) {
                                     Icon(
-                                        imageVector = Icons.Filled.Add,
-                                        contentDescription = "Add Mission",
-                                        tint = MaterialTheme.colorScheme.primary
+                                        imageVector = Icons.Filled.Close,
+                                        contentDescription = "Clear",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
                         },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            titleContentColor = MaterialTheme.colorScheme.onSurface,
-                            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                            actionIconContentColor = MaterialTheme.colorScheme.onSurface
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            focusedBorderColor = MaterialTheme.colorScheme.outline,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                         ),
-                        modifier = Modifier.fillMaxWidth()
+                        textStyle = MaterialTheme.typography.bodyMedium,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { /* Handle search */ })
                     )
-                
-                // Search Bar - MD3 filled style matching mission cards
-                OutlinedTextField(
-                    value = searchText,
-                    onValueChange = { viewModel.updateSearchText(it) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    placeholder = {
-                        Text(
-                            text = "Search for jobs",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Filled.Search,
-                            contentDescription = "Search",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    trailingIcon = {
-                        if (searchText.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.updateSearchText("") }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Close,
-                                    contentDescription = "Clear",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        focusedBorderColor = MaterialTheme.colorScheme.outline,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    textStyle = MaterialTheme.typography.bodyMedium,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { /* Handle search */ })
-                )
-                
-                // Material 3 Primary Tabs - Below toolbar - MD3 filled style matching mission cards
-                if (isTalent) {
-                    ScrollableTabRow(
-                        selectedTabIndex = selectedTabIndex,
-                        modifier = Modifier.fillMaxWidth(),
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        contentColor = MaterialTheme.colorScheme.primary,
-                        edgePadding = 52.dp, // Material 3 standard leading offset for scrollable tabs
-                        indicator = { tabPositions ->
-                            if (selectedTabIndex < tabPositions.size) {
-                                TabRowDefaults.SecondaryIndicator(
-                                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    height = 3.dp
-                                )
-                            }
-                        },
-                        divider = {
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f),
-                                thickness = 0.5.dp
-                            )
-                        }
-                    ) {
-                        tabs.forEachIndexed { index, title ->
-                            Tab(
-                                selected = selectedTabIndex == index,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        val newTab = when (index) {
-                                            0 -> MissionTab.BEST_MATCHES
-                                            1 -> MissionTab.MOST_RECENT
-                                            2 -> MissionTab.FAVORITES
-                                            else -> MissionTab.MOST_RECENT
-                                        }
-                                        viewModel.selectTab(newTab)
-                                        pagerState.animateScrollToPage(index)
-                                        if (newTab == MissionTab.FAVORITES) {
-                                            viewModel.loadFavorites()
-                                        }
-                                    }
-                                },
-                                text = {
-                                    Text(
-                                        text = title,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = if (selectedTabIndex == index) {
-                                            FontWeight.SemiBold
-                                        } else {
-                                            FontWeight.Medium
-                                        }
+                    
+                    // Material 3 Primary Tabs - matching Material 3 design patterns
+                    if (isTalent) {
+                        ScrollableTabRow(
+                            selectedTabIndex = selectedTabIndex,
+                            modifier = Modifier.fillMaxWidth(),
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.primary,
+                            edgePadding = 16.dp,
+                            indicator = { tabPositions ->
+                                if (selectedTabIndex < tabPositions.size) {
+                                    TabRowDefaults.SecondaryIndicator(
+                                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        height = 3.dp
                                     )
-                                },
-                                selectedContentColor = MaterialTheme.colorScheme.primary,
-                                unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                                }
+                            },
+                            divider = {
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f),
+                                    thickness = 0.5.dp
+                                )
+                            }
+                        ) {
+                            tabs.forEachIndexed { index, title ->
+                                Tab(
+                                    selected = selectedTabIndex == index,
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            val newTab = when (index) {
+                                                0 -> MissionTab.BEST_MATCHES
+                                                1 -> MissionTab.MOST_RECENT
+                                                2 -> MissionTab.FAVORITES
+                                                else -> MissionTab.MOST_RECENT
+                                            }
+                                            viewModel.selectTab(newTab)
+                                            pagerState.animateScrollToPage(index)
+                                            if (newTab == MissionTab.FAVORITES) {
+                                                viewModel.loadFavorites()
+                                            }
+                                        }
+                                    },
+                                    text = {
+                                        Text(
+                                            text = title,
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = if (selectedTabIndex == index) {
+                                                FontWeight.SemiBold
+                                            } else {
+                                                FontWeight.Medium
+                                            }
+                                        )
+                                    },
+                                    selectedContentColor = MaterialTheme.colorScheme.primary,
+                                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
-            }
             },
             containerColor = MaterialTheme.colorScheme.surface
         ) { paddingValues ->
@@ -467,20 +437,19 @@ fun MissionTabContent(
         else -> {
             LazyColumn(
                 modifier = modifier.fillMaxSize(),
-                contentPadding = PaddingValues(vertical = 0.dp)
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                itemsIndexed(missions) { index, mission ->
+                items(missions) { mission ->
                     // Check if current user is owner of this mission
                     val isOwner = viewModel.isMissionOwner(mission)
                     val isRecruiter = !isTalent
                     
-                    MissionCardNew(
+                    MissionRow(
                         mission = mission,
-                        isFavorite = viewModel.isFavorite(mission),
-                        onFavoriteToggle = { viewModel.toggleFavorite(mission) },
-                        onClick = { onMissionClick(mission) },
-                        isOwner = isOwner,
+                        isOwner = isOwner && isRecruiter,
                         isRecruiter = isRecruiter,
+                        onClick = { onMissionClick(mission) },
                         onEdit = {
                             if (isRecruiter && isOwner && onEditMission != null) {
                                 onEditMission(mission)
@@ -490,18 +459,8 @@ fun MissionTabContent(
                             if (isRecruiter && isOwner) {
                                 viewModel.deleteMission(mission)
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth()
+                        }
                     )
-                    
-                    // MD3 Divider between cards (except after the last item)
-                    if (index < missions.size - 1) {
-                        HorizontalDivider(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                            thickness = 1.dp
-                        )
-                    }
                 }
             }
         }
@@ -516,80 +475,34 @@ fun EmptyStateViewNew(
     isFavoritesTab: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(40.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        // Material 3 Surface for icon container
-        Surface(
-            modifier = Modifier.size(80.dp),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-            tonalElevation = 0.dp
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Work,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                )
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        Text(
-            text = "No missions yet",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        Text(
-            text = when {
-                isFavoritesTab -> "You can save your favourite or wait until there a new missions for best match and most recent missions"
-                isTalent -> "You can save your favourite or wait until there a new missions for best match and most recent missions"
-                else -> "Create your first mission offer to get started"
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-        
-        if (onAddMission != null) {
-            Spacer(modifier = Modifier.height(40.dp))
-            
-            // Material 3 Filled Button
-            Button(
-                onClick = onAddMission,
-                modifier = Modifier
-                    .fillMaxWidth(0.75f)
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 2.dp,
-                    pressedElevation = 4.dp
-                )
-            ) {
-                Text(
-                    text = "Create Mission",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+            Icon(
+                imageVector = Icons.Filled.Work,
+                contentDescription = null,
+                modifier = Modifier.size(60.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            )
+            Text(
+                text = "No Missions",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = when {
+                    isFavoritesTab -> "You have not saved any favorite missions yet."
+                    isTalent -> "No missions available at the moment."
+                    else -> "You have not created any missions yet."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
