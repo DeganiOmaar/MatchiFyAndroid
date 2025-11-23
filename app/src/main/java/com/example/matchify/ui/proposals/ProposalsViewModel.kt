@@ -93,6 +93,28 @@ class ProposalsViewModel(
             }
         }
     }
+    
+    fun archiveProposal(id: String) {
+        viewModelScope.launch {
+            try {
+                repository.archiveProposal(id)
+                loadProposals()
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erreur lors de l'archivage de la proposition"
+            }
+        }
+    }
+    
+    fun deleteProposal(id: String) {
+        viewModelScope.launch {
+            try {
+                repository.deleteProposal(id)
+                loadProposals()
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erreur lors de la suppression de la proposition"
+            }
+        }
+    }
 }
 
 class ProposalsViewModelFactory : androidx.lifecycle.ViewModelProvider.Factory {

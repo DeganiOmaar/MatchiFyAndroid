@@ -28,6 +28,12 @@ interface ProposalApi {
         @Body request: UpdateProposalStatusRequest
     ): ProposalDto
     
+    @PATCH("proposals/{id}/archive")
+    suspend fun archiveProposal(@Path("id") id: String): ProposalDto
+    
+    @DELETE("proposals/{id}")
+    suspend fun deleteProposal(@Path("id") id: String): ProposalDto
+    
     @GET("proposals/mission/{missionId}/count")
     suspend fun getMissionProposalsCount(@Path("missionId") missionId: String): Map<String, Any>
 }

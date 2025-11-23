@@ -6,18 +6,26 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -114,7 +122,9 @@ fun ProposalsScreen(
                             ProposalRow(
                                 proposal = proposal,
                                 isRecruiter = viewModel.isRecruiter,
-                                onClick = { onProposalClick(proposal.proposalId) }
+                                onClick = { onProposalClick(proposal.proposalId) },
+                                onArchive = { viewModel.archiveProposal(proposal.proposalId) },
+                                onDelete = { viewModel.deleteProposal(proposal.proposalId) }
                             )
                         }
                     }
@@ -256,8 +266,14 @@ private fun EmptyProposalsView(isRecruiter: Boolean) {
 private fun ProposalRow(
     proposal: Proposal,
     isRecruiter: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onArchive: () -> Unit = {},
+    onDelete: () -> Unit = {}
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+    
+    // Only show menu for Talent
+    val showContextMenu = !isRecruiter
     // Determine if proposal is "unread" (not viewed) - matching alerts logic
     val isUnread = proposal.status == com.example.matchify.domain.model.ProposalStatus.NOT_VIEWED
     
@@ -272,23 +288,38 @@ private fun ProposalRow(
         null
     }
     
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (!isUnread) {
-                MaterialTheme.colorScheme.surface
-            } else {
-                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
-            }
-        ),
-        border = if (isUnread) {
-            androidx.compose.foundation.BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-            )
-        } else null
-    ) {
+    Box {
+        Card(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    if (showContextMenu) {
+                        Modifier.pointerInput(Unit) {
+                            detectTapGestures(
+                                onLongPress = {
+                                    showMenu = true
+                                }
+                            )
+                        }
+                    } else {
+                        Modifier
+                    }
+                ),
+            colors = CardDefaults.cardColors(
+                containerColor = if (!isUnread) {
+                    MaterialTheme.colorScheme.surface
+                } else {
+                    MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                }
+            ),
+            border = if (isUnread) {
+                androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                )
+            } else null
+        ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -360,6 +391,58 @@ private fun ProposalRow(
                     text = formatDate(proposal.createdAt),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
+            }
+        }
+        }
+        
+        // Context menu for Talent only
+        if (showContextMenu) {
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Archive,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text("Archive")
+                        }
+                    },
+                    onClick = {
+                        showMenu = false
+                        onArchive()
+                    }
+                )
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                "Delete",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    onClick = {
+                        showMenu = false
+                        onDelete()
+                    }
                 )
             }
         }

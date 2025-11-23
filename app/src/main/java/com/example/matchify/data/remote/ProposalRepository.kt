@@ -52,5 +52,15 @@ class ProposalRepository(
         val response = apiService.proposalApi.getMissionProposalsCount(missionId)
         return response["count"]?.toString()?.toIntOrNull() ?: 0
     }
+    
+    suspend fun archiveProposal(id: String): Proposal {
+        val dto = apiService.proposalApi.archiveProposal(id)
+        return ProposalDtoMapper.toDomain(dto)
+    }
+    
+    suspend fun deleteProposal(id: String): Proposal {
+        val dto = apiService.proposalApi.deleteProposal(id)
+        return ProposalDtoMapper.toDomain(dto)
+    }
 }
 
