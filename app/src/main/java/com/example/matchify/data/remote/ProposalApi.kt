@@ -12,7 +12,8 @@ interface ProposalApi {
     
     @GET("proposals/talent")
     suspend fun getTalentProposals(
-        @Query("status") status: String? = null
+        @Query("status") status: String? = null,
+        @Query("archived") archived: Boolean? = null
     ): List<ProposalDto>
     
     @GET("proposals/recruiter")

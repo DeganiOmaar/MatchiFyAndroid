@@ -19,6 +19,11 @@ enum class ProposalStatusFilter(val displayName: String, val apiValue: String?) 
     NOT_VIEWED("Not Viewed", "NOT_VIEWED")
 }
 
+enum class ProposalTab(val displayName: String) {
+    ACTIVE("Active"),
+    ARCHIVE("Archive")
+}
+
 class ProposalsViewModel(
     private val repository: ProposalRepository
 ) : ViewModel() {
@@ -35,6 +40,9 @@ class ProposalsViewModel(
     private val _selectedStatusFilter = MutableStateFlow(ProposalStatusFilter.ALL)
     val selectedStatusFilter: StateFlow<ProposalStatusFilter> = _selectedStatusFilter.asStateFlow()
     
+    private val _selectedTab = MutableStateFlow(ProposalTab.ACTIVE)
+    val selectedTab: StateFlow<ProposalTab> = _selectedTab.asStateFlow()
+    
     val isRecruiter: Boolean
         get() {
             val prefs = AuthPreferencesProvider.getInstance().get()
@@ -42,6 +50,15 @@ class ProposalsViewModel(
         }
     
     init {
+        loadProposals()
+    }
+    
+    fun selectTab(tab: ProposalTab) {
+        _selectedTab.value = tab
+        // Reset status filter when switching to Archive (status filters don't apply to Archive)
+        if (tab == ProposalTab.ARCHIVE) {
+            _selectedStatusFilter.value = ProposalStatusFilter.ALL
+        }
         loadProposals()
     }
     
@@ -59,7 +76,14 @@ class ProposalsViewModel(
                 val proposalsList = if (isRecruiter) {
                     repository.getRecruiterProposals()
                 } else {
-                    repository.getTalentProposals(status = _selectedStatusFilter.value.apiValue)
+                    val archived = if (_selectedTab.value == ProposalTab.ARCHIVE) true else null
+                    // Only apply status filter for Active tab
+                    val statusFilter = if (_selectedTab.value == ProposalTab.ACTIVE) {
+                        _selectedStatusFilter.value.apiValue
+                    } else {
+                        null
+                    }
+                    repository.getTalentProposals(status = statusFilter, archived = archived)
                 }
                 _proposals.value = proposalsList
             } catch (e: Exception) {

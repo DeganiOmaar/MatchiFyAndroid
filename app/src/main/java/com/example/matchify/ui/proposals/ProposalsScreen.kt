@@ -2,13 +2,16 @@ package com.example.matchify.ui.proposals
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.*
@@ -42,6 +45,7 @@ fun ProposalsScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val selectedStatusFilter by viewModel.selectedStatusFilter.collectAsState()
+    val selectedTab by viewModel.selectedTab.collectAsState()
     
     Scaffold(
         topBar = {
@@ -55,15 +59,26 @@ fun ProposalsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Filter chips (Talent only)
+            // Active/Archive tabs (Talent only)
             if (!viewModel.isRecruiter) {
-                ProposalStatusFilters(
-                    selectedFilter = selectedStatusFilter,
-                    onFilterSelected = { filter ->
-                        viewModel.selectStatusFilter(filter)
+                ProposalTabSelector(
+                    selectedTab = selectedTab,
+                    onTabSelected = { tab ->
+                        viewModel.selectTab(tab)
                     },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 )
+                
+                // Status filter chips (Talent only, Active tab only)
+                if (selectedTab == ProposalTab.ACTIVE) {
+                    ProposalStatusFilters(
+                        selectedFilter = selectedStatusFilter,
+                        onFilterSelected = { filter ->
+                            viewModel.selectStatusFilter(filter)
+                        },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                    )
+                }
             }
             
             when {
@@ -103,6 +118,59 @@ fun ProposalsScreen(
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProposalTabSelector(
+    selectedTab: ProposalTab,
+    onTabSelected: (ProposalTab) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            ProposalTab.values().forEach { tab ->
+                val isSelected = selectedTab == tab
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onTabSelected(tab) }
+                        .then(
+                            if (isSelected) {
+                                Modifier.background(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                            } else {
+                                Modifier
+                            }
+                        )
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = tab.displayName,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (isSelected) {
+                            FontWeight.SemiBold
+                        } else {
+                            FontWeight.Medium
+                        },
+                        color = if (isSelected) {
+                            MaterialTheme.colorScheme.onPrimary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
                 }
             }
         }
