@@ -1,7 +1,7 @@
 package com.example.matchify.ui.conversations
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,26 +11,31 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.DriveFileMoveRtl
 import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.matchify.data.local.AuthPreferencesProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +53,17 @@ fun ConversationChatScreen(
     val messageText by viewModel.messageText.collectAsState()
     val isSending by viewModel.isSending.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    
+    val prefs = remember { AuthPreferencesProvider.getInstance().get() }
+    val currentUser by prefs.user.collectAsState(initial = null)
+    
+    // Get avatar URLs
+    val currentUserAvatarUrl = currentUser?.profileImageUrl
+    
+    val otherUserAvatarUrl = conversation?.getOtherUserProfileImageURL(
+        isRecruiter = viewModel.isRecruiter,
+        baseURL = "http://10.0.2.2:3000"
+    )
     
     val listState = rememberLazyListState()
     
@@ -85,12 +101,14 @@ fun ConversationChatScreen(
                 isRecruiter = viewModel.isRecruiter,
                 onContractClick = if (viewModel.isRecruiter) onCreateContractClick else null
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             if (isLoading && messages.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -98,8 +116,8 @@ fun ConversationChatScreen(
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     items(messages) { message ->
                         // Check if this is a contract message
@@ -116,12 +134,16 @@ fun ConversationChatScreen(
                                         onContractReview(contractId)
                                     }
                                 },
-                                isRecruiter = viewModel.isRecruiter
+                                isRecruiter = viewModel.isRecruiter,
+                                currentUserAvatarUrl = currentUserAvatarUrl,
+                                otherUserAvatarUrl = otherUserAvatarUrl
                             )
                         } else {
                             MessageBubble(
                                 message = message,
-                                isFromCurrentUser = viewModel.isMessageFromCurrentUser(message)
+                                isFromCurrentUser = viewModel.isMessageFromCurrentUser(message),
+                                currentUserAvatarUrl = currentUserAvatarUrl,
+                                otherUserAvatarUrl = otherUserAvatarUrl
                             )
                         }
                     }
@@ -171,7 +193,7 @@ private fun ConversationTopBar(
         },
         navigationIcon = {
             IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back")
             }
         }
     )
@@ -182,41 +204,56 @@ private fun ContractMessageBubble(
     message: com.example.matchify.domain.model.Message,
     isFromCurrentUser: Boolean,
     onContractClick: () -> Unit,
-    isRecruiter: Boolean = false
+    isRecruiter: Boolean = false,
+    currentUserAvatarUrl: String?,
+    otherUserAvatarUrl: String?
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 4.dp),
         horizontalArrangement = if (isFromCurrentUser) Arrangement.End else Arrangement.Start
     ) {
+        // Avatar for received messages (left side)
+        if (!isFromCurrentUser) {
+            MessageAvatar(
+                avatarUrl = otherUserAvatarUrl,
+                modifier = Modifier
+                    .size(36.dp)
+                    .padding(end = 8.dp)
+            )
+        }
+        
         Column(
             horizontalAlignment = if (isFromCurrentUser) Alignment.End else Alignment.Start,
-            modifier = Modifier.widthIn(max = 300.dp)
+            modifier = Modifier.widthIn(max = 280.dp)
         ) {
-            // Contract message card - matching iOS design exactly
+            // Unified bubble design - same colors as regular messages
+            val bubbleColor = if (isFromCurrentUser) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            }
+            
+            val textColor = if (isFromCurrentUser) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            
+            // Check if contract is signed for icon display
+            val signedKeywords = listOf("signed", "signé", "both parties", "Talent signed")
+            val isSigned = signedKeywords.any { message.content.contains(it, ignoreCase = true) } ||
+                         message.pdfUrl != null
+            
             Surface(
-                shape = RoundedCornerShape(18.dp),
-                color = if (isRecruiter && !isFromCurrentUser) {
-                    // Recruiter sees contract from talent: secondaryBackground (light gray)
-                    MaterialTheme.colorScheme.surfaceVariant
-                } else {
-                    // Talent sees contract from recruiter OR recruiter's own: primary (blue)
-                    MaterialTheme.colorScheme.primary
-                },
+                shape = RoundedCornerShape(20.dp),
+                color = bubbleColor,
                 onClick = onContractClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    // Add border for recruiter view (matching iOS)
-                    .then(
-                        if (isRecruiter && !isFromCurrentUser) {
-                            Modifier.border(
-                                width = 0.5.dp,
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                                shape = RoundedCornerShape(18.dp)
-                            )
-                        } else {
-                            Modifier
-                        }
-                    )
+                modifier = Modifier.shadow(
+                    elevation = 1.dp,
+                    shape = RoundedCornerShape(20.dp)
+                )
             ) {
                 Row(
                     modifier = Modifier
@@ -225,18 +262,11 @@ private fun ContractMessageBubble(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Document icon - matching iOS "doc.text.fill"
                     Icon(
-                        Icons.Default.InsertDriveFile,
+                        Icons.Default.DriveFileMoveRtl,
                         contentDescription = "Contract",
-                        modifier = Modifier.size(24.dp),
-                        tint = if (isRecruiter && !isFromCurrentUser) {
-                            // Recruiter view: primary color
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            // Talent view or recruiter's own: white
-                            Color.White
-                        }
+                        modifier = Modifier.size(28.dp),
+                        tint = textColor
                     )
                     
                     Column(
@@ -244,55 +274,41 @@ private fun ContractMessageBubble(
                         horizontalAlignment = Alignment.Start
                     ) {
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Contract",
+                                text = "Contrat",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontSize = 16.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = if (isRecruiter && !isFromCurrentUser) {
-                                    // Recruiter view: textPrimary
-                                    MaterialTheme.colorScheme.onSurface
-                                } else {
-                                    // Talent view or recruiter's own: white
-                                    Color.White
-                                }
+                                color = textColor
                             )
                             
-                            // Show signed indicator if contract is signed (matching iOS)
-                            val signedKeywords = listOf("signed", "signé", "both parties", "Talent signed")
-                            val isSigned = signedKeywords.any { message.content.contains(it, ignoreCase = true) } ||
-                                         message.pdfUrl != null
                             if (isSigned) {
                                 Icon(
                                     Icons.Default.CheckCircle,
                                     contentDescription = "Signed",
-                                    modifier = Modifier.size(14.dp),
-                                    tint = Color(0xFF4CAF50)
+                                    modifier = Modifier.size(16.dp),
+                                    tint = if (isSystemInDarkTheme()) {
+                                        Color(0xFF81C784)
+                                    } else {
+                                        Color(0xFF4CAF50)
+                                    }
                                 )
                             }
                         }
                         
-                        // Contract message text - matching iOS size (12sp)
                         Text(
                             text = message.content,
                             style = MaterialTheme.typography.bodySmall,
                             fontSize = 12.sp,
-                            color = if (isRecruiter && !isFromCurrentUser) {
-                                // Recruiter view: textSecondary
-                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                            } else {
-                                // Talent view or recruiter's own: white with opacity
-                                Color.White.copy(alpha = 0.8f)
-                            },
+                            color = textColor.copy(alpha = 0.8f),
                             maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
-                    
-                    Spacer(modifier = Modifier.width(0.dp))
                 }
             }
             
@@ -302,7 +318,17 @@ private fun ContractMessageBubble(
                 style = MaterialTheme.typography.bodySmall,
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+        }
+        
+        // Avatar for sent messages (right side)
+        if (isFromCurrentUser) {
+            MessageAvatar(
+                avatarUrl = currentUserAvatarUrl,
+                modifier = Modifier
+                    .size(36.dp)
+                    .padding(start = 8.dp)
             )
         }
     }
@@ -311,46 +337,108 @@ private fun ContractMessageBubble(
 @Composable
 private fun MessageBubble(
     message: com.example.matchify.domain.model.Message,
-    isFromCurrentUser: Boolean
+    isFromCurrentUser: Boolean,
+    currentUserAvatarUrl: String?,
+    otherUserAvatarUrl: String?
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 4.dp),
         horizontalArrangement = if (isFromCurrentUser) Arrangement.End else Arrangement.Start
     ) {
+        // Avatar for received messages (left side)
+        if (!isFromCurrentUser) {
+            MessageAvatar(
+                avatarUrl = otherUserAvatarUrl,
+                modifier = Modifier
+                    .size(36.dp)
+                    .padding(end = 8.dp)
+            )
+        }
+        
         Column(
             horizontalAlignment = if (isFromCurrentUser) Alignment.End else Alignment.Start,
             modifier = Modifier.widthIn(max = 280.dp)
         ) {
+            // Modern chat bubble with large rounded corners
+            val bubbleColor = if (isFromCurrentUser) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            }
+            
+            val textColor = if (isFromCurrentUser) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            
             Surface(
-                shape = RoundedCornerShape(
-                    topStart = 18.dp,
-                    topEnd = 18.dp,
-                    bottomStart = if (isFromCurrentUser) 18.dp else 4.dp,
-                    bottomEnd = if (isFromCurrentUser) 4.dp else 18.dp
-                ),
-                color = if (isFromCurrentUser) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.surfaceVariant
-                }
+                shape = RoundedCornerShape(20.dp),
+                color = bubbleColor,
+                modifier = Modifier.shadow(
+                    elevation = 1.dp,
+                    shape = RoundedCornerShape(20.dp)
+                )
             ) {
                 Text(
                     text = message.content,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = if (isFromCurrentUser) {
-                        MaterialTheme.colorScheme.onPrimary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                    color = textColor,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 )
             }
             
+            // Timestamp below message
             Text(
                 text = message.formattedTime,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+        }
+        
+        // Avatar for sent messages (right side)
+        if (isFromCurrentUser) {
+            MessageAvatar(
+                avatarUrl = currentUserAvatarUrl,
+                modifier = Modifier
+                    .size(36.dp)
+                    .padding(start = 8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MessageAvatar(
+    avatarUrl: String?,
+    modifier: Modifier = Modifier
+) {
+    if (avatarUrl != null) {
+        AsyncImage(
+            model = avatarUrl,
+            contentDescription = "Avatar",
+            modifier = modifier
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        // Placeholder icon or initial
+        Box(
+            modifier = modifier
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Description,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )
         }
     }
@@ -368,10 +456,11 @@ private fun MessageInputBar(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 8.dp
     ) {
         Column {
-            // Contract button (Recruiter only) - same as iOS
+            // Contract button (Recruiter only) - Modern design
             if (isRecruiter && onContractClick != null) {
                 Row(
                     modifier = Modifier
@@ -379,24 +468,23 @@ private fun MessageInputBar(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    Button(
+                    FilledTonalButton(
                         onClick = onContractClick,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF007AFF) // Blue color like iOS
-                        ),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     ) {
                         Icon(
                             Icons.Default.Add,
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                            tint = Color.White
+                            modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             "Envoyer un contrat",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.White
+                            style = MaterialTheme.typography.labelMedium
                         )
                     }
                 }
@@ -405,37 +493,59 @@ private fun MessageInputBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Modern Material 3 Filled Text Field
                 OutlinedTextField(
                     value = messageText,
                     onValueChange = onMessageTextChange,
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Type a message...") },
-                    shape = RoundedCornerShape(20.dp),
-                    maxLines = 4
+                    placeholder = { 
+                        Text(
+                            "Tapez un message...",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        ) 
+                    },
+                    shape = RoundedCornerShape(24.dp),
+                    maxLines = 4,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    textStyle = MaterialTheme.typography.bodyLarge
                 )
                 
-                IconButton(
+                // Modern send button with FAB-like design
+                FloatingActionButton(
                     onClick = onSendClick,
-                    enabled = enabled
+                    modifier = Modifier.size(48.dp),
+                    containerColor = if (enabled) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    },
+                    contentColor = if (enabled) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    },
+                    shape = CircleShape
                 ) {
                     if (isSending) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     } else {
                         Icon(
                             Icons.Default.Send,
-                            contentDescription = "Send",
-                            tint = if (enabled) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            }
+                            contentDescription = "Envoyer",
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
