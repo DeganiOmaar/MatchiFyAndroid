@@ -105,6 +105,10 @@ class ConversationChatViewModel(
     fun isMessageFromCurrentUser(message: Message): Boolean {
         return message.senderId == currentUserId
     }
+    
+    fun refreshMessages() {
+        loadMessages()
+    }
 }
 
 class ConversationChatViewModelFactory(

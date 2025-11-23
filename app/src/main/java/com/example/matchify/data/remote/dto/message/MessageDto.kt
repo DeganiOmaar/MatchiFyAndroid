@@ -10,6 +10,9 @@ data class MessageDto(
     @SerializedName("senderRole") val senderRole: String? = null,
     @SerializedName("text") val text: String? = null,
     @SerializedName("content") val content: String? = null,
+    @SerializedName("contractId") val contractId: String? = null,
+    @SerializedName("pdfUrl") val pdfUrl: String? = null,
+    @SerializedName("isContractMessage") val isContractMessage: Boolean? = null,
     @SerializedName("createdAt") val createdAt: String? = null,
     @SerializedName("updatedAt") val updatedAt: String? = null
 )

@@ -12,6 +12,9 @@ object MessageDtoMapper {
             senderRole = dto.senderRole,
             text = dto.text,
             contentParam = dto.content,
+            contractId = dto.contractId,
+            pdfUrl = dto.pdfUrl,
+            isContractMessage = dto.isContractMessage,
             createdAt = dto.createdAt,
             updatedAt = dto.updatedAt
         )

@@ -350,9 +350,46 @@ fun MainScreen(
             
             composable("conversation_chat/{conversationId}") { backStackEntry ->
                 val conversationId = backStackEntry.arguments?.getString("conversationId") ?: ""
+                
+                // Load conversation to get missionId and talentId for contract creation
+                val conversationViewModel = androidx.lifecycle.viewmodel.compose.viewModel<com.example.matchify.ui.conversations.ConversationChatViewModel>(
+                    factory = com.example.matchify.ui.conversations.ConversationChatViewModelFactory(conversationId)
+                )
+                val conversation by conversationViewModel.conversation.collectAsState()
+                
+                LaunchedEffect(Unit) {
+                    conversationViewModel.loadConversation()
+                }
+                
                 com.example.matchify.ui.conversations.ConversationChatScreen(
                     conversationId = conversationId,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onCreateContractClick = {
+                        // Navigate to create contract screen with missionId and talentId from conversation
+                        // Recruiter creates contract, so we need the talentId (not recruiterId)
+                        val missionId = conversation?.missionId ?: ""
+                        val talentId = conversation?.talentId ?: "" // Always use talentId for contract creation
+                        if (missionId.isNotEmpty() && talentId.isNotEmpty()) {
+                            // Save conversationId in savedStateHandle for reload after contract creation
+                            navController.currentBackStackEntry?.savedStateHandle?.set("conversationId", conversationId)
+                            navController.navigate("create_contract/$missionId/$talentId") {
+                                launchSingleTop = true
+                            }
+                        }
+                    },
+                    onContractReview = { contractId ->
+                        // Navigate based on role: recruiter sees detail, talent sees review
+                        if (conversationViewModel.isRecruiter) {
+                            navController.navigate("contract_detail/$contractId") {
+                                launchSingleTop = true
+                            }
+                        } else {
+                            navController.navigate("contract_review/$contractId") {
+                                launchSingleTop = true
+                            }
+                        }
+                    },
+                    viewModel = conversationViewModel
                 )
             }
             
@@ -521,11 +558,14 @@ fun MainScreen(
             composable("create_contract/{missionId}/{talentId}") { backStackEntry ->
                 val missionId = backStackEntry.arguments?.getString("missionId") ?: ""
                 val talentId = backStackEntry.arguments?.getString("talentId") ?: ""
+                val conversationId = backStackEntry.savedStateHandle.get<String>("conversationId") ?: ""
+                
                 com.example.matchify.ui.contracts.CreateContractScreen(
                     missionId = missionId,
                     talentId = talentId,
                     onBack = { navController.popBackStack() },
                     onContractCreated = {
+                        // Return to conversation screen automatically (same as iOS)
                         navController.popBackStack()
                     }
                 )
@@ -553,16 +593,25 @@ fun MainScreen(
                 }
                 
                 if (contract != null) {
-                    com.example.matchify.ui.contracts.ContractReviewScreen(
-                        contract = contract!!,
-                        onBack = { navController.popBackStack() },
-                        onSigned = {
-                            navController.popBackStack()
-                        },
-                        onDeclined = {
-                            navController.popBackStack()
-                        }
-                    )
+                    // If contract is already signed by both, show detail screen instead
+                    if (contract!!.status == com.example.matchify.domain.model.Contract.ContractStatus.SIGNED_BY_BOTH) {
+                        com.example.matchify.ui.contracts.ContractDetailScreen(
+                            contractId = contractId,
+                            onBack = { navController.popBackStack() }
+                        )
+                    } else {
+                        // Contract not yet signed - show review screen for talent to sign
+                        com.example.matchify.ui.contracts.ContractReviewScreen(
+                            contract = contract!!,
+                            onBack = { navController.popBackStack() },
+                            onSigned = {
+                                navController.popBackStack()
+                            },
+                            onDeclined = {
+                                navController.popBackStack()
+                            }
+                        )
+                    }
                 } else {
                     Box(
                         modifier = androidx.compose.ui.Modifier.fillMaxSize(),

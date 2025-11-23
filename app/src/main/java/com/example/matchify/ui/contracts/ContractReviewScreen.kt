@@ -58,7 +58,8 @@ fun ContractReviewScreen(
                     }
                 },
                 actions = {
-                    if (!hasSigned) {
+                    // Only show sign button if contract is not already signed by both
+                    if (currentContract.status != Contract.ContractStatus.SIGNED_BY_BOTH && !hasSigned) {
                         TextButton(
                             onClick = { showSignaturePad = true }
                         ) {

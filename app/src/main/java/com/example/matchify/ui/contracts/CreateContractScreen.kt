@@ -53,7 +53,7 @@ fun CreateContractScreen(
     val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
     
     LaunchedEffect(viewModel.contractCreated.value) {
-        if (viewModel.contractCreated.value != null) {
+        viewModel.contractCreated.value?.let {
             onContractCreated()
         }
     }
@@ -84,14 +84,16 @@ fun CreateContractScreen(
                 actions = {
                     TextButton(
                         onClick = {
-                            viewModel.createContract(missionId, talentId) {}
+                            viewModel.createContract(missionId, talentId) {
+                                // Contract created - LaunchedEffect will handle closing
+                            }
                         },
                         enabled = title.isNotEmpty() && 
                                  content.isNotEmpty() && 
                                  signatureBitmap != null && 
                                  !isLoading
                     ) {
-                        Text("Envoyer")
+                        Text("Send")
                     }
                 }
             )
@@ -271,25 +273,47 @@ fun CreateContractScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DatePickerDialog(
     initialDate: Long,
     onDateSelected: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var selectedDate by remember { mutableStateOf(initialDate) }
+    // Material Design 3 DatePicker automatically uses system locale
+    // This ensures weekday headers (M, T, W, T, F, S, S) display correctly
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDate
+    )
+    
+    val selectedDate = datePickerState.selectedDateMillis
     
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Sélectionner une date") },
         text = {
-            // Note: Material3 doesn't have a built-in DatePicker in Compose yet
-            // For now, we'll use a simple text input
-            // In production, use a proper date picker library or native picker
-            Text("Date picker implementation needed")
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Material Design 3 DatePicker - automatically handles locale and weekday display
+                // Weekday headers will display correctly according to system locale
+                DatePicker(
+                    state = datePickerState,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         },
         confirmButton = {
-            TextButton(onClick = { onDateSelected(selectedDate) }) {
+            TextButton(
+                onClick = {
+                    selectedDate?.let {
+                        onDateSelected(it)
+                    } ?: run {
+                        // If no date selected, use initial date
+                        onDateSelected(initialDate)
+                    }
+                }
+            ) {
                 Text("OK")
             }
         },
