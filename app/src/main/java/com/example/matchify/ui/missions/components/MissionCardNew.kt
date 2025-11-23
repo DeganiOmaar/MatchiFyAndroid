@@ -1,5 +1,6 @@
 package com.example.matchify.ui.missions.components
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,10 +13,14 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,23 +42,61 @@ fun MissionCardNew(
     onMenuClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    // Animation pour l'effet de scale au clic
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "card_scale"
+    )
+    
+    // Animation pour l'ombre - très visible avec effet de glow
+    val shadowElevation by animateFloatAsState(
+        targetValue = if (isPressed) 24f else 20f,
+        animationSpec = tween(durationMillis = 200),
+        label = "shadow_elevation"
+    )
+    
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
+            .scale(scale)
+            .shadow(
+                elevation = shadowElevation.dp,
+                shape = RoundedCornerShape(16.dp),
+                spotColor = Color.Black.copy(alpha = 0.6f),
+                ambientColor = Color.Black.copy(alpha = 0.5f)
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) {
+                onClick()
+            },
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp,
-            pressedElevation = 2.dp,
-            hoveredElevation = 2.dp,
-            focusedElevation = 2.dp
+            defaultElevation = 0.dp,
+            pressedElevation = 0.dp,
+            hoveredElevation = 0.dp,
+            focusedElevation = 0.dp
         ),
         border = androidx.compose.foundation.BorderStroke(
-            width = 0.5.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+            width = 1.5.dp,
+            brush = Brush.linearGradient(
+                colors = listOf(
+                    Color(0xFF61A5C2).copy(alpha = 0.3f),
+                    Color(0xFF61A5C2).copy(alpha = 0.1f),
+                    Color(0xFF61A5C2).copy(alpha = 0.3f)
+                )
+            )
         )
     ) {
         Column(
@@ -123,64 +166,31 @@ fun MissionCardNew(
                 overflow = TextOverflow.Ellipsis
             )
             
-            // 5. Skills and Favorite icon row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Skills (rounded pill-shaped tags, neutral gray background)
-                if (mission.skills.isNotEmpty()) {
-                    LazyRow(
-                        modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(horizontal = 1.dp)
-                    ) {
-                        items(mission.skills) { skill ->
-                            // Material 3 Assist Chip style for skills
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                tonalElevation = 0.dp
-                            ) {
-                                Text(
-                                    text = skill,
-                                    modifier = Modifier.padding(
-                                        horizontal = 12.dp,
-                                        vertical = 6.dp
-                                    ),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+            // 5. Skills (rounded pill-shaped tags, neutral gray background)
+            if (mission.skills.isNotEmpty()) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 1.dp)
+                ) {
+                    items(mission.skills) { skill ->
+                        // Material 3 Assist Chip style for skills
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            tonalElevation = 0.dp
+                        ) {
+                            Text(
+                                text = skill,
+                                modifier = Modifier.padding(
+                                    horizontal = 12.dp,
+                                    vertical = 6.dp
+                                ),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
-                } else {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-                
-                // Heart icon for favorites
-                IconButton(
-                    onClick = { onFavoriteToggle() },
-                    modifier = Modifier.size(40.dp),
-                    colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = if (isFavorite) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-                    )
-                ) {
-                    Icon(
-                        imageVector = if (isFavorite) {
-                            Icons.Filled.Favorite
-                        } else {
-                            Icons.Filled.FavoriteBorder
-                        },
-                        contentDescription = if (isFavorite) "Retirer des favoris" else "Ajouter aux favoris",
-                        modifier = Modifier.size(20.dp)
-                    )
                 }
             }
         }

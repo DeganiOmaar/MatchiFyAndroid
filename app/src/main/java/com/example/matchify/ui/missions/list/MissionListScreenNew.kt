@@ -1,14 +1,15 @@
 package com.example.matchify.ui.missions.list
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.rememberDismissState
@@ -32,12 +34,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import android.content.Intent
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -78,6 +88,36 @@ fun MissionListScreenNew(
     var missionToDelete by remember { mutableStateOf<Mission?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     
+    // Speech recognition launcher
+    val speechLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val resultCode = result.resultCode
+        val data = result.data
+        
+        if (resultCode == android.app.Activity.RESULT_OK && data != null) {
+            val results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            results?.get(0)?.let { spokenText ->
+                viewModel.updateSearchText(spokenText)
+            }
+        }
+    }
+    
+    // Function to start voice recognition
+    fun startVoiceRecognition() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.getDefault())
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Parlez pour rechercher...")
+        }
+        
+        try {
+            speechLauncher.launch(intent)
+        } catch (e: Exception) {
+            // Speech recognition not available
+        }
+    }
+    
     val drawerWidth = 280.dp
     val drawerOffsetPx = with(LocalDensity.current) { drawerWidth.toPx() }
     val drawerOffset = animateFloatAsState(
@@ -86,28 +126,196 @@ fun MissionListScreenNew(
         label = "drawer_animation"
     )
     
+    // Couleur de fond et navbar
+    val backgroundColor = Color(0xFF61A5C2)
+    
+    // Animation infinie pour le background
+    val infiniteTransition = rememberInfiniteTransition(label = "background_animation")
+    
+    // Animation pour les cercles flottants
+    val circle1Y by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "circle1_y"
+    )
+    
+    val circle2Y by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(4000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "circle2_y"
+    )
+    
+    val circle3X by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(5000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "circle3_x"
+    )
+    
+    val circle1Scale by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "circle1_scale"
+    )
+    
+    val circle2Scale by infiniteTransition.animateFloat(
+        initialValue = 0.9f,
+        targetValue = 1.3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "circle2_scale"
+    )
+    
+    val circle3Scale by infiniteTransition.animateFloat(
+        initialValue = 0.7f,
+        targetValue = 1.1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "circle3_scale"
+    )
+    
+    val circle1Alpha by infiniteTransition.animateFloat(
+        initialValue = 0.15f,
+        targetValue = 0.3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1800, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "circle1_alpha"
+    )
+    
+    val circle2Alpha by infiniteTransition.animateFloat(
+        initialValue = 0.1f,
+        targetValue = 0.25f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "circle2_alpha"
+    )
+    
+    val circle3Alpha by infiniteTransition.animateFloat(
+        initialValue = 0.12f,
+        targetValue = 0.28f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1900, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "circle3_alpha"
+    )
+    
     Box(modifier = Modifier.fillMaxSize()) {
+        // Background animé avec cercles flottants
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(backgroundColor)
+        ) {
+            // Cercle 1 - En haut à gauche, se déplace verticalement
+            Box(
+                modifier = Modifier
+                    .offset(
+                        x = (-50).dp,
+                        y = (circle1Y * 200).dp - 50.dp
+                    )
+                    .size((150 * circle1Scale).dp)
+                    .background(
+                        color = Color.White.copy(alpha = circle1Alpha),
+                        shape = CircleShape
+                    )
+            )
+            
+            // Cercle 2 - En haut à droite, se déplace verticalement
+            Box(
+                modifier = Modifier
+                    .offset(
+                        x = 300.dp,
+                        y = (circle2Y * 180).dp - 40.dp
+                    )
+                    .size((120 * circle2Scale).dp)
+                    .background(
+                        color = Color.White.copy(alpha = circle2Alpha),
+                        shape = CircleShape
+                    )
+            )
+            
+            // Cercle 3 - Au milieu, se déplace horizontalement
+            Box(
+                modifier = Modifier
+                    .offset(
+                        x = (circle3X * 250).dp + 50.dp,
+                        y = 300.dp
+                    )
+                    .size((100 * circle3Scale).dp)
+                    .background(
+                        color = Color.White.copy(alpha = circle3Alpha),
+                        shape = CircleShape
+                    )
+            )
+            
+            // Cercle 4 - En bas à gauche, rotation et scale
+            Box(
+                modifier = Modifier
+                    .offset(x = 20.dp, y = 500.dp)
+                    .size((80 * circle1Scale).dp)
+                    .background(
+                        color = Color.White.copy(alpha = circle2Alpha),
+                        shape = CircleShape
+                    )
+            )
+            
+            // Cercle 5 - En bas à droite
+            Box(
+                modifier = Modifier
+                    .offset(x = 280.dp, y = 600.dp)
+                    .size((90 * circle3Scale).dp)
+                    .background(
+                        color = Color.White.copy(alpha = circle1Alpha),
+                        shape = CircleShape
+                    )
+            )
+        }
+        
         // Main content
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                // Même couleur que les tabs et le fond principal
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
         ) {
-            // Top Section - Profile Image (Left Aligned)
+            // Top Section - Profile Image and Post Button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Profile Image
+                // Profile Image - Réduit et mieux intégré
                 Surface(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(36.dp)
                         .clickable { viewModel.openProfileDrawer() },
-                    shape = CircleShape
+                    shape = CircleShape,
+                    color = Color.White.copy(alpha = 0.2f),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color.White.copy(alpha = 0.3f))
                 ) {
                     Box {
                         val profileImageUrl = user?.profileImageUrl
@@ -129,81 +337,156 @@ fun MissionListScreenNew(
                     }
                 }
                 
-                // Add Mission button for Recruiters
+                // Add Mission button for Recruiters - Style moderne avec gradient
                 if (isRecruiter) {
-                    Button(
-                        onClick = onAddMission,
-                        modifier = Modifier.height(32.dp),
-                        shape = RoundedCornerShape(8.dp), // bouton plus carré
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = Color.White
+                    val buttonInteractionSource = remember { MutableInteractionSource() }
+                    val isButtonPressed by buttonInteractionSource.collectIsPressedAsState()
+                    
+                    val buttonScale by animateFloatAsState(
+                        targetValue = if (isButtonPressed) 0.95f else 1f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium
                         ),
-                        contentPadding = PaddingValues(horizontal = 10.dp)
+                        label = "button_scale"
+                    )
+                    
+                    val buttonShadow by animateFloatAsState(
+                        targetValue = if (isButtonPressed) 8f else 12f,
+                        animationSpec = tween(durationMillis = 200),
+                        label = "button_shadow"
+                    )
+                    
+                    Box(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .scale(buttonScale)
+                            .shadow(
+                                elevation = buttonShadow.dp,
+                                shape = RoundedCornerShape(20.dp),
+                                spotColor = Color.Black.copy(alpha = 0.3f),
+                                ambientColor = Color.Black.copy(alpha = 0.2f)
+                            )
+                            .clickable(
+                                interactionSource = buttonInteractionSource,
+                                indication = null
+                            ) {
+                                onAddMission()
+                            }
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color(0xFF4A90E2),
+                                        Color(0xFF61A5C2),
+                                        Color(0xFF7DB8D6)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(20.dp)
+                            )
+                            .padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Post a job",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Post a job",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
             
-            // Search Bar - Material 3 FilledTextField
+            // Search Bar - Compacte, discrète avec ombre douce
             OutlinedTextField(
                 value = searchText,
-                onValueChange = { viewModel.updateSearchText(it) },
+                onValueChange = { newText -> viewModel.updateSearchText(newText) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .shadow(
+                        elevation = 2.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        spotColor = Color.Black.copy(alpha = 0.1f)
+                    ),
                 placeholder = {
                     Text(
                         text = "Search for jobs",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        fontSize = 15.sp
                     )
                 },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Filled.Search,
                         contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 },
                 trailingIcon = {
-                    if (searchText.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.updateSearchText("") }) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Microphone icon for voice input
+                        IconButton(
+                            onClick = { startVoiceRecognition() },
+                            modifier = Modifier.size(36.dp)
+                        ) {
                             Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = "Clear",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                imageVector = Icons.Filled.Mic,
+                                contentDescription = "Recherche vocale",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.primary
                             )
+                        }
+                        
+                        // Clear icon (only show when there's text)
+                        if (searchText.isNotEmpty()) {
+                            IconButton(
+                                onClick = { viewModel.updateSearchText("") },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = "Clear",
+                                    modifier = Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                )
+                            }
                         }
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
                     focusedTextColor = MaterialTheme.colorScheme.onSurface,
                     unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 ),
-                textStyle = MaterialTheme.typography.bodyMedium,
+                textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { /* Handle search */ })
             )
             
-            // Tabs Section - Material 3 TabRow (Talent only)
+            // Tabs Section - Material 3 TabRow (Talent only) - Espaces réduits
             if (isTalent) {
                 val tabs = listOf("Best Matches", "Most Recent", "Favorites")
                 val selectedTabIndex = when (selectedTab) {
@@ -216,23 +499,19 @@ fun MissionListScreenNew(
                     selectedTabIndex = selectedTabIndex,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    containerColor = Color.Transparent,
                     contentColor = MaterialTheme.colorScheme.primary,
                     indicator = { tabPositions ->
                         if (selectedTabIndex < tabPositions.size) {
                             TabRowDefaults.Indicator(
                                 modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                                color = MaterialTheme.colorScheme.primary,
-                                height = 3.dp
+                                color = Color.White,
+                                height = 2.5.dp
                             )
                         }
                     },
-                    divider = {
-                        HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
-                        )
-                    }
+                    divider = {}
                 ) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -253,16 +532,17 @@ fun MissionListScreenNew(
                             text = {
                                 Text(
                                     text = title,
-                                    style = MaterialTheme.typography.labelLarge,
+                                    style = MaterialTheme.typography.labelMedium,
                                     fontWeight = if (selectedTabIndex == index) {
                                         FontWeight.SemiBold
                                     } else {
-                                        FontWeight.Medium
-                                    }
+                                        FontWeight.Normal
+                                    },
+                                    fontSize = 13.sp
                                 )
                             },
-                            selectedContentColor = MaterialTheme.colorScheme.primary,
-                            unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            selectedContentColor = Color.White,
+                            unselectedContentColor = Color.White.copy(alpha = 0.7f)
                         )
                     }
                 }
@@ -291,32 +571,44 @@ fun MissionListScreenNew(
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                         contentPadding = PaddingValues(
-                            horizontal = 20.dp,
-                            vertical = 20.dp
+                            horizontal = 16.dp,
+                            vertical = 12.dp
                         )
                     ) {
-                        items(missions.size) { index ->
+                        items(missions.size, key = { missions[it].missionId }) { index ->
                             val mission = missions[index]
                             val isOwner = viewModel.isMissionOwner(mission)
                             
-                            MissionCardNew(
-                                mission = mission,
-                                isFavorite = viewModel.isFavorite(mission),
-                                onFavoriteToggle = { viewModel.toggleFavorite(mission) },
-                                onClick = {
-                                    onMissionClick(mission)
-                                },
-                                onMenuClick = {
-                                    if (isRecruiter && isOwner) {
-                                        // Show menu for recruiter owners
-                                        // For now, just navigate to edit
+                            // Swipe to delete - only for recruiters who own the mission
+                            if (isRecruiter && isOwner) {
+                                SwipeToDeleteMission(
+                                    mission = mission,
+                                    onDelete = {
+                                        missionToDelete = mission
+                                        showDeleteDialog = true
+                                    },
+                                    onEdit = {
                                         onEditMission(mission)
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                                    },
+                                    onFavoriteToggle = { viewModel.toggleFavorite(mission) },
+                                    isFavorite = viewModel.isFavorite(mission),
+                                    onClick = { onMissionClick(mission) },
+                                    isDialogOpen = showDeleteDialog && missionToDelete?.missionId == mission.missionId
+                                )
+                            } else {
+                                MissionCardNew(
+                                    mission = mission,
+                                    isFavorite = viewModel.isFavorite(mission),
+                                    onFavoriteToggle = { viewModel.toggleFavorite(mission) },
+                                    onClick = {
+                                        onMissionClick(mission)
+                                    },
+                                    onMenuClick = {},
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
                     }
                 }
@@ -358,6 +650,135 @@ fun MissionListScreenNew(
                 }
             }
         }
+        
+        // Delete Confirmation Dialog
+        if (showDeleteDialog && missionToDelete != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(2000f)
+            ) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showDeleteDialog = false
+                        missionToDelete = null
+                    },
+                title = {
+                    Text(
+                        text = "Supprimer la mission",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Êtes-vous sûr de vouloir supprimer la mission \"${missionToDelete?.title}\" ? Cette action est irréversible.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            missionToDelete?.let { mission ->
+                                viewModel.deleteMission(mission)
+                            }
+                            showDeleteDialog = false
+                            missionToDelete = null
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Supprimer")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showDeleteDialog = false
+                            missionToDelete = null
+                        }
+                    ) {
+                        Text("Annuler")
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(20.dp)
+                )
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun SwipeToDeleteMission(
+    mission: Mission,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit,
+    onFavoriteToggle: () -> Unit,
+    isFavorite: Boolean,
+    onClick: () -> Unit,
+    isDialogOpen: Boolean
+) {
+    // Use mission ID and dialog state as key to force recreation
+    key(mission.missionId, isDialogOpen) {
+        // Always start with Default state to prevent persistent red background
+        val dismissState = rememberDismissState(
+            initialValue = DismissValue.Default
+        )
+        
+        // Detect swipe and show dialog
+        LaunchedEffect(dismissState.currentValue) {
+            if (dismissState.currentValue == DismissValue.DismissedToEnd) {
+                // Show confirmation dialog
+                onDelete()
+            }
+        }
+        
+        SwipeToDismiss(
+            state = dismissState,
+            directions = setOf(DismissDirection.EndToStart), // Swipe left to delete
+            background = {
+                // Only show background when swiping in the correct direction
+                val backgroundColor = if (dismissState.dismissDirection == DismissDirection.EndToStart) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    Color.Transparent
+                }
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(backgroundColor)
+                        .clickable { onDelete() },
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    // Only show icon when swiping
+                    if (dismissState.dismissDirection == DismissDirection.EndToStart) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Supprimer",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .padding(end = 24.dp)
+                        )
+                    }
+                }
+            },
+            dismissContent = {
+                MissionCardNew(
+                    mission = mission,
+                    isFavorite = isFavorite,
+                    onFavoriteToggle = onFavoriteToggle,
+                    onClick = onClick,
+                    onMenuClick = onEdit,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        )
     }
 }
 
@@ -416,33 +837,6 @@ fun EmptyStateViewNew(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
-        
-        if (onAddMission != null) {
-            Spacer(modifier = Modifier.height(40.dp))
-            
-            // Material 3 Filled Button
-            Button(
-                onClick = onAddMission,
-                modifier = Modifier
-                    .fillMaxWidth(0.75f)
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 2.dp,
-                    pressedElevation = 4.dp
-                )
-            ) {
-                Text(
-                    text = "Create Mission",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
     }
 }
 

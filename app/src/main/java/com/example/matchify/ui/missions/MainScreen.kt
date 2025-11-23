@@ -85,8 +85,8 @@ fun MainScreen(
         // Utiliser la même couleur que la section des onglets (surfaceContainerHighest)
         containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         bottomBar = {
-            // Show bottom bar on main screens (Missions, Proposals, Messages)
-            if (currentRoute in listOf("missions_list", "proposals_list", "messages_list")) {
+            // Show bottom bar on main screens (Missions, Proposals, Alert, Messages)
+            if (currentRoute in listOf("missions_list", "proposals_list", "alerts_list", "messages_list")) {
                 MainBottomNavigation(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
@@ -108,9 +108,10 @@ fun MainScreen(
             modifier = Modifier.padding(paddingValues)
         ) {
             composable("missions_list") {
-                val listViewModel: MissionListViewModel = viewModel(
-                    factory = MissionListViewModelFactory()
-                )
+                val scope = rememberCoroutineScope()
+                val prefs = remember { AuthPreferencesProvider.getInstance().get() }
+                
+                // Utiliser le ViewModel partagé créé en haut pour que le rafraîchissement fonctionne
                 MissionListScreenNew(
                     onAddMission = {
                         navController.navigate("mission_add")
@@ -126,7 +127,51 @@ fun MainScreen(
                             navController.navigate("mission_details/$missionId")
                         }
                     },
-                    viewModel = listViewModel
+                    onDrawerItemSelected = { itemType ->
+                        when (itemType) {
+                            DrawerMenuItemType.PROFILE -> {
+                                val profileRoute = if (userRole == "talent") "talent_profile" else "recruiter_profile"
+                                navController.navigate(profileRoute) {
+                                    popUpTo("missions_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.MY_STATS -> {
+                                navController.navigate("my_stats") {
+                                    popUpTo("missions_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.SETTINGS -> {
+                                navController.navigate("settings") {
+                                    popUpTo("missions_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.THEME -> {
+                                navController.navigate("theme") {
+                                    popUpTo("missions_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.CHAT_BOT -> {
+                                navController.navigate("chatbot") {
+                                    popUpTo("missions_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.LOG_OUT -> {
+                                scope.launch {
+                                    prefs.logout()
+                                    navController.navigate("login") {
+                                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    viewModel = missionListViewModel
                 )
             }
 
@@ -196,7 +241,13 @@ fun MainScreen(
                     onEditProfile = {
                         navController.navigate("edit_recruiter_profile")
                     },
-                    onSettings = onOpenSettings
+                    onSettings = onOpenSettings,
+                    onBack = {
+                        navController.navigate("missions_list") {
+                            popUpTo("missions_list") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
             
@@ -216,6 +267,12 @@ fun MainScreen(
                         navController.navigate("edit_talent_profile")
                     },
                     onSettings = onOpenSettings,
+                    onBack = {
+                        navController.navigate("missions_list") {
+                            popUpTo("missions_list") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
                     onProjectClick = { project ->
                         // Use actual ID (_id or id), not projectId which can be a random UUID
                         val actualId = project.id ?: project.id_alt ?: ""
@@ -294,6 +351,14 @@ fun MainScreen(
                     },
                     onConversationClick = { conversationId ->
                         navController.navigate("conversation_chat/$conversationId")
+                    }
+                )
+            }
+            
+            composable("alerts_list") {
+                com.example.matchify.ui.alerts.AlertsScreen(
+                    onAlertClick = { proposalId ->
+                        navController.navigate("proposal_details/$proposalId")
                     }
                 )
             }

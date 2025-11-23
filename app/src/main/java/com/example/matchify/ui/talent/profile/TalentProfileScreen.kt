@@ -46,7 +46,8 @@ fun TalentProfileScreen(
     onEditProfile: () -> Unit,
     onSettings: () -> Unit,
     onProjectClick: (Project) -> Unit = {},
-    onAddProject: () -> Unit = {}
+    onAddProject: () -> Unit = {},
+    onBack: () -> Unit = {}
 ) {
     val user by viewModel.user.collectAsState()
     val joined by viewModel.joinedDate.collectAsState()
@@ -74,29 +75,14 @@ fun TalentProfileScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Profil",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A1A)
-                    )
-                    
-                    Surface(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clickable { showMenuSheet = true },
-                        shape = CircleShape,
-                        color = Color(0xFFF5F7FA)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Rounded.MoreVert,
-                                contentDescription = "Menu",
-                                modifier = Modifier.size(24.dp),
-                                tint = Color(0xFF1A1A1A)
-                            )
-                        }
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Rounded.ArrowBack,
+                            contentDescription = "Retour",
+                            tint = Color(0xFF1A1A1A)
+                        )
                     }
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }

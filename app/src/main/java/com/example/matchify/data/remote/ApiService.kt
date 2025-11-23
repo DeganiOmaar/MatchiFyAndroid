@@ -123,6 +123,13 @@ class ApiService(private val authPreferences: AuthPreferences) {
         retrofit.create(SkillApi::class.java)
     }
 
+    // -----------------------------------------------------------
+    // 🔔 ALERT API
+    // -----------------------------------------------------------
+    val alertApi: AlertApi by lazy {
+        retrofit.create(AlertApi::class.java)
+    }
+
     companion object {
         @Volatile
         private var INSTANCE: ApiService? = null

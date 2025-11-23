@@ -38,7 +38,8 @@ import com.example.matchify.R
 fun RecruiterProfileScreen(
     viewModel: RecruiterProfileViewModel,
     onEditProfile: () -> Unit,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onBack: () -> Unit = {}
 ) {
     val user by viewModel.user.collectAsState()
     val joined by viewModel.joinedDate.collectAsState()
@@ -72,17 +73,14 @@ fun RecruiterProfileScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    IconButton(onClick = onSettings) {
+                    IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.Rounded.Settings,
-                            contentDescription = "Paramètres",
-                            tint = Color.Black
+                            imageVector = Icons.Rounded.ArrowBack,
+                            contentDescription = "Retour",
+                            tint = Color.White
                         )
                     }
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }
