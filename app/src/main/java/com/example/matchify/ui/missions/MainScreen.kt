@@ -341,10 +341,27 @@ fun MainScreen(
             }
             
             composable("messages_list") {
+                // Shared ViewModel for MessagesScreen to maintain state and refresh properly
+                val messagesViewModel: com.example.matchify.ui.messages.MessagesViewModel = viewModel(
+                    factory = com.example.matchify.ui.messages.MessagesViewModelFactory()
+                )
+                val badgeCountViewModel: com.example.matchify.ui.alerts.BadgeCountViewModel = viewModel(
+                    factory = com.example.matchify.ui.alerts.BadgeCountViewModelFactory()
+                )
+                
+                // Refresh conversations and badge counts when returning to this screen
+                LaunchedEffect(currentRoute) {
+                    if (currentRoute == "messages_list") {
+                        messagesViewModel.loadConversations()
+                        badgeCountViewModel.loadCounts()
+                    }
+                }
+                
                 com.example.matchify.ui.messages.MessagesScreen(
                     onConversationClick = { conversationId ->
                         navController.navigate("conversation_chat/$conversationId")
-                    }
+                    },
+                    viewModel = messagesViewModel
                 )
             }
             

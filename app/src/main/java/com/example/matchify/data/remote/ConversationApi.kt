@@ -25,5 +25,33 @@ interface ConversationApi {
         @Path("id") id: String,
         @Body request: CreateMessageRequest
     ): MessageDto
+    
+    @GET("conversations/unread-count")
+    suspend fun getUnreadCount(): UnreadCountResponse
+    
+    @GET("conversations/conversations-with-unread")
+    suspend fun getConversationsWithUnreadCount(): ConversationsWithUnreadCountResponse
+    
+    @GET("conversations/{id}/unread-count")
+    suspend fun getConversationUnreadCount(@Path("id") id: String): ConversationUnreadCountResponse
+    
+    @POST("conversations/{id}/mark-read")
+    suspend fun markConversationAsRead(@Path("id") id: String): MarkConversationReadResponse
 }
+
+data class UnreadCountResponse(
+    val count: Int
+)
+
+data class ConversationsWithUnreadCountResponse(
+    val count: Int
+)
+
+data class ConversationUnreadCountResponse(
+    val count: Int
+)
+
+data class MarkConversationReadResponse(
+    val count: Int
+)
 

@@ -47,6 +47,20 @@ class ConversationChatViewModel(
     init {
         loadConversation()
         loadMessages()
+        markAsRead() // Mark conversation as read when opened (matching iOS behavior)
+    }
+    
+    fun markAsRead() {
+        viewModelScope.launch {
+            try {
+                repository.markConversationAsRead(conversationId)
+                // Note: Badge counts will be refreshed when returning to messages_list
+                // The BadgeCountViewModel also refreshes periodically every 30 seconds
+            } catch (e: Exception) {
+                // Silently fail - marking as read is not critical
+                e.printStackTrace()
+            }
+        }
     }
     
     fun loadConversation() {

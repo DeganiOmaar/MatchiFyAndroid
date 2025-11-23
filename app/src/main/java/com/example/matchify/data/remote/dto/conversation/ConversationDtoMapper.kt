@@ -17,7 +17,8 @@ object ConversationDtoMapper {
             talentName = dto.talentName,
             talentProfileImage = dto.talentProfileImage,
             recruiterName = dto.recruiterName,
-            recruiterProfileImage = dto.recruiterProfileImage
+            recruiterProfileImage = dto.recruiterProfileImage,
+            unreadCount = dto.unreadCount ?: 0
         )
     }
 }

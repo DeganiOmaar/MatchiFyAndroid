@@ -1,11 +1,13 @@
 package com.example.matchify.ui.messages
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,28 +19,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
-import coil.compose.SubcomposeAsyncImageContent
-import com.example.matchify.R
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.matchify.R
 
-/**
- * Material Design 3 Messages Screen
- * 
- * Fully compliant with MD3 list items specification:
- * - MD3 List Items (two-line pattern)
- * - Circular avatars (56dp)
- * - MD3 typography (Title Medium, Body Medium, Label Small)
- * - MD3 spacing (16dp padding, 16dp between avatar and text)
- * - Red unread badge (errorContainer/error)
- * - Timestamp styling (onSurfaceVariant)
- * - Ripple & interaction states
- * - Light & dark mode adaptive colors
- * - Dividers between items
- * - MD3 scroll behavior
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessagesScreen(
@@ -48,6 +33,7 @@ fun MessagesScreen(
     val conversations by viewModel.conversations.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     
+    // Load conversations on first appearance
     LaunchedEffect(Unit) {
         viewModel.loadConversations()
     }
@@ -55,63 +41,38 @@ fun MessagesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = "Messages",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                title = { Text("Messages") }
             )
-        },
-        containerColor = MaterialTheme.colorScheme.surface
+        }
     ) { paddingValues ->
-        when {
-            isLoading && conversations.isEmpty() -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary
-                    )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            when {
+                isLoading && conversations.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
-            }
-            conversations.isEmpty() -> {
-                EmptyMessagesView(
-                    modifier = Modifier.padding(paddingValues)
-                )
-            }
-            else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(vertical = 0.dp),
-                    verticalArrangement = Arrangement.spacedBy(0.dp)
-                ) {
-                    items(
-                        items = conversations,
-                        key = { it.conversationId }
-                    ) { conversation ->
-                        MD3ConversationListItem(
-                            conversation = conversation,
-                            isRecruiter = viewModel.isRecruiter,
-                            onClick = { onConversationClick(conversation.conversationId) }
-                        )
-                        
-                        // Full-width divider (MD3 style) - between items except last
-                        if (conversation != conversations.last()) {
-                            HorizontalDivider(
-                                modifier = Modifier.fillMaxWidth(),
-                                color = MaterialTheme.colorScheme.outlineVariant,
-                                thickness = 0.5.dp
+                conversations.isEmpty() -> {
+                    EmptyMessagesView()
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(conversations) { conversation ->
+                            ConversationRow(
+                                conversation = conversation,
+                                isRecruiter = viewModel.isRecruiter,
+                                onClick = { onConversationClick(conversation.conversationId) }
                             )
                         }
                     }
@@ -121,28 +82,8 @@ fun MessagesScreen(
     }
 }
 
-/**
- * Material Design 3 Conversation List Item
- * 
- * Two-line list item pattern following MD3 specifications:
- * - Leading: Circular avatar (56dp) with 16dp padding from edge
- * - Headline: Contact/group name (Title Medium, MD3 type scale)
- * - Supporting: Message preview (Body Medium, truncated to one line)
- * - Trailing: Timestamp (Label Small, onSurfaceVariant) + Unread badge (errorContainer)
- * 
- * MD3 spacing rules:
- * - 16dp outer padding (horizontal)
- * - 16dp between avatar and text column
- * - 4-8dp vertical spacing between headline and supporting text
- * - Trailing column right-aligned
- * 
- * MD3 interaction states:
- * - Ripple effect on click
- * - Hover, focus, pressed states via ListItem
- * - State layers based on surface tonality
- */
 @Composable
-private fun MD3ConversationListItem(
+private fun ConversationRow(
     conversation: com.example.matchify.domain.model.Conversation,
     isRecruiter: Boolean,
     onClick: () -> Unit
@@ -155,173 +96,158 @@ private fun MD3ConversationListItem(
     )
     val lastMessageText = conversation.lastMessageText ?: "No messages yet"
     val timestamp = conversation.formattedLastMessageTime
-    // TODO: Get unreadCount from backend when available
-    val unreadCount = 0
+    val unreadCount = conversation.unreadCount
+    val isUnread = unreadCount > 0
     
-    ListItem(
-        headlineContent = {
-            Text(
-                text = userName,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (!isUnread) {
+                MaterialTheme.colorScheme.surface
+            } else {
+                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+            }
+        ),
+        border = if (isUnread) {
+            androidx.compose.foundation.BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
             )
-        },
-        supportingContent = {
-            Text(
-                text = lastMessageText,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 4.dp)
+        } else null
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Profile Image - matching alerts/proposals design exactly
+            ProfileImage(
+                imageUrl = imageUrl,
+                modifier = Modifier.size(50.dp),
+                isUnread = isUnread
             )
-        },
-        leadingContent = {
-            // Circular Avatar - 56dp (MD3 standard size)
-            // 16dp padding from edge is handled by ListItem
-            SubcomposeAsyncImage(
-                model = imageUrl,
-                contentDescription = userName,
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop,
-                loading = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                MaterialTheme.colorScheme.surfaceContainerHighest,
-                                CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                },
-                error = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                MaterialTheme.colorScheme.surfaceContainerHighest,
-                                CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.avatar),
-                            contentDescription = null,
-                            modifier = Modifier.size(32.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                        )
-                    }
-                },
-                success = {
-                    SubcomposeAsyncImageContent()
-                }
-            )
-        },
-        trailingContent = {
-            // Trailing column: Timestamp (above) + Unread badge (below)
-            // Right-aligned, vertically centered
+            
+            // Content - matching alerts/proposals design exactly
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = userName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (!isUnread) FontWeight.Normal else FontWeight.SemiBold,
+                    maxLines = 2
+                )
+                
+                Text(
+                    text = lastMessageText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2
+                )
+            }
+            
+            // Time and Unread Badge - matching iOS layout exactly
+            // VStack aligned to trailing (right side)
             Column(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(start = 16.dp)
+                modifier = Modifier.padding(start = 8.dp)
             ) {
-                // Timestamp - MD3 Label Small, neutral tone (onSurfaceVariant)
-                Text(
-                    text = timestamp,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
-                )
+                // Timestamp - displayed at top right
+                if (timestamp.isNotEmpty()) {
+                    Text(
+                        text = timestamp,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
                 
-                // Unread badge - MD3 red error badge
-                // Background: errorContainer (light) / error (dark)
-                // Text: onErrorContainer
-                // Only show badge if there are unread messages
+                // Unread badge - displayed below timestamp, matching iOS style
                 if (unreadCount > 0) {
-                    Badge(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    Surface(
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = RoundedCornerShape(12.dp), // Capsule shape using high corner radius
+                        modifier = Modifier
+                            .heightIn(min = 18.dp)
+                            .widthIn(min = 18.dp)
                     ) {
                         Text(
                             text = if (unreadCount > 99) "99+" else unreadCount.toString(),
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
                 }
             }
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = ListItemDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            headlineColor = MaterialTheme.colorScheme.onSurface,
-            supportingColor = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    )
+        }
+    }
 }
 
-/**
- * Empty Messages State - MD3 compliant
- */
 @Composable
-private fun EmptyMessagesView(
-    modifier: Modifier = Modifier
+private fun ProfileImage(
+    imageUrl: String?,
+    modifier: Modifier = Modifier,
+    isUnread: Boolean = false
 ) {
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .clip(CircleShape)
+            .then(
+                if (isUnread) {
+                    Modifier.border(
+                        2.dp,
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                        CircleShape
+                    )
+                } else {
+                    Modifier
+                }
+            )
+    ) {
+        AsyncImage(
+            model = imageUrl ?: "",
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop,
+            error = painterResource(id = R.drawable.avatar),
+            placeholder = painterResource(id = R.drawable.avatar)
+        )
+    }
+}
+
+@Composable
+private fun EmptyMessagesView() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(40.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Surface(
-                modifier = Modifier.size(80.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                tonalElevation = 0.dp
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.avatar),
-                        contentDescription = null,
-                        modifier = Modifier.size(40.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    )
-                }
-            }
-            
-            Text(
-                text = "No messages yet",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+            Icon(
+                imageVector = Icons.Filled.Message,
+                contentDescription = null,
+                modifier = Modifier.size(60.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
-            
             Text(
-                text = "Start a conversation by viewing a proposal",
+                text = "No Messages",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "You have no conversations yet.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 20.dp)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

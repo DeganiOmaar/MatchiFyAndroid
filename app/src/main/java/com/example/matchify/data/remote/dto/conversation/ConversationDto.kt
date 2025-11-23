@@ -15,6 +15,7 @@ data class ConversationDto(
     @SerializedName("talentName") val talentName: String? = null,
     @SerializedName("talentProfileImage") val talentProfileImage: String? = null,
     @SerializedName("recruiterName") val recruiterName: String? = null,
-    @SerializedName("recruiterProfileImage") val recruiterProfileImage: String? = null
+    @SerializedName("recruiterProfileImage") val recruiterProfileImage: String? = null,
+    @SerializedName("unreadCount") val unreadCount: Int? = null
 )
 

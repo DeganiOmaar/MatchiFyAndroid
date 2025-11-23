@@ -47,5 +47,25 @@ class ConversationRepository(
         val dto = apiService.conversationApi.sendMessage(conversationId, request)
         return MessageDtoMapper.toDomain(dto)
     }
+    
+    suspend fun getUnreadCount(): Int {
+        val response = apiService.conversationApi.getUnreadCount()
+        return response.count
+    }
+    
+    suspend fun getConversationsWithUnreadCount(): Int {
+        val response = apiService.conversationApi.getConversationsWithUnreadCount()
+        return response.count
+    }
+    
+    suspend fun getConversationUnreadCount(conversationId: String): Int {
+        val response = apiService.conversationApi.getConversationUnreadCount(conversationId)
+        return response.count
+    }
+    
+    suspend fun markConversationAsRead(conversationId: String): Int {
+        val response = apiService.conversationApi.markConversationAsRead(conversationId)
+        return response.count
+    }
 }
 

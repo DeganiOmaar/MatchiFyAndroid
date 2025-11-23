@@ -36,13 +36,55 @@ class MessagesViewModel(
             _isLoading.value = true
             try {
                 val conversationsList = repository.getConversations()
-                _conversations.value = conversationsList
+                
+                // Load unread count for each conversation (matching iOS behavior)
+                val conversationsWithCounts = conversationsList.map { conversation ->
+                    try {
+                        val unreadCount = repository.getConversationUnreadCount(conversation.conversationId)
+                        conversation.copy(unreadCount = unreadCount)
+                    } catch (e: Exception) {
+                        // If fetching unread count fails, set to 0
+                        conversation.copy(unreadCount = 0)
+                    }
+                }
+                
+                _conversations.value = conversationsWithCounts
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
                 _isLoading.value = false
             }
         }
+    }
+    
+    fun refreshUnreadCounts() {
+        viewModelScope.launch {
+            val currentConversations = _conversations.value
+            
+            // Reload unread count for each conversation
+            val updatedConversations = currentConversations.map { conversation ->
+                try {
+                    val unreadCount = repository.getConversationUnreadCount(conversation.conversationId)
+                    conversation.copy(unreadCount = unreadCount)
+                } catch (e: Exception) {
+                    conversation.copy(unreadCount = 0)
+                }
+            }
+            
+            _conversations.value = updatedConversations
+        }
+    }
+    
+    fun updateConversationUnreadCount(conversationId: String, count: Int) {
+        val currentConversations = _conversations.value
+        val updatedConversations = currentConversations.map { conversation ->
+            if (conversation.conversationId == conversationId) {
+                conversation.copy(unreadCount = count)
+            } else {
+                conversation
+            }
+        }
+        _conversations.value = updatedConversations
     }
 }
 

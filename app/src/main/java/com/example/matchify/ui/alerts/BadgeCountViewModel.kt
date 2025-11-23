@@ -62,11 +62,11 @@ class BadgeCountViewModel(
             
             // Load conversations with unread count
             try {
-                // Note: This would need to be implemented in ConversationRepository
-                // For now, we'll leave it at 0
-                _conversationsWithUnreadCount.value = 0
+                val count = conversationRepository.getConversationsWithUnreadCount()
+                _conversationsWithUnreadCount.value = count
             } catch (e: Exception) {
                 // Silently fail
+                _conversationsWithUnreadCount.value = 0
             }
         }
     }

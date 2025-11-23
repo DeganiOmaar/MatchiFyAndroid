@@ -19,7 +19,9 @@ data class Conversation(
     @SerializedName("talentProfileImage") val talentProfileImage: String? = null,
     // Recruiter information (for talent view)
     @SerializedName("recruiterName") val recruiterName: String? = null,
-    @SerializedName("recruiterProfileImage") val recruiterProfileImage: String? = null
+    @SerializedName("recruiterProfileImage") val recruiterProfileImage: String? = null,
+    // Unread count from backend
+    val unreadCount: Int = 0
 ) {
     val conversationId: String
         get() = id ?: id_alt ?: UUID.randomUUID().toString()
