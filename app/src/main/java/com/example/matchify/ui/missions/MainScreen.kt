@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
@@ -90,9 +91,13 @@ fun MainScreen(
                 MainBottomNavigation(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
+                        // Navigate to the route, clearing the back stack up to the start destination
+                        // but keeping the main navigation routes accessible
                         navController.navigate(route) {
-                            popUpTo(navController.graph.startDestinationId) {
+                            // Pop up to start destination (missions_list) but keep it in the stack
+                            popUpTo("missions_list") {
                                 saveState = true
+                                inclusive = false
                             }
                             launchSingleTop = true
                             restoreState = true
@@ -375,19 +380,47 @@ fun MainScreen(
                 val conversationId = backStackEntry.arguments?.getString("conversationId") ?: ""
                 com.example.matchify.ui.conversations.ConversationChatScreen(
                     conversationId = conversationId,
-                    onBack = { navController.popBackStack() }
+                    onBack = { 
+                        navController.navigate("messages_list") {
+                            popUpTo("messages_list") { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
             
             composable("mission_details/{missionId}") { backStackEntry ->
                 val missionId = backStackEntry.arguments?.getString("missionId") ?: ""
-                com.example.matchify.ui.missions.details.MissionDetailsScreen(
-                    missionId = missionId,
-                    onBack = { navController.popBackStack() },
-                    onCreateProposal = { missionId, missionTitle ->
-                        navController.navigate("create_proposal/$missionId/$missionTitle")
-                    }
+                val detailsViewModel: com.example.matchify.ui.missions.details.MissionDetailsViewModel = viewModel(
+                    factory = com.example.matchify.ui.missions.details.MissionDetailsViewModelFactory(missionId)
                 )
+                val mission by detailsViewModel.mission.collectAsState()
+                
+                LaunchedEffect(Unit) {
+                    detailsViewModel.loadMission()
+                }
+                
+                mission?.let { missionData ->
+                    MissionDetailScreen(
+                        mission = missionData,
+                        onBack = { navController.popBackStack() }
+                    )
+                } ?: run {
+                    // Show loading or error state
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (detailsViewModel.isLoading.value) {
+                            CircularProgressIndicator()
+                        } else {
+                            Text(
+                                text = detailsViewModel.errorMessage.value ?: "Mission introuvable",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
             }
             
             composable("create_proposal/{missionId}/{missionTitle}") { backStackEntry ->

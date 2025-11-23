@@ -1,17 +1,24 @@
 package com.example.matchify.ui.proposals.details
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,14 +46,28 @@ fun ProposalDetailsScreen(
     }
     
     Scaffold(
+        containerColor = Color(0xFFF5F7FA),
         topBar = {
             TopAppBar(
-                title = { Text("Proposal Details") },
+                title = { 
+                    Text(
+                        "Proposal Details",
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1A1A1A)
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.Default.ArrowBack, 
+                            contentDescription = "Back",
+                            tint = Color(0xFF1A1A1A)
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White
+                )
             )
         },
         bottomBar = {
@@ -106,55 +127,78 @@ private fun ProposalDetailsContent(
     onTalentClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(24.dp)) {
-        // Mission Section
-        Section(title = "Mission") {
-            Text(
-                text = proposal.missionTitle ?: "Mission",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        
-        // Talent/Recruiter Section
-        Section(title = if (isRecruiter) "Talent" else "Recruiter") {
-            if (isRecruiter) {
-                TextButton(onClick = onTalentClick) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            // Mission Section
+            Section(title = "Mission") {
+                Text(
+                    text = proposal.missionTitle ?: "Mission",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1A1A)
+                )
+            }
+            
+            // Talent/Recruiter Section
+            Section(title = if (isRecruiter) "Talent" else "Recruiter") {
+                if (isRecruiter) {
+                    TextButton(
+                        onClick = onTalentClick,
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
                     Text(
                         text = proposal.talentName ?: "Talent",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = Color(0xFF2196F3)
+                    )
+                    }
+                } else {
+                    Text(
+                        text = proposal.recruiterName ?: "Recruiter",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF1A1A1A)
                     )
                 }
-            } else {
+            }
+            
+            // Message Section
+            Section(title = "Proposal Message") {
                 Text(
-                    text = proposal.recruiterName ?: "Recruiter",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    text = proposal.message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color(0xFF4A4A4A)
                 )
             }
-        }
-        
-        // Message Section
-        Section(title = "Proposal Message") {
-            Text(
-                text = proposal.message,
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-        
-        // Date Section
-        Section(title = "Sent") {
-            Text(
-                text = proposal.formattedDate,
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-        
-        // Status Section
-        Section(title = "Status") {
-            StatusBadge(status = proposal.status)
+            
+            // Date Section
+            Section(title = "Sent") {
+                Text(
+                    text = proposal.formattedDate,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color(0xFF4A4A4A)
+                )
+            }
+            
+            // Status Section
+            Section(title = "Status") {
+                StatusBadge(status = proposal.status)
+            }
         }
     }
 }
@@ -203,38 +247,82 @@ private fun AcceptRefuseButtons(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
+        color = Color.White,
         shadowElevation = 8.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            OutlinedButton(
-                onClick = onRefuse,
-                enabled = !isLoading,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color(0xFFF44336)
-                )
-            ) {
-                Text("Refuse")
-            }
-            
-            Button(
-                onClick = onAccept,
-                enabled = !isLoading,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(16.dp)
+            // Refuse Button - Red X icon
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .shadow(
+                        elevation = 4.dp,
+                        shape = CircleShape,
+                        spotColor = Color(0xFFF44336).copy(alpha = 0.3f)
+                    )
+                    .background(
+                        color = Color.White,
+                        shape = CircleShape
+                    )
+                    .clickable(
+                        enabled = !isLoading,
+                        onClick = onRefuse
+                    ),
+                contentAlignment = Alignment.Center
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        modifier = Modifier.size(24.dp),
+                        color = Color(0xFFF44336),
+                        strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Accept")
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Refuse",
+                        tint = Color(0xFFF44336),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+            
+            // Accept Button - Green Check icon
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .shadow(
+                        elevation = 4.dp,
+                        shape = CircleShape,
+                        spotColor = Color(0xFF4CAF50).copy(alpha = 0.3f)
+                    )
+                    .background(
+                        color = Color.White,
+                        shape = CircleShape
+                    )
+                    .clickable(
+                        enabled = !isLoading,
+                        onClick = onAccept
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color(0xFF4CAF50),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = "Accept",
+                        tint = Color(0xFF4CAF50),
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
             }
         }

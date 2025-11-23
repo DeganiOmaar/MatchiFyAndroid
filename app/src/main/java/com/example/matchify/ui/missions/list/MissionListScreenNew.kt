@@ -126,180 +126,15 @@ fun MissionListScreenNew(
         label = "drawer_animation"
     )
     
-    // Couleur de fond et navbar
-    val backgroundColor = Color(0xFF61A5C2)
+    // Couleur de fond et navbar - même couleur que ProposalsScreen
+    val backgroundColor = Color(0xFFF5F7FA)
     
-    // Animation infinie pour le background
-    val infiniteTransition = rememberInfiniteTransition(label = "background_animation")
-    
-    // Animation pour les cercles flottants
-    val circle1Y by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "circle1_y"
-    )
-    
-    val circle2Y by infiniteTransition.animateFloat(
-        initialValue = 0.5f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "circle2_y"
-    )
-    
-    val circle3X by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(5000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "circle3_x"
-    )
-    
-    val circle1Scale by infiniteTransition.animateFloat(
-        initialValue = 0.8f,
-        targetValue = 1.2f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "circle1_scale"
-    )
-    
-    val circle2Scale by infiniteTransition.animateFloat(
-        initialValue = 0.9f,
-        targetValue = 1.3f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2500, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "circle2_scale"
-    )
-    
-    val circle3Scale by infiniteTransition.animateFloat(
-        initialValue = 0.7f,
-        targetValue = 1.1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "circle3_scale"
-    )
-    
-    val circle1Alpha by infiniteTransition.animateFloat(
-        initialValue = 0.15f,
-        targetValue = 0.3f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "circle1_alpha"
-    )
-    
-    val circle2Alpha by infiniteTransition.animateFloat(
-        initialValue = 0.1f,
-        targetValue = 0.25f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "circle2_alpha"
-    )
-    
-    val circle3Alpha by infiniteTransition.animateFloat(
-        initialValue = 0.12f,
-        targetValue = 0.28f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1900, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "circle3_alpha"
-    )
-    
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Background animé avec cercles flottants
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(backgroundColor)
-        ) {
-            // Cercle 1 - En haut à gauche, se déplace verticalement
-            Box(
-                modifier = Modifier
-                    .offset(
-                        x = (-50).dp,
-                        y = (circle1Y * 200).dp - 50.dp
-                    )
-                    .size((150 * circle1Scale).dp)
-                    .background(
-                        color = Color.White.copy(alpha = circle1Alpha),
-                        shape = CircleShape
-                    )
-            )
-            
-            // Cercle 2 - En haut à droite, se déplace verticalement
-            Box(
-                modifier = Modifier
-                    .offset(
-                        x = 300.dp,
-                        y = (circle2Y * 180).dp - 40.dp
-                    )
-                    .size((120 * circle2Scale).dp)
-                    .background(
-                        color = Color.White.copy(alpha = circle2Alpha),
-                        shape = CircleShape
-                    )
-            )
-            
-            // Cercle 3 - Au milieu, se déplace horizontalement
-            Box(
-                modifier = Modifier
-                    .offset(
-                        x = (circle3X * 250).dp + 50.dp,
-                        y = 300.dp
-                    )
-                    .size((100 * circle3Scale).dp)
-                    .background(
-                        color = Color.White.copy(alpha = circle3Alpha),
-                        shape = CircleShape
-                    )
-            )
-            
-            // Cercle 4 - En bas à gauche, rotation et scale
-            Box(
-                modifier = Modifier
-                    .offset(x = 20.dp, y = 500.dp)
-                    .size((80 * circle1Scale).dp)
-                    .background(
-                        color = Color.White.copy(alpha = circle2Alpha),
-                        shape = CircleShape
-                    )
-            )
-            
-            // Cercle 5 - En bas à droite
-            Box(
-                modifier = Modifier
-                    .offset(x = 280.dp, y = 600.dp)
-                    .size((90 * circle3Scale).dp)
-                    .background(
-                        color = Color.White.copy(alpha = circle1Alpha),
-                        shape = CircleShape
-                    )
-            )
-        }
-        
-        // Main content
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
+    // Main content
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
+    ) {
             // Top Section - Profile Image and Post Button
             Row(
                 modifier = Modifier
@@ -314,8 +149,9 @@ fun MissionListScreenNew(
                         .size(36.dp)
                         .clickable { viewModel.openProfileDrawer() },
                     shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.2f),
-                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color.White.copy(alpha = 0.3f))
+                    color = Color.White,
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color.Gray.copy(alpha = 0.2f)),
+                    shadowElevation = 2.dp
                 ) {
                     Box {
                         val profileImageUrl = user?.profileImageUrl
@@ -708,7 +544,7 @@ fun MissionListScreenNew(
             }
         }
     }
-}
+
 
 
 @OptIn(ExperimentalMaterialApi::class)
