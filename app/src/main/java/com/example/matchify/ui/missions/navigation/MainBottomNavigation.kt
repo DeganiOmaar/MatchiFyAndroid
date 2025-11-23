@@ -144,41 +144,6 @@ fun MainBottomNavigation(
             )
         )
         
-        // Alerts Tab
-        NavigationBarItem(
-            icon = {
-                NavigationBarIcon(
-                    icon = Icons.Filled.Notifications,
-                    outlinedIcon = Icons.Outlined.Notifications,
-                    isSelected = currentRoute == "alerts_list",
-                    badgeCount = if (alertsUnreadCount > 0) alertsUnreadCount.takeIf { it > 0 } else null
-                )
-            },
-            label = {
-                Text(
-                    text = "Alerts",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (currentRoute == "alerts_list") FontWeight.SemiBold else FontWeight.Normal
-                )
-            },
-            selected = currentRoute == "alerts_list",
-            onClick = {
-                if (currentRoute == "alerts_list") {
-                    // Re-selecting active tab - scroll to top
-                    onScrollToTop?.invoke("alerts_list")
-                } else {
-                    onNavigate("alerts_list")
-                }
-            },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = iconColorSelected,
-                selectedTextColor = textColorSelected,
-                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                unselectedIconColor = iconColorUnselected,
-                unselectedTextColor = textColorUnselected
-            )
-        )
-        
         // Messages Tab
         NavigationBarItem(
             icon = {
@@ -203,6 +168,41 @@ fun MainBottomNavigation(
                     onScrollToTop?.invoke("messages_list")
                 } else {
                     onNavigate("messages_list")
+                }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = iconColorSelected,
+                selectedTextColor = textColorSelected,
+                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                unselectedIconColor = iconColorUnselected,
+                unselectedTextColor = textColorUnselected
+            )
+        )
+        
+        // Alerts Tab
+        NavigationBarItem(
+            icon = {
+                NavigationBarIcon(
+                    icon = Icons.Filled.Notifications,
+                    outlinedIcon = Icons.Outlined.Notifications,
+                    isSelected = currentRoute == "alerts_list",
+                    badgeCount = if (alertsUnreadCount > 0) alertsUnreadCount.takeIf { it > 0 } else null
+                )
+            },
+            label = {
+                Text(
+                    text = "Alerts",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = if (currentRoute == "alerts_list") FontWeight.SemiBold else FontWeight.Normal
+                )
+            },
+            selected = currentRoute == "alerts_list",
+            onClick = {
+                if (currentRoute == "alerts_list") {
+                    // Re-selecting active tab - scroll to top
+                    onScrollToTop?.invoke("alerts_list")
+                } else {
+                    onNavigate("alerts_list")
                 }
             },
             colors = NavigationBarItemDefaults.colors(
