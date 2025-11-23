@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.matchify.R
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TalentSignupScreen(
     onBack: () -> Unit = {},
@@ -55,58 +56,67 @@ fun TalentSignupScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Back button
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.Black
+    val backgroundColor = Color(0xFF61A5C2)
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Sign Up Talent",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = backgroundColor
                 )
-            }
+            )
         }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // LOGO
-        Image(
-            painter = painterResource(id = R.drawable.matchifylogo),
-            contentDescription = "App Logo",
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .size(170.dp)
-                .padding(top = 10.dp)
-        )
+                .fillMaxSize()
+                .background(Color.White)
+                .verticalScroll(rememberScrollState())
+                .padding(paddingValues)
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(20.dp))
 
-        Spacer(modifier = Modifier.height(20.dp))
+            // LOGO
+            Image(
+                painter = painterResource(id = R.drawable.matchifylogo),
+                contentDescription = "App Logo",
+                modifier = Modifier
+                    .size(170.dp)
+                    .padding(top = 10.dp)
+            )
 
-        Text(
-            text = "Sign Up Talent",
-            fontWeight = FontWeight.SemiBold,
-            fontSize = MaterialTheme.typography.titleLarge.fontSize,
-            textAlign = TextAlign.Left,
-            modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
-        )
+            Spacer(modifier = Modifier.height(20.dp))
 
-        Text(
-            text = "Create your talent profile",
-            color = Color.Gray,
-            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-            textAlign = TextAlign.Left,
-            modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
-        )
+            Text(
+                text = "Create your talent profile",
+                color = Color.Gray,
+                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -152,10 +162,14 @@ fun TalentSignupScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // PHONE
+        // PHONE - Only accept digits
         OutlinedTextField(
             value = phone,
-            onValueChange = { viewModel.setPhone(it) },
+            onValueChange = { newValue ->
+                // Filter to only allow digits
+                val filtered = newValue.filter { it.isDigit() }
+                viewModel.setPhone(filtered)
+            },
             leadingIcon = {
                 Icon(Icons.Default.Phone, contentDescription = null, tint = Color.Gray)
             },

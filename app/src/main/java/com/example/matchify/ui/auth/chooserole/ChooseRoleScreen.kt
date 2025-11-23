@@ -211,11 +211,16 @@ fun ChooseRoleScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Choose Your Role",
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Choose Your Role",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
