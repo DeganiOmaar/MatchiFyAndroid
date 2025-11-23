@@ -11,6 +11,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+enum class ProposalStatusFilter(val displayName: String, val apiValue: String?) {
+    ALL("All", null),
+    ACCEPTED("Accepted", "ACCEPTED"),
+    REFUSED("Refused", "REFUSED"),
+    VIEWED("Viewed", "VIEWED"),
+    NOT_VIEWED("Not Viewed", "NOT_VIEWED")
+}
+
 class ProposalsViewModel(
     private val repository: ProposalRepository
 ) : ViewModel() {
@@ -24,6 +32,9 @@ class ProposalsViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
     
+    private val _selectedStatusFilter = MutableStateFlow(ProposalStatusFilter.ALL)
+    val selectedStatusFilter: StateFlow<ProposalStatusFilter> = _selectedStatusFilter.asStateFlow()
+    
     val isRecruiter: Boolean
         get() {
             val prefs = AuthPreferencesProvider.getInstance().get()
@@ -31,6 +42,11 @@ class ProposalsViewModel(
         }
     
     init {
+        loadProposals()
+    }
+    
+    fun selectStatusFilter(filter: ProposalStatusFilter) {
+        _selectedStatusFilter.value = filter
         loadProposals()
     }
     
@@ -43,7 +59,7 @@ class ProposalsViewModel(
                 val proposalsList = if (isRecruiter) {
                     repository.getRecruiterProposals()
                 } else {
-                    repository.getTalentProposals()
+                    repository.getTalentProposals(status = _selectedStatusFilter.value.apiValue)
                 }
                 _proposals.value = proposalsList
             } catch (e: Exception) {

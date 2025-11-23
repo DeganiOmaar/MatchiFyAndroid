@@ -27,8 +27,8 @@ class ProposalRepository(
         return ProposalDtoMapper.toDomain(dto)
     }
     
-    suspend fun getTalentProposals(): List<Proposal> {
-        val dtos = apiService.proposalApi.getTalentProposals()
+    suspend fun getTalentProposals(status: String? = null): List<Proposal> {
+        val dtos = apiService.proposalApi.getTalentProposals(status = status)
         return dtos.map { ProposalDtoMapper.toDomain(it) }
     }
     

@@ -11,7 +11,9 @@ interface ProposalApi {
     suspend fun createProposal(@Body request: CreateProposalRequest): ProposalDto
     
     @GET("proposals/talent")
-    suspend fun getTalentProposals(): List<ProposalDto>
+    suspend fun getTalentProposals(
+        @Query("status") status: String? = null
+    ): List<ProposalDto>
     
     @GET("proposals/recruiter")
     suspend fun getRecruiterProposals(): List<ProposalDto>

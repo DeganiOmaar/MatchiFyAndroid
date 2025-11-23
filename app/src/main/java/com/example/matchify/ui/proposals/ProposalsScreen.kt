@@ -3,15 +3,16 @@ package com.example.matchify.ui.proposals
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -40,10 +41,7 @@ fun ProposalsScreen(
     val proposals by viewModel.proposals.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    
-    LaunchedEffect(Unit) {
-        viewModel.loadProposals()
-    }
+    val selectedStatusFilter by viewModel.selectedStatusFilter.collectAsState()
     
     Scaffold(
         topBar = {
@@ -57,6 +55,17 @@ fun ProposalsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Filter chips (Talent only)
+            if (!viewModel.isRecruiter) {
+                ProposalStatusFilters(
+                    selectedFilter = selectedStatusFilter,
+                    onFilterSelected = { filter ->
+                        viewModel.selectStatusFilter(filter)
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                )
+            }
+            
             when {
                 isLoading && proposals.isEmpty() -> {
                     Box(
@@ -96,6 +105,46 @@ fun ProposalsScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ProposalStatusFilters(
+    selectedFilter: ProposalStatusFilter,
+    onFilterSelected: (ProposalStatusFilter) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scrollState = rememberScrollState()
+    
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .horizontalScroll(scrollState),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        ProposalStatusFilter.values().forEach { filter ->
+            FilterChip(
+                selected = selectedFilter == filter,
+                onClick = { onFilterSelected(filter) },
+                label = {
+                    Text(
+                        text = filter.displayName,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = if (selectedFilter == filter) {
+                            FontWeight.SemiBold
+                        } else {
+                            FontWeight.Medium
+                        }
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            )
         }
     }
 }
