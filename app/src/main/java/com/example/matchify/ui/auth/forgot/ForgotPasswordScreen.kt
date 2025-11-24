@@ -107,22 +107,3 @@ fun ForgotPasswordScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewForgotPassword() {
-    val fakeAuthApi = object : AuthApi {
-        override suspend fun login(body: LoginRequest): LoginResponse { TODO("Not yet implemented") }
-        override suspend fun signupTalent(body: TalentSignupRequest): LoginResponse { TODO("Not yet implemented") }
-        override suspend fun signupRecruiter(body: RecruiterSignupRequest): LoginResponse { TODO("Not yet implemented") }
-        override suspend fun forgotPassword(body: ForgotPasswordRequest): ForgotPasswordResponse { TODO("Not yet implemented") }
-        override suspend fun verifyResetCode(body: VerifyResetCodeRequest): VerifyResetCodeResponse { TODO("Not yet implemented") }
-        override suspend fun resetPassword(body: ResetPasswordRequest): ResetPasswordResponse { TODO("Not yet implemented") }
-    }
-    val dummyViewModel = ForgotPasswordViewModel(AuthRepository(fakeAuthApi))
-
-    ForgotPasswordScreen(
-        onCodeSent = {},
-        onBackToLogin = {},
-        viewModel = dummyViewModel
-    )
-}

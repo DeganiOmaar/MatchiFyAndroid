@@ -163,7 +163,13 @@ class AuthPreferences(private val context: Context) {
 
     suspend fun logout() {
         context.dataStore.edit { prefs ->
-            prefs.clear()
+            // Clear only auth-related data, keep app preferences
+            prefs.remove(TOKEN)
+            prefs.remove(USER)
+            prefs.remove(ROLE)
+            prefs.remove(REMEMBER)
+            // Keep HAS_SEEN_ONBOARDING, LANGUAGE, and THEME
+            // so user doesn't see onboarding again after logout
         }
         _currentAccessToken.value = null // Explicitly clear on logout
         _currentUser.value = null // Clear current user on logout

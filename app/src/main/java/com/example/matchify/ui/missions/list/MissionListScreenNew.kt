@@ -208,6 +208,16 @@ fun MissionListScreenNew(
                                     }
                                 }
                             }
+                        },
+                        actions = {
+                            if (isRecruiter && onAddMission != null) {
+                                IconButton(onClick = onAddMission) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Add,
+                                        contentDescription = "Add Mission"
+                                    )
+                                }
+                            }
                         }
                     )
                     

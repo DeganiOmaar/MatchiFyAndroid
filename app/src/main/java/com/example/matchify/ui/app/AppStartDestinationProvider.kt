@@ -11,7 +11,7 @@ class AppStartDestinationProvider(private val context: Context) {
 
         val token = prefs.getTokenValue()
         val rememberMe = prefs.getRememberMeValue()
-        val role = prefs.getRoleValue() // Get the stored role
+        val hasSeenOnboarding = prefs.getHasSeenOnboardingValue()
 
         // If user is logged in (has token and remember me), go to main
         if (token != null && rememberMe) {
@@ -19,7 +19,13 @@ class AppStartDestinationProvider(private val context: Context) {
             return "main"
         }
 
-        // User is not logged in → always show onboarding
-        return "onboarding"
+        // User is not logged in
+        // Show onboarding only if they haven't seen it before
+        // After logout, hasSeenOnboarding is preserved, so they go to login
+        return if (hasSeenOnboarding) {
+            "login"
+        } else {
+            "onboarding"
+        }
     }
 }

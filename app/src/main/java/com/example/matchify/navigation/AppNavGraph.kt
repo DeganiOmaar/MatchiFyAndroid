@@ -222,7 +222,13 @@ fun AppNavGraph(
         // MAIN SCREEN (Missions + Profile with Bottom Navigation)
         composable("main") {
             com.example.matchify.ui.missions.MainScreen(
-                onOpenSettings = { navController.navigate("settings") }
+                onOpenSettings = { navController.navigate("settings") },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 

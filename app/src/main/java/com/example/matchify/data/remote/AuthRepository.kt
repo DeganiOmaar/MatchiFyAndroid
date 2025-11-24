@@ -37,4 +37,9 @@ class AuthRepository(private val api: AuthApi) {
                 ResetPasswordRequest(newPassword, confirmPassword)
             )
         }
+
+    suspend fun logout(): LogoutResponse =
+        withContext(Dispatchers.IO) {
+            api.logout()
+        }
 }

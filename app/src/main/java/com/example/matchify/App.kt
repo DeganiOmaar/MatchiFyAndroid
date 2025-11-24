@@ -4,6 +4,7 @@ import android.app.Application
 import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.data.remote.ApiService
 import com.example.matchify.data.realtime.RealtimeManager
+import com.example.matchify.domain.session.AuthSessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,7 +29,10 @@ class App : Application() {
         // 4. Initialize RealtimeManager
         RealtimeManager.initialize(authPreferences)
 
-        // 5. Connect realtime clients if user is logged in
+        // 5. Initialize AuthSessionManager so logout flow mirrors iOS
+        AuthSessionManager.initialize(authPreferences)
+
+        // 6. Connect realtime clients if user is logged in
         applicationScope.launch {
             val token = authPreferences.currentAccessToken.value
             if (!token.isNullOrBlank()) {

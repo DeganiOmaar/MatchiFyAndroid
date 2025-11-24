@@ -143,6 +143,7 @@ fun PreviewResetPassword() {
         override suspend fun forgotPassword(body: ForgotPasswordRequest): ForgotPasswordResponse { TODO("Not yet implemented") }
         override suspend fun verifyResetCode(body: VerifyResetCodeRequest): VerifyResetCodeResponse { TODO("Not yet implemented") }
         override suspend fun resetPassword(body: ResetPasswordRequest): ResetPasswordResponse { TODO("Not yet implemented") }
+        override suspend fun logout(): LogoutResponse { TODO("Not yet implemented") }
     }
     val dummyViewModel = ResetPasswordViewModel(AuthRepository(fakeAuthApi))
 

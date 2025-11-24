@@ -3,6 +3,7 @@ package com.example.matchify.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.matchify.data.local.AuthPreferences
+import com.example.matchify.domain.session.AuthSessionManager
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -10,7 +11,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
-    private val authPreferences: AuthPreferences
+    private val authPreferences: AuthPreferences,
+    private val authSessionManager: AuthSessionManager
 ) : ViewModel() {
 
     private val _isLoggingOut = MutableStateFlow(false)
@@ -34,13 +36,15 @@ class SettingsViewModel(
         viewModelScope.launch {
             _isLoggingOut.value = true
             _errorMessage.value = null
+            
             runCatching {
-                authPreferences.logout()
+                authSessionManager.logout()
             }.onSuccess {
                 _logoutEvents.emit(Unit)
             }.onFailure { throwable ->
                 _errorMessage.value = throwable.localizedMessage ?: "Une erreur est survenue."
             }
+            
             _isLoggingOut.value = false
         }
     }

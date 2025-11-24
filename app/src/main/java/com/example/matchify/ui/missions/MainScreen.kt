@@ -52,12 +52,15 @@ import com.example.matchify.ui.stats.MyStatsScreen
 import com.example.matchify.ui.stats.MyStatsViewModel
 import com.example.matchify.ui.stats.MyStatsViewModelFactory
 import androidx.compose.runtime.LaunchedEffect
+import com.example.matchify.domain.session.AuthSessionManager
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     navController: NavHostController = rememberNavController(),
-    onOpenSettings: () -> Unit = {}
+    onOpenSettings: () -> Unit = {},
+    onLogout: () -> Unit = {}
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -66,6 +69,7 @@ fun MainScreen(
     val context = LocalContext.current
     val prefs = remember { AuthPreferencesProvider.getInstance().get() }
     val userRole by prefs.role.collectAsState(initial = "recruiter")
+    val authSessionManager = remember { AuthSessionManager.getInstance() }
     
     // Determine profile route based on role
     val profileRoute = if (userRole == "talent") "talent_profile" else "recruiter_profile"
@@ -152,11 +156,11 @@ fun MainScreen(
                             }
                             DrawerMenuItemType.LOG_OUT -> {
                                 scope.launch {
-                                    prefs.logout()
-                                    navController.navigate("login") {
-                                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                                        launchSingleTop = true
+                                    val result = runCatching { authSessionManager.logout() }
+                                    if (result.isFailure) {
+                                        Log.e("MainScreen", "Logout from drawer failed", result.exceptionOrNull())
                                     }
+                                    onLogout()
                                 }
                             }
                         }
