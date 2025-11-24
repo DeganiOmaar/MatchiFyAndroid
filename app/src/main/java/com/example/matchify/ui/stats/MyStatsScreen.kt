@@ -1,6 +1,7 @@
 package com.example.matchify.ui.stats
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -8,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.getValue
@@ -234,6 +236,22 @@ private fun ProposalsSection(
     onTimeframeSelected: (StatsTimeframe) -> Unit,
     proposalsSentText: String
 ) {
+    val maxProposalValue = maxOf(
+        1,
+        maxOf(
+            stats?.proposalsSent ?: 0,
+            maxOf(
+                stats?.proposalsAccepted ?: 0,
+                stats?.proposalsRefused ?: 0
+            )
+        )
+    )
+    
+    fun calculateBarHeight(value: Int, maxValue: Int): androidx.compose.ui.unit.Dp {
+        if (maxValue == 0) return 4.dp
+        val ratio = value.toFloat() / maxValue.toFloat()
+        return maxOf(4.dp, (ratio * 80).dp)
+    }
     Column(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
@@ -250,43 +268,84 @@ private fun ProposalsSection(
                 color = MaterialTheme.colorScheme.onSurface
             )
             
-            // Dropdown Selector
-            var showDropdown by androidx.compose.runtime.mutableStateOf(false)
+            // Dropdown Selector with Material 3 style
+            var showDropdown by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+            
             Box {
                 TextButton(
-                    onClick = { showDropdown = true }
+                    onClick = { showDropdown = !showDropdown },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            RoundedCornerShape(8.dp)
+                        )
                 ) {
-                    Text(
-                        text = when (selectedTimeframe) {
-                            StatsTimeframe.LAST_7_DAYS -> "Last 7 days"
-                            StatsTimeframe.LAST_30_DAYS -> "Last 30 days"
-                            StatsTimeframe.LAST_90_DAYS -> "Last 90 days"
-                            StatsTimeframe.LAST_12_MONTHS -> "Last 12 months"
-                        },
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = null
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = when (selectedTimeframe) {
+                                StatsTimeframe.LAST_7_DAYS -> "Last 7 days"
+                                StatsTimeframe.LAST_30_DAYS -> "Last 30 days"
+                                StatsTimeframe.LAST_90_DAYS -> "Last 90 days"
+                                StatsTimeframe.LAST_12_MONTHS -> "Last 12 months"
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
                 
                 DropdownMenu(
                     expanded = showDropdown,
-                    onDismissRequest = { showDropdown = false }
+                    onDismissRequest = { showDropdown = false },
+                    modifier = Modifier
+                        .background(
+                            MaterialTheme.colorScheme.surface,
+                            RoundedCornerShape(12.dp)
+                        )
                 ) {
                     StatsTimeframe.entries.forEach { timeframe ->
+                        val isSelected = timeframe == selectedTimeframe
                         DropdownMenuItem(
                             text = {
-                                Text(
-                                    text = when (timeframe) {
-                                        StatsTimeframe.LAST_7_DAYS -> "Last 7 days"
-                                        StatsTimeframe.LAST_30_DAYS -> "Last 30 days"
-                                        StatsTimeframe.LAST_90_DAYS -> "Last 90 days"
-                                        StatsTimeframe.LAST_12_MONTHS -> "Last 12 months"
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = when (timeframe) {
+                                            StatsTimeframe.LAST_7_DAYS -> "Last 7 days"
+                                            StatsTimeframe.LAST_30_DAYS -> "Last 30 days"
+                                            StatsTimeframe.LAST_90_DAYS -> "Last 90 days"
+                                            StatsTimeframe.LAST_12_MONTHS -> "Last 12 months"
+                                        },
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
                                     }
-                                )
+                                }
                             },
                             onClick = {
                                 onTimeframeSelected(timeframe)
@@ -311,7 +370,7 @@ private fun ProposalsSection(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Graph Placeholder (Simple bar chart)
+            // Graph Placeholder (Simple bar chart with 3 bars)
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -321,14 +380,13 @@ private fun ProposalsSection(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    // Bar 1 - Organic
+                    // Bar 1 - Sent
                     Column(
-                        modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .width(20.dp)
                                 .height(80.dp)
                                 .background(
                                     MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
@@ -338,24 +396,26 @@ private fun ProposalsSection(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(40.dp)
+                                    .width(20.dp)
+                                    .height(calculateBarHeight(
+                                        value = stats?.proposalsSent ?: 0,
+                                        maxValue = maxProposalValue
+                                    ))
                                     .background(
-                                        Color(0xFF66CCCC), // Organic color
+                                        Color(0xFF66CCCC), // Sent color (light turquoise)
                                         RoundedCornerShape(4.dp)
                                     )
                             )
                         }
                     }
                     
-                    // Bar 2 - Organic
+                    // Bar 2 - Accepted
                     Column(
-                        modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .width(20.dp)
                                 .height(80.dp)
                                 .background(
                                     MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
@@ -365,24 +425,26 @@ private fun ProposalsSection(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(50.dp)
+                                    .width(20.dp)
+                                    .height(calculateBarHeight(
+                                        value = stats?.proposalsAccepted ?: 0,
+                                        maxValue = maxProposalValue
+                                    ))
                                     .background(
-                                        Color(0xFF66CCCC),
+                                        Color(0xFF33B84D), // Accepted color (green)
                                         RoundedCornerShape(4.dp)
                                     )
                             )
                         }
                     }
                     
-                    // Bar 3 - Boosted
+                    // Bar 3 - Refused
                     Column(
-                        modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .width(20.dp)
                                 .height(80.dp)
                                 .background(
                                     MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
@@ -392,79 +454,17 @@ private fun ProposalsSection(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(30.dp)
+                                    .width(20.dp)
+                                    .height(calculateBarHeight(
+                                        value = stats?.proposalsRefused ?: 0,
+                                        maxValue = maxProposalValue
+                                    ))
                                     .background(
-                                        MaterialTheme.colorScheme.primary, // Boosted color
+                                        Color(0xFFE64A4A), // Refused color (red)
                                         RoundedCornerShape(4.dp)
                                     )
                             )
                         }
-                    }
-                    
-                    // Bar 4 - Boosted
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(80.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                                    RoundedCornerShape(4.dp)
-                                ),
-                            contentAlignment = Alignment.BottomCenter
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(25.dp)
-                                    .background(
-                                        MaterialTheme.colorScheme.primary,
-                                        RoundedCornerShape(4.dp)
-                                    )
-                            )
-                        }
-                    }
-                }
-                
-                // Legend
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(12.dp)
-                                .background(Color(0xFF66CCCC), RoundedCornerShape(2.dp))
-                        )
-                        Text(
-                            text = "Organic",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(12.dp)
-                                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(2.dp))
-                        )
-                        Text(
-                            text = "Boosted",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
                 }
             }
@@ -474,46 +474,56 @@ private fun ProposalsSection(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = "${stats?.proposalsSent ?: 0} proposals sent",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .background(Color(0xFF66CCCC), RoundedCornerShape(2.dp))
+                    )
+                    Text(
+                        text = "${stats?.proposalsSent ?: 0} proposals sent",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
                 
-                Text(
-                    text = "${stats?.proposalsViewed ?: 0} were viewed",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .background(Color(0xFF33B84D), RoundedCornerShape(2.dp))
+                    )
+                    Text(
+                        text = "${stats?.proposalsAccepted ?: 0} proposals accepted",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
                 
-                Text(
-                    text = "${stats?.interviews ?: 0} interviews",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                
-                Text(
-                    text = "${stats?.hires ?: 0} hires",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .background(Color(0xFFE64A4A), RoundedCornerShape(2.dp))
+                    )
+                    Text(
+                        text = "${stats?.proposalsRefused ?: 0} proposals refused",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
         }
         
-        // "My proposals" Link
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            TextButton(onClick = { /* TODO: Navigate to proposals */ }) {
-                Text(
-                    text = "My proposals",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF4CAF50)
-                )
-            }
-        }
     }
 }
 

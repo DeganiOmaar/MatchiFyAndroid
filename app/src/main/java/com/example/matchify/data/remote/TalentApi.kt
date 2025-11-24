@@ -1,12 +1,14 @@
 package com.example.matchify.data.remote
 
 import com.example.matchify.data.remote.dto.profile.TalentProfileResponseDto
+import com.example.matchify.data.remote.dto.stats.TalentStatsResponseDto
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.PUT
 import retrofit2.http.Part
+import retrofit2.http.Query
 
 interface TalentApi {
 
@@ -28,5 +30,9 @@ interface TalentApi {
         @Part("portfolioLink") portfolioLink: RequestBody?,
         @Part profileImage: MultipartBody.Part?
     ): TalentProfileResponseDto
+
+    // Récupérer les statistiques de proposals du talent
+    @GET("talent/stats")
+    suspend fun getTalentStats(@Query("days") days: Int): TalentStatsResponseDto
 }
 

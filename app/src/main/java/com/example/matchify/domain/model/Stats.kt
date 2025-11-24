@@ -7,9 +7,8 @@ data class Stats(
     val twelveMonthEarnings: Double = 0.0,
     val jobSuccessScore: Int? = null,
     val proposalsSent: Int = 0,
-    val proposalsViewed: Int = 0,
-    val interviews: Int = 0,
-    val hires: Int = 0
+    val proposalsAccepted: Int = 0,
+    val proposalsRefused: Int = 0
 ) {
     val hasJobSuccessScore: Boolean
         get() = jobSuccessScore != null
