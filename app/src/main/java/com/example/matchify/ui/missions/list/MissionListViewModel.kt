@@ -35,12 +35,18 @@ class MissionListViewModel(
 
     private val _favoriteMissionsList = MutableStateFlow<List<Mission>>(emptyList())
     val favoriteMissionsList: StateFlow<List<Mission>> = _favoriteMissionsList
+    
+    private val _bestMatchMissions = MutableStateFlow<List<Mission>>(emptyList())
+    val bestMatchMissions: StateFlow<List<Mission>> = _bestMatchMissions
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _isLoadingFavorites = MutableStateFlow(false)
     val isLoadingFavorites: StateFlow<Boolean> = _isLoadingFavorites
+    
+    private val _isLoadingBestMatches = MutableStateFlow(false)
+    val isLoadingBestMatches: StateFlow<Boolean> = _isLoadingBestMatches
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
@@ -88,9 +94,10 @@ class MissionListViewModel(
                 
                 _isLoading.value = false
                 
-                // Load favorites if talent
+                // Load favorites and best matches if talent
                 if (isTalent) {
                     loadFavorites()
+                    loadBestMatches()
                 }
             } catch (e: Exception) {
                 _isLoading.value = false
@@ -136,6 +143,56 @@ class MissionListViewModel(
                 _isLoadingFavorites.value = false
                 _errorMessage.value = "Failed to load favorites: ${e.message}"
                 // Don't silently fail - show error to user
+            }
+        }
+    }
+    
+    /**
+     * Charger les missions Best Match avec AI
+     * GET /missions/best-match
+     * Limite à 20 missions comme iOS
+     */
+    fun loadBestMatches() {
+        if (!isTalent) {
+            android.util.Log.d("MissionListViewModel", "loadBestMatches: User is not a talent, skipping")
+            return
+        }
+        
+        android.util.Log.d("MissionListViewModel", "loadBestMatches: Starting to load best match missions")
+        _isLoadingBestMatches.value = true
+        
+        viewModelScope.launch {
+            try {
+                val response = repository.getBestMatchMissions()
+                // Limiter à 20 missions comme iOS
+                val bestMatches = response.missions.take(20).map { bestMatchDto ->
+                    // Convertir BestMatchMissionDto en Mission
+                    Mission(
+                        id = bestMatchDto.missionId,
+                        _id = bestMatchDto.missionId,
+                        title = bestMatchDto.title,
+                        description = bestMatchDto.description,
+                        duration = bestMatchDto.duration,
+                        budget = bestMatchDto.budget,
+                        skills = bestMatchDto.skills,
+                        recruiterId = bestMatchDto.recruiterId,
+                        createdAt = null,
+                        updatedAt = null,
+                        proposalsCount = null,
+                        interviewingCount = null,
+                        hasApplied = null,
+                        isFavorite = null,
+                        status = null
+                    )
+                }
+                
+                _bestMatchMissions.value = bestMatches
+                android.util.Log.d("MissionListViewModel", "loadBestMatches: Successfully loaded ${bestMatches.size} best match missions")
+                _isLoadingBestMatches.value = false
+            } catch (e: Exception) {
+                android.util.Log.e("MissionListViewModel", "loadBestMatches: Error loading best matches", e)
+                _isLoadingBestMatches.value = false
+                _errorMessage.value = "Failed to load best matches: ${e.message}"
             }
         }
     }
@@ -289,12 +346,14 @@ class MissionListViewModel(
         get() = kotlinx.coroutines.flow.combine(
             _missions,
             _favoriteMissionsList,
+            _bestMatchMissions,
             _searchText,
             _selectedTab
-        ) { missions, favorites, search, tab ->
+        ) { missions, favorites, bestMatches, search, tab ->
             var filtered = when (tab) {
                 MissionTab.FAVORITES -> favorites
-                MissionTab.BEST_MATCHES, MissionTab.MOST_RECENT -> missions
+                MissionTab.BEST_MATCHES -> bestMatches // Utiliser les missions Best Match avec AI
+                MissionTab.MOST_RECENT -> missions
             }
             
             // Apply search filter

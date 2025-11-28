@@ -44,6 +44,12 @@ class TalentProfileViewModel(
     
     private val _skillNames = MutableStateFlow<List<String>>(emptyList())
     val skillNames: StateFlow<List<String>> = _skillNames
+    
+    private val _isUploadingCV = MutableStateFlow(false)
+    val isUploadingCV: StateFlow<Boolean> = _isUploadingCV
+    
+    private val _cvUploadError = MutableStateFlow<String?>(null)
+    val cvUploadError: StateFlow<String?> = _cvUploadError
 
     init {
         // Load user data from local preferences first
@@ -191,6 +197,69 @@ class TalentProfileViewModel(
                 Log.e("TalentProfileViewModel", "Failed to load skill names: ${e.message}", e)
                 // Fallback: use IDs if loading names fails
                 _skillNames.value = skillIds
+            }
+        }
+    }
+    
+    /**
+     * Upload CV file
+     * Même comportement que iOS
+     */
+    fun uploadCV() {
+        // Cette fonction déclenchera le sélecteur de fichier dans l'écran
+        // L'écran appellera uploadCVFile avec le fichier sélectionné
+    }
+    
+    fun uploadCVFile(fileUri: android.net.Uri, context: android.content.Context) {
+        _isUploadingCV.value = true
+        _cvUploadError.value = null
+        
+        viewModelScope.launch {
+            try {
+                // Lire le fichier depuis l'URI
+                val inputStream = context.contentResolver.openInputStream(fileUri)
+                val file = java.io.File(context.cacheDir, "cv_temp_${System.currentTimeMillis()}")
+                inputStream?.use { input ->
+                    file.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                
+                // Déterminer l'extension
+                val fileName = context.contentResolver.query(fileUri, null, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    cursor.moveToFirst()
+                    cursor.getString(nameIndex)
+                } ?: "cv.pdf"
+                
+                // Vérifier le type de fichier
+                val extension = fileName.substringAfterLast('.', "").lowercase()
+                if (extension !in listOf("pdf", "doc", "docx")) {
+                    throw IllegalArgumentException("Format de fichier non supporté. Utilisez PDF, DOC ou DOCX.")
+                }
+                
+                // Renommer le fichier avec la bonne extension
+                val renamedFile = java.io.File(file.parent, fileName)
+                file.renameTo(renamedFile)
+                
+                // Upload
+                val response = repository.uploadCV(renamedFile)
+                val userDto = response.user
+                    ?: throw IllegalStateException("Réponse invalide du serveur")
+                
+                val userData = userDto.toDomain()
+                _user.value = userData
+                prefs.saveUser(userData)
+                
+                // Nettoyer le fichier temporaire
+                renamedFile.delete()
+                
+                _isUploadingCV.value = false
+                refreshProfile() // Recharger le profil pour afficher le CV
+            } catch (e: Exception) {
+                Log.e("TalentProfileViewModel", "Error uploading CV: ${e.message}", e)
+                _isUploadingCV.value = false
+                _cvUploadError.value = ErrorHandler.getErrorMessage(e, ErrorContext.PROFILE_UPDATE)
             }
         }
     }

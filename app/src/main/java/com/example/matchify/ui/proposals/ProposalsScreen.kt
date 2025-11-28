@@ -9,6 +9,9 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,6 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -55,6 +60,12 @@ fun ProposalsScreen(
     val selectedStatusFilter by viewModel.selectedStatusFilter.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
     
+    // Recruiter-specific state
+    val missions by viewModel.missions.collectAsState()
+    val selectedMission by viewModel.selectedMission.collectAsState()
+    val aiSortEnabled by viewModel.aiSortEnabled.collectAsState()
+    val isLoadingMissions by viewModel.isLoadingMissions.collectAsState()
+    
     Scaffold(
         topBar = {
             TopAppBar(
@@ -67,6 +78,19 @@ fun ProposalsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Mission Selector & AI Sort (Recruiter only)
+            if (viewModel.isRecruiter) {
+                RecruiterMissionSelector(
+                    missions = missions,
+                    selectedMission = selectedMission,
+                    isLoadingMissions = isLoadingMissions,
+                    onMissionSelected = { viewModel.selectMission(it) },
+                    aiSortEnabled = aiSortEnabled,
+                    onToggleAiSort = { viewModel.toggleAiSort() },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                )
+            }
+            
             // Active/Archive tabs (Talent only)
             if (!viewModel.isRecruiter) {
                 ProposalTabSelector(
@@ -109,6 +133,35 @@ fun ProposalsScreen(
                         )
                     }
                 }
+                viewModel.isRecruiter && selectedMission == null -> {
+                    // Show placeholder when no mission selected (recruiter)
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Description,
+                                contentDescription = null,
+                                modifier = Modifier.size(60.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                            )
+                            Text(
+                                text = "Select a mission to view proposals",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "Choose a mission from the dropdown above",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
                 proposals.isEmpty() -> {
                     EmptyProposalsView(viewModel.isRecruiter)
                 }
@@ -122,6 +175,7 @@ fun ProposalsScreen(
                             ProposalRow(
                                 proposal = proposal,
                                 isRecruiter = viewModel.isRecruiter,
+                                showAiScore = aiSortEnabled && viewModel.isRecruiter,
                                 onClick = { onProposalClick(proposal.proposalId) },
                                 onArchive = { viewModel.archiveProposal(proposal.proposalId) },
                                 onDelete = { viewModel.deleteProposal(proposal.proposalId) }
@@ -261,11 +315,96 @@ private fun EmptyProposalsView(isRecruiter: Boolean) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RecruiterMissionSelector(
+    missions: List<com.example.matchify.domain.model.Mission>,
+    selectedMission: com.example.matchify.domain.model.Mission?,
+    isLoadingMissions: Boolean,
+    onMissionSelected: (com.example.matchify.domain.model.Mission?) -> Unit,
+    aiSortEnabled: Boolean,
+    onToggleAiSort: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Mission Dropdown
+        var expanded by remember { mutableStateOf(false) }
+        
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = selectedMission?.title ?: "Select a mission",
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Mission") },
+                leadingIcon = {
+                    Icon(Icons.Default.Work, contentDescription = null)
+                },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+                enabled = !isLoadingMissions
+            )
+            
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                missions.forEach { mission ->
+                    DropdownMenuItem(
+                        text = { Text(mission.title) },
+                        onClick = {
+                            onMissionSelected(mission)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+        
+        // AI Sort Toggle (only shown when mission is selected)
+        if (selectedMission != null) {
+            Button(
+                onClick = onToggleAiSort,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (aiSortEnabled) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.primaryContainer
+                    }
+                )
+            ) {
+                Icon(
+                    Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (aiSortEnabled) "AI Sorting Enabled" else "Enable AI Sorting",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun ProposalRow(
     proposal: Proposal,
     isRecruiter: Boolean,
+    showAiScore: Boolean = false,
     onClick: () -> Unit,
     onArchive: () -> Unit = {},
     onDelete: () -> Unit = {}
@@ -378,6 +517,29 @@ private fun ProposalRow(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
                     )
+                }
+                
+                // AI Score Badge (shown when AI sorting is enabled and score is available)
+                if (showAiScore) {
+                    // Note: Le backend devrait retourner le score AI dans ProposalDto
+                    // Pour l'instant, on affiche juste un indicateur visuel
+                    Row(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "AI Match",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
                 
                 Text(

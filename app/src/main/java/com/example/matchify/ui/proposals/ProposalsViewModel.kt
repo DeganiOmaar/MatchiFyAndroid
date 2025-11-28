@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.data.remote.ApiService
 import com.example.matchify.data.remote.ProposalRepository
+import com.example.matchify.domain.model.Mission
 import com.example.matchify.domain.model.Proposal
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,6 +44,19 @@ class ProposalsViewModel(
     private val _selectedTab = MutableStateFlow(ProposalTab.ACTIVE)
     val selectedTab: StateFlow<ProposalTab> = _selectedTab.asStateFlow()
     
+    // Recruiter-specific state
+    private val _missions = MutableStateFlow<List<Mission>>(emptyList())
+    val missions: StateFlow<List<Mission>> = _missions.asStateFlow()
+    
+    private val _selectedMission = MutableStateFlow<Mission?>(null)
+    val selectedMission: StateFlow<Mission?> = _selectedMission.asStateFlow()
+    
+    private val _aiSortEnabled = MutableStateFlow(false)
+    val aiSortEnabled: StateFlow<Boolean> = _aiSortEnabled.asStateFlow()
+    
+    private val _isLoadingMissions = MutableStateFlow(false)
+    val isLoadingMissions: StateFlow<Boolean> = _isLoadingMissions.asStateFlow()
+    
     val isRecruiter: Boolean
         get() {
             val prefs = AuthPreferencesProvider.getInstance().get()
@@ -50,7 +64,11 @@ class ProposalsViewModel(
         }
     
     init {
-        loadProposals()
+        if (isRecruiter) {
+            loadMissions()
+        } else {
+            loadProposals()
+        }
     }
     
     fun selectTab(tab: ProposalTab) {
@@ -74,7 +92,17 @@ class ProposalsViewModel(
             
             try {
                 val proposalsList = if (isRecruiter) {
-                    repository.getRecruiterProposals()
+                    // Recruiter: load proposals for selected mission with optional AI sort
+                    val selectedMissionId = _selectedMission.value?.missionId
+                    if (selectedMissionId != null) {
+                        val (_, proposals) = repository.getProposalsForMission(
+                            missionId = selectedMissionId,
+                            aiSort = _aiSortEnabled.value
+                        )
+                        proposals
+                    } else {
+                        emptyList()
+                    }
                 } else {
                     val archived = if (_selectedTab.value == ProposalTab.ARCHIVE) true else null
                     // Only apply status filter for Active tab
@@ -92,6 +120,41 @@ class ProposalsViewModel(
                 _isLoading.value = false
             }
         }
+    }
+    
+    /**
+     * Charger les missions du recruteur pour le filtre
+     */
+    fun loadMissions() {
+        if (!isRecruiter) return
+        
+        _isLoadingMissions.value = true
+        viewModelScope.launch {
+            try {
+                val missionsList = repository.getRecruiterMissions()
+                _missions.value = missionsList
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erreur lors du chargement des missions"
+            } finally {
+                _isLoadingMissions.value = false
+            }
+        }
+    }
+    
+    /**
+     * Sélectionner une mission (recruiter)
+     */
+    fun selectMission(mission: Mission?) {
+        _selectedMission.value = mission
+        loadProposals()
+    }
+    
+    /**
+     * Activer/désactiver le tri AI (recruiter)
+     */
+    fun toggleAiSort() {
+        _aiSortEnabled.value = !_aiSortEnabled.value
+        loadProposals()
     }
     
     fun archiveProposal(id: String) {

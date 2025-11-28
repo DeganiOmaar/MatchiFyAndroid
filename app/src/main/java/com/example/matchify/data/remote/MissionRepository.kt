@@ -55,5 +55,14 @@ class MissionRepository(
         
         return isOwner
     }
+    
+    /**
+     * Récupérer les missions Best Match avec AI
+     * GET /missions/best-match
+     * Même endpoint que iOS
+     */
+    suspend fun getBestMatchMissions(): com.example.matchify.data.remote.dto.mission.BestMatchMissionsResponseDto = withContext(Dispatchers.IO) {
+        api.getBestMatchMissions()
+    }
 }
 

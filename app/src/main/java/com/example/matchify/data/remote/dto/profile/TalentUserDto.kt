@@ -14,7 +14,7 @@ data class TalentUserDto(
     @SerializedName("talent") val talent: List<String>?,
     @SerializedName("description") val description: String?,
     @SerializedName("skills") val skills: List<String>?,
-    @SerializedName("portfolioLink") val portfolioLink: String?,
+    @SerializedName("cvUrl") val cvUrl: String? = null, // URL du CV uploadé
     @SerializedName("createdAt") val createdAt: String?,
     @SerializedName("updatedAt") val updatedAt: String?
 )

@@ -36,5 +36,42 @@ interface ProposalApi {
     
     @GET("proposals/mission/{missionId}/count")
     suspend fun getMissionProposalsCount(@Path("missionId") missionId: String): Map<String, Any>
+    
+    // Récupérer les missions du recruteur pour le filtre
+    // GET /recruiter/missions
+    @GET("recruiter/missions")
+    suspend fun getRecruiterMissions(): List<com.example.matchify.data.remote.dto.mission.MissionDto>
+    
+    // Récupérer les propositions pour une mission avec tri AI optionnel
+    // GET /recruiter/proposals/mission/{missionId}?sort=ai
+    @GET("recruiter/proposals/mission/{missionId}")
+    suspend fun getProposalsForMission(
+        @Path("missionId") missionId: String,
+        @Query("sort") sort: String? = null // "ai" pour tri AI
+    ): MissionProposalsResponseDto
+    
+    // Rechercher les propositions par titre de mission
+    // GET /recruiter/proposals?title={title}
+    @GET("recruiter/proposals")
+    suspend fun searchProposalsByMissionTitle(
+        @Query("title") title: String
+    ): List<MissionProposalsSearchResultDto>
 }
+
+/**
+ * Réponse avec mission et ses propositions
+ */
+data class MissionProposalsResponseDto(
+    val mission: com.example.matchify.data.remote.dto.mission.MissionDto,
+    val proposals: List<ProposalDto>
+)
+
+/**
+ * Résultat de recherche de propositions par titre de mission
+ */
+data class MissionProposalsSearchResultDto(
+    val mission: com.example.matchify.data.remote.dto.mission.MissionDto,
+    val proposalCount: Int,
+    val proposals: List<ProposalDto>
+)
 

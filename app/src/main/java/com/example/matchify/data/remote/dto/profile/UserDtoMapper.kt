@@ -15,7 +15,6 @@ fun UserDto.toDomain(): UserModel {
         talent = talent,
         description = description,
         skills = skills,
-        portfolioLink = portfolioLink,
         createdAt = createdAt,
         updatedAt = updatedAt
     )

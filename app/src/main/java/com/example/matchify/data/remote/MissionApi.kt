@@ -1,5 +1,6 @@
 package com.example.matchify.data.remote
 
+import com.example.matchify.data.remote.dto.mission.BestMatchMissionsResponseDto
 import com.example.matchify.data.remote.dto.mission.CreateMissionRequest
 import com.example.matchify.data.remote.dto.mission.MissionDto
 import com.example.matchify.data.remote.dto.mission.UpdateMissionRequest
@@ -27,6 +28,12 @@ interface MissionApi {
     
     @DELETE("missions/{id}")
     suspend fun deleteMission(@Path("id") id: String): MissionDto
+    
+    // Best Match Missions avec AI
+    // GET /missions/best-match
+    // Même endpoint que iOS
+    @GET("missions/best-match")
+    suspend fun getBestMatchMissions(): BestMatchMissionsResponseDto
 }
 
 

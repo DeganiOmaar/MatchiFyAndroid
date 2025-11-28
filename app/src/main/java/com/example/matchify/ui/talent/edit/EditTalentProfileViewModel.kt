@@ -31,7 +31,6 @@ class EditTalentProfileViewModel(
     val talentInput = MutableStateFlow("")
     val description = MutableStateFlow("")
     val skills = MutableStateFlow<List<String>>(emptyList())
-    val portfolioLink = MutableStateFlow("")
     val skillInput = MutableStateFlow("")
     val selectedImageUri = MutableStateFlow<Uri?>(null)
     val currentProfileImageUrl = MutableStateFlow<String?>(null)
@@ -49,7 +48,6 @@ class EditTalentProfileViewModel(
         talents.value = user.talent ?: emptyList()
         description.value = user.description ?: ""
         skills.value = user.skills ?: emptyList()
-        portfolioLink.value = user.portfolioLink ?: ""
         currentProfileImageUrl.value = user.profileImageUrl
     }
 
@@ -128,7 +126,6 @@ class EditTalentProfileViewModel(
                     talent = if (talents.value.isNotEmpty()) talents.value else null,
                     description = description.value.ifBlank { null },
                     skills = if (skills.value.isNotEmpty()) skills.value else null,
-                    portfolioLink = portfolioLink.value.ifBlank { null },
                     imageFile = imageFile
                 )
 

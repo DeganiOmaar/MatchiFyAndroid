@@ -62,6 +62,7 @@ fun MissionListScreenNew(
     val missions by viewModel.filteredMissions.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isLoadingFavorites by viewModel.isLoadingFavorites.collectAsState()
+    val isLoadingBestMatches by viewModel.isLoadingBestMatches.collectAsState()
     val searchText by viewModel.searchText.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
     val showDrawer by viewModel.showProfileDrawer.collectAsState()
@@ -344,13 +345,14 @@ fun MissionListScreenNew(
                     when (page) {
                         0 -> MissionTabContent(
                             missions = missions,
-                            isLoading = isLoading,
+                            isLoading = isLoading || (isTalent && isLoadingBestMatches),
                             isLoadingFavorites = false,
                             isTalent = isTalent,
                             viewModel = viewModel,
                             onMissionClick = onMissionClick,
                             onAddMission = if (isRecruiter) onAddMission else null,
                             isFavoritesTab = false,
+                            isBestMatchTab = true,
                             onEditMission = onEditMission
                         )
                         1 -> MissionTabContent(
@@ -420,6 +422,7 @@ fun MissionTabContent(
     onMissionClick: (Mission) -> Unit,
     onAddMission: (() -> Unit)?,
     isFavoritesTab: Boolean,
+    isBestMatchTab: Boolean = false,
     onEditMission: ((Mission) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {

@@ -19,6 +19,9 @@ class CreateProposalViewModel(
     private val _message = MutableStateFlow("")
     val message: StateFlow<String> = _message.asStateFlow()
     
+    private val _proposalContent = MutableStateFlow("")
+    val proposalContent: StateFlow<String> = _proposalContent.asStateFlow()
+    
     private val _proposedBudget = MutableStateFlow("")
     val proposedBudget: StateFlow<String> = _proposedBudget.asStateFlow()
     
@@ -28,6 +31,9 @@ class CreateProposalViewModel(
     private val _isSubmitting = MutableStateFlow(false)
     val isSubmitting: StateFlow<Boolean> = _isSubmitting.asStateFlow()
     
+    private val _isGeneratingAI = MutableStateFlow(false)
+    val isGeneratingAI: StateFlow<Boolean> = _isGeneratingAI.asStateFlow()
+    
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
     
@@ -35,10 +41,14 @@ class CreateProposalViewModel(
     val submissionSuccess: StateFlow<Boolean> = _submissionSuccess.asStateFlow()
     
     val isFormValid: Boolean
-        get() = message.value.trim().isNotEmpty()
+        get() = proposalContent.value.trim().isNotEmpty()
     
     fun updateMessage(text: String) {
         _message.value = text
+    }
+    
+    fun updateProposalContent(text: String) {
+        _proposalContent.value = text
     }
     
     fun updateProposedBudget(text: String) {
@@ -49,9 +59,25 @@ class CreateProposalViewModel(
         _estimatedDuration.value = text
     }
     
+    fun generateProposalWithAI() {
+        _isGeneratingAI.value = true
+        _errorMessage.value = null
+        
+        viewModelScope.launch {
+            try {
+                val generatedContent = repository.generateProposalWithAI(missionId)
+                _proposalContent.value = generatedContent
+                _isGeneratingAI.value = false
+            } catch (e: Exception) {
+                _isGeneratingAI.value = false
+                _errorMessage.value = e.message ?: "Erreur lors de la génération avec AI"
+            }
+        }
+    }
+    
     fun sendProposal() {
         if (!isFormValid) {
-            _errorMessage.value = "Please enter a proposal message."
+            _errorMessage.value = "Please enter a proposal content."
             return
         }
         
@@ -65,7 +91,8 @@ class CreateProposalViewModel(
                 
                 repository.createProposal(
                     missionId = missionId,
-                    message = message.value.trim(),
+                    message = message.value.trim().takeIf { it.isNotEmpty() },
+                    proposalContent = proposalContent.value.trim(),
                     proposedBudget = budgetValue,
                     estimatedDuration = durationValue
                 )

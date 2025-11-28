@@ -7,11 +7,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -30,9 +32,11 @@ fun CreateProposalScreen(
     )
 ) {
     val message by viewModel.message.collectAsState()
+    val proposalContent by viewModel.proposalContent.collectAsState()
     val proposedBudget by viewModel.proposedBudget.collectAsState()
     val estimatedDuration by viewModel.estimatedDuration.collectAsState()
     val isSubmitting by viewModel.isSubmitting.collectAsState()
+    val isGeneratingAI by viewModel.isGeneratingAI.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val submissionSuccess by viewModel.submissionSuccess.collectAsState()
     
@@ -85,10 +89,67 @@ fun CreateProposalScreen(
                 }
             }
             
-            // Cover Letter Section
+            // Proposal Content Section (Required)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Proposal *",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
+                    
+                    // Generate with AI Button
+                    OutlinedButton(
+                        onClick = { viewModel.generateProposalWithAI() },
+                        enabled = !isGeneratingAI && !isSubmitting,
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        if (isGeneratingAI) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                "Generate with AI",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
+                }
+                
+                // Proposal Content - MD3 Outlined Text Field (multi-line, required)
+                MD3OutlinedTextField(
+                    value = proposalContent,
+                    onValueChange = { viewModel.updateProposalContent(it) },
+                    label = "Proposal content",
+                    placeholder = "Write your detailed proposal here...",
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    errorText = null,
+                    singleLine = false,
+                    minLines = 8,
+                    maxLines = 12
+                )
+            }
+            
+            // Cover Letter Section (Optional)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "Cover letter",
+                    text = "Cover letter (optional)",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                 )

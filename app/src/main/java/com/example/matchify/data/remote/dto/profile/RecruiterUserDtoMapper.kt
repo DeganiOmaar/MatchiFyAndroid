@@ -15,7 +15,6 @@ fun RecruiterUserDto.toDomain(): UserModel {
         talent = this.talent,
         description = this.description,
         skills = null,
-        portfolioLink = null,
         createdAt = this.createdAt,
         updatedAt = this.updatedAt
     )

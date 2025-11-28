@@ -14,7 +14,6 @@ data class UserDto(
     @SerializedName("talent") val talent: List<String>? = null,
     @SerializedName("description") val description: String? = null,
     @SerializedName("skills") val skills: List<String>? = null,
-    @SerializedName("portfolioLink") val portfolioLink: String? = null,
     @SerializedName("createdAt") val createdAt: String? = null,
     @SerializedName("updatedAt") val updatedAt: String? = null
 )

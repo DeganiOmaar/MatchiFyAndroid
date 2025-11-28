@@ -137,6 +137,13 @@ class ApiService(private val authPreferences: AuthPreferences) {
         retrofit.create(ContractApi::class.java)
     }
 
+    // -----------------------------------------------------------
+    // 🤖 AI API
+    // -----------------------------------------------------------
+    val aiApi: AiApi by lazy {
+        retrofit.create(AiApi::class.java)
+    }
+
     companion object {
         @Volatile
         private var INSTANCE: ApiService? = null

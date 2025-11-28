@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +20,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -52,6 +58,20 @@ fun TalentProfileScreen(
     
     var showMenuSheet by remember { mutableStateOf(false) }
     var isBioExpanded by remember { mutableStateOf(false) }
+    var showCvPreview by remember { mutableStateOf(false) }
+    
+    val context = LocalContext.current
+    val isUploadingCV by viewModel.isUploadingCV.collectAsState()
+    val cvUploadError by viewModel.cvUploadError.collectAsState()
+    
+    // File picker launcher for CV upload
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.uploadCVFile(it, context)
+        }
+    }
     
     // Refresh projects and skill names when screen appears
     LaunchedEffect(Unit) {
@@ -178,10 +198,78 @@ fun TalentProfileScreen(
                         .padding(horizontal = 16.dp)
                 )
             }
+            
+            // CV Section (only if CV exists)
+            user?.cvUrl?.let { cvUrl ->
+                if (cvUrl.isNotBlank()) {
+                    item {
+                        CvSection(
+                            cvUrl = cvUrl,
+                            onCvClick = {
+                                // Ouvrir le CV dans un navigateur ou viewer
+                                val cvUrlFull = user?.cvUrlURL ?: return@CvSection
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(cvUrlFull))
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    android.util.Log.e("TalentProfileScreen", "Error opening CV: ${e.message}", e)
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 24.dp)
+                        )
+                    }
+                }
+            }
+            
+            // AI Profile Insights Section
+            item {
+                AIProfileInsightsView(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 24.dp)
+                )
+            }
 
             // Bottom spacing
             item {
                 Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+        
+        // CV Upload Error Alert
+        cvUploadError?.let { error ->
+            LaunchedEffect(error) {
+                // L'erreur sera affichée dans errorMessage qui est déjà géré
+            }
+        }
+        
+        // CV Upload Loading Overlay
+        if (isUploadingCV) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        CircularProgressIndicator()
+                        Text(
+                            text = "Upload du CV en cours...",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
             }
         }
     }
@@ -215,6 +303,11 @@ fun TalentProfileScreen(
                 onSettings = {
                     showMenuSheet = false
                     onSettings()
+                },
+                onAttachCV = {
+                    showMenuSheet = false
+                    // Ouvrir le sélecteur de fichier
+                    filePickerLauncher.launch("application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document")
                 }
             )
         }
@@ -460,7 +553,8 @@ private fun SkillChip(skill: String) {
 @Composable
 private fun MenuBottomSheetContent(
     onEditProfile: () -> Unit,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onAttachCV: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -473,6 +567,13 @@ private fun MenuBottomSheetContent(
             icon = Icons.Rounded.Edit,
             title = "Edit Profile",
             onClick = onEditProfile,
+            iconColor = MaterialTheme.colorScheme.primary
+        )
+        
+        MenuItem(
+            icon = Icons.Default.Description,
+            title = "Attach your CV",
+            onClick = onAttachCV,
             iconColor = MaterialTheme.colorScheme.primary
         )
 

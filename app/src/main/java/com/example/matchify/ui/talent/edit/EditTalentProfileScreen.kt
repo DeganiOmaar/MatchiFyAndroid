@@ -468,28 +468,6 @@ fun EditTalentProfileScreen(
                 )
             }
 
-            // Portfolio Link
-            OutlinedTextField(
-                value = viewModel.portfolioLink.collectAsState().value,
-                onValueChange = { viewModel.portfolioLink.value = it },
-                leadingIcon = {
-                    Icon(Icons.Filled.Link, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Portfolio Link (URL)") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Uri
-                ),
-                shape = RoundedCornerShape(35.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
-                )
-            )
-
             Spacer(modifier = Modifier.height(10.dp))
 
             // Error message

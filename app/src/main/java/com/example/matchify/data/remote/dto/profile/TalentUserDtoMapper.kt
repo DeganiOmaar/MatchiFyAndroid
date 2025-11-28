@@ -15,7 +15,7 @@ fun TalentUserDto.toDomain(): UserModel {
         talent = this.talent,
         description = this.description,
         skills = this.skills,
-        portfolioLink = this.portfolioLink,
+        cvUrl = this.cvUrl,
         createdAt = this.createdAt,
         updatedAt = this.updatedAt
     )

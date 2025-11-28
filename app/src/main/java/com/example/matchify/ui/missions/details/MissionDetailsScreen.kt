@@ -10,11 +10,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,6 +40,8 @@ fun MissionDetailsScreen(
     val canApply by viewModel.canApply.collectAsState()
     val shouldShowApplyButton by viewModel.shouldShowApplyButton.collectAsState()
     
+    var showFitAnalysis by remember { mutableStateOf(false) }
+    
     LaunchedEffect(Unit) {
         viewModel.loadMission()
     }
@@ -47,6 +53,24 @@ fun MissionDetailsScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    // AI Analyze button for talents (replaces favorite icon)
+                    if (shouldShowApplyButton) {
+                        IconButton(
+                            onClick = {
+                                mission?.let {
+                                    showFitAnalysis = true
+                                }
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.AutoAwesome,
+                                contentDescription = "Analyze compatibility",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -108,6 +132,8 @@ fun MissionDetailsScreen(
             mission != null -> {
                 MissionDetailsContent(
                     mission = mission!!,
+                    showFitAnalysis = showFitAnalysis,
+                    onShowFitAnalysis = { showFitAnalysis = it },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -120,6 +146,8 @@ fun MissionDetailsScreen(
 @Composable
 private fun MissionDetailsContent(
     mission: com.example.matchify.domain.model.Mission,
+    showFitAnalysis: Boolean,
+    onShowFitAnalysis: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -268,6 +296,14 @@ private fun MissionDetailsContent(
         )
         
         Spacer(modifier = Modifier.height(24.dp))
+    }
+    
+    // Mission Fit Analysis Modal
+    if (showFitAnalysis) {
+        MissionFitAnalysisView(
+            missionId = mission.missionId,
+            onDismiss = { onShowFitAnalysis(false) }
+        )
     }
 }
 

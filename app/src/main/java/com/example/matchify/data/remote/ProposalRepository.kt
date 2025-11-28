@@ -13,13 +13,15 @@ class ProposalRepository(
     
     suspend fun createProposal(
         missionId: String,
-        message: String,
+        message: String? = null,
+        proposalContent: String, // Requis comme dans iOS
         proposedBudget: Int? = null,
         estimatedDuration: String? = null
     ): Proposal {
         val request = CreateProposalRequest(
             missionId = missionId,
             message = message,
+            proposalContent = proposalContent,
             proposedBudget = proposedBudget,
             estimatedDuration = estimatedDuration
         )
@@ -61,6 +63,51 @@ class ProposalRepository(
     suspend fun deleteProposal(id: String): Proposal {
         val dto = apiService.proposalApi.deleteProposal(id)
         return ProposalDtoMapper.toDomain(dto)
+    }
+    
+    /**
+     * Récupérer les missions du recruteur pour le filtre
+     */
+    suspend fun getRecruiterMissions(): List<com.example.matchify.domain.model.Mission> {
+        val dtos = apiService.proposalApi.getRecruiterMissions()
+        return dtos.map { com.example.matchify.data.remote.dto.mission.MissionDtoMapper.toDomain(it) }
+    }
+    
+    /**
+     * Récupérer les propositions pour une mission avec tri AI optionnel
+     */
+    suspend fun getProposalsForMission(
+        missionId: String,
+        aiSort: Boolean = false
+    ): Pair<com.example.matchify.domain.model.Mission, List<Proposal>> {
+        val response = apiService.proposalApi.getProposalsForMission(
+            missionId = missionId,
+            sort = if (aiSort) "ai" else null
+        )
+        val mission = com.example.matchify.data.remote.dto.mission.MissionDtoMapper.toDomain(response.mission)
+        val proposals = response.proposals.map { ProposalDtoMapper.toDomain(it) }
+        return Pair(mission, proposals)
+    }
+    
+    /**
+     * Rechercher les propositions par titre de mission
+     */
+    suspend fun searchProposalsByMissionTitle(title: String): List<Pair<com.example.matchify.domain.model.Mission, List<Proposal>>> {
+        val results = apiService.proposalApi.searchProposalsByMissionTitle(title)
+        return results.map { result ->
+            val mission = com.example.matchify.data.remote.dto.mission.MissionDtoMapper.toDomain(result.mission)
+            val proposals = result.proposals.map { ProposalDtoMapper.toDomain(it) }
+            Pair(mission, proposals)
+        }
+    }
+    
+    /**
+     * Générer une proposition avec AI
+     */
+    suspend fun generateProposalWithAI(missionId: String): String {
+        val aiRepository = com.example.matchify.data.remote.AiRepository(apiService.aiApi)
+        val response = aiRepository.generateProposal(missionId)
+        return response.proposalContent
     }
 }
 

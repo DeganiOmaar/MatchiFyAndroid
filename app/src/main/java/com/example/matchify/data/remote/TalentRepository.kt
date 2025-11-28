@@ -30,7 +30,6 @@ class TalentRepository(
         talent: List<String>?,
         description: String?,
         skills: List<String>?,
-        portfolioLink: String?,
         imageFile: File?
     ): TalentProfileResponseDto =
         withContext(Dispatchers.IO) {
@@ -40,7 +39,6 @@ class TalentRepository(
             val requestPhone = phone?.toMultipartString()
             val requestLocation = location?.toMultipartString()
             val requestDescription = description?.toMultipartString()
-            val requestPortfolioLink = portfolioLink?.toMultipartString()
 
             val requestTalent = talent?.let {
                 val gson = Gson()
@@ -67,7 +65,6 @@ class TalentRepository(
                 talent = requestTalent,
                 description = requestDescription,
                 skills = requestSkills,
-                portfolioLink = requestPortfolioLink,
                 profileImage = imagePart
             )
         }
@@ -75,6 +72,33 @@ class TalentRepository(
 
     suspend fun saveUpdatedUser(user: UserModel) {
         prefs.saveUser(user)
+    }
+    
+    /**
+     * Upload CV (PDF/DOC/DOCX)
+     * Même endpoint que iOS: POST /talent/upload-cv
+     */
+    suspend fun uploadCV(file: java.io.File): TalentProfileResponseDto = withContext(Dispatchers.IO) {
+        // Déterminer le type MIME
+        val mimeType = when (file.extension.lowercase()) {
+            "pdf" -> "application/pdf"
+            "doc" -> "application/msword"
+            "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            else -> "application/octet-stream"
+        }
+        
+        val requestBody = RequestBody.create(
+            mimeType.toMediaTypeOrNull(),
+            file
+        )
+        
+        val filePart = MultipartBody.Part.createFormData(
+            "file",
+            file.name,
+            requestBody
+        )
+        
+        api.uploadCV(filePart)
     }
 }
 

@@ -14,7 +14,7 @@ data class UserModel(
     val talent: List<String>? = null, // Talent categories (array)
     val description: String? = null,
     val skills: List<String>? = null, // Talent skills
-    val portfolioLink: String? = null, // Talent portfolio URL
+    val cvUrl: String? = null, // URL du CV uploadé
     val createdAt: String? = null,
     val updatedAt: String? = null
 ) {
@@ -33,5 +33,14 @@ data class UserModel(
             android.util.Log.d("UserModel", "Profile image URL: $fullUrl (from path: $path)")
             
             return fullUrl
+        }
+    
+    val cvUrlURL: String?
+        get() {
+            val path = cvUrl?.trim()
+            if (path.isNullOrBlank()) return null
+            
+            val normalized = if (path.startsWith("/")) path else "/$path"
+            return "http://10.0.2.2:3000$normalized"
         }
 }
