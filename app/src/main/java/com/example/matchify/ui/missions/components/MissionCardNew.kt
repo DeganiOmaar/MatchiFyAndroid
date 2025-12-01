@@ -1,7 +1,6 @@
 package com.example.matchify.ui.missions.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -18,7 +17,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,8 +26,8 @@ import com.example.matchify.domain.model.Mission
 import com.example.matchify.domain.model.timePostedText
 
 /**
- * New Mission Card matching iOS design exactly
- * Order: Posted time, Title, Price, Description (2 lines), Skills, Heart icon or 3 points menu
+ * Mission Card - New Design
+ * Pixel-perfect match to specifications
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,265 +43,264 @@ fun MissionCardNew(
     modifier: Modifier = Modifier
 ) {
     var showMenuSheet by remember { mutableStateOf(false) }
-    // MD3 Filled Card - no elevation, no border
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(0.dp), // No rounded corners for filled cards
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 0.dp,
-            pressedElevation = 0.dp,
-            hoveredElevation = 0.dp,
-            focusedElevation = 0.dp
-        )
-    ) {
-        Column(
+    
+    Box(modifier = modifier) {
+        // Card container - #1E293B background, 16px corner radius
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .clickable { onClick() },
+            shape = RoundedCornerShape(16.dp),
+            color = Color(0xFF1E293B),
+            tonalElevation = 0.dp
         ) {
-            // 1. Posted time and Heart icon / 3 points menu
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp, vertical = 18.dp), // 16-20px padding
+                verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                // Posted time (small, light-gray font)
+                // Header: Posted time (left) and icon (right)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Posted time - #94A3B8, 13px, weight 400
+                    Text(
+                        text = mission.timePostedText,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight(400),
+                        color = Color(0xFF94A3B8),
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    // Icon based on role and ownership
+                    when {
+                        isRecruiter && isOwner -> {
+                            // 3-dot menu for recruiter owner - 20-22px, #94A3B8
+                            IconButton(
+                                onClick = { showMenuSheet = true },
+                                modifier = Modifier.size(32.dp),
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    contentColor = Color(0xFF94A3B8)
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.MoreVert,
+                                    contentDescription = "Menu",
+                                    modifier = Modifier.size(21.dp) // 20-22px
+                                )
+                            }
+                        }
+                        !isRecruiter -> {
+                            // Heart icon for Talent - 20-22px
+                            IconButton(
+                                onClick = onFavoriteToggle,
+                                modifier = Modifier.size(32.dp),
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    contentColor = if (isFavorite) {
+                                        Color(0xFF3B82F6) // Active: #3B82F6
+                                    } else {
+                                        Color(0xFF94A3B8) // Inactive: #94A3B8
+                                    }
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                    contentDescription = "Favorite",
+                                    modifier = Modifier.size(21.dp) // 20-22px
+                                )
+                            }
+                        }
+                        // Recruiter but not owner: no icon
+                    }
+                }
+                
+                // Mission Title - #FFFFFF, 16-17px, weight 600, max 2 lines
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = mission.timePostedText,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f)
+                    text = mission.title,
+                    fontSize = 16.5.sp, // 16-17px
+                    fontWeight = FontWeight(600),
+                    color = Color(0xFFFFFFFF),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 20.sp
                 )
                 
-                // Show 3 points menu if recruiter is owner, heart icon if talent, nothing if recruiter not owner
-                when {
-                    isRecruiter && isOwner -> {
-                        // 3 points menu for recruiter owner
-                        IconButton(
-                            onClick = { showMenuSheet = true },
-                            modifier = Modifier.size(40.dp),
-                            colors = IconButtonDefaults.iconButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.MoreVert,
-                                contentDescription = "Menu",
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                    !isRecruiter -> {
-                        // Heart icon for talent
-                        IconButton(
-                            onClick = onFavoriteToggle,
-                            modifier = Modifier.size(40.dp),
-                            colors = IconButtonDefaults.iconButtonColors(
-                                contentColor = if (isFavorite) {
-                                    MaterialTheme.colorScheme.error
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                }
-                            )
-                        ) {
-                            Icon(
-                                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = "Favorite",
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                    // If recruiter but not owner, show nothing
-                }
-            }
-            
-            // 2. Mission title (bold, medium-large font)
-            Text(
-                text = mission.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            
-            // 3. Price (directly under title)
-            Text(
-                text = mission.formattedBudget,
-                style = MaterialTheme.typography.bodyLarge,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            
-            // 4. Description (2 lines only, auto-truncate)
-            Text(
-                text = mission.description,
-                style = MaterialTheme.typography.bodyMedium,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            
-            // 5. Skills (rounded pill-shaped tags, neutral gray background)
-            if (mission.skills.isNotEmpty()) {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(horizontal = 1.dp)
-                ) {
-                    items(mission.skills) { skill ->
-                        // Material 3 Assist Chip style for skills
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            tonalElevation = 0.dp
-                        ) {
-                            Text(
-                                text = skill,
-                                modifier = Modifier.padding(
-                                    horizontal = 12.dp,
-                                    vertical = 6.dp
-                                ),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                // Price - #3B82F6, 15-16px, weight 600, spacing 4-6px below title
+                Spacer(modifier = Modifier.height(5.dp)) // 4-6px
+                Text(
+                    text = mission.formattedBudget,
+                    fontSize = 15.5.sp, // 15-16px
+                    fontWeight = FontWeight(600),
+                    color = Color(0xFF3B82F6)
+                )
+                
+                // Description - #CBD5E1, 14px, weight 400, max 2-3 lines, line height 1.3-1.4
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = mission.description,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight(400),
+                    color = Color(0xFFCBD5E1),
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 19.sp // 1.36 (14 * 1.36 ≈ 19)
+                )
+                
+                // Skill Tags - background #1E293B, text #93C5FD, 12-13px, weight 500
+                if (mission.skills.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(7.dp), // 6-8px
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        items(mission.skills) { skill ->
+                            // Rounded pill tag
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = Color(0xFF1E293B),
+                                tonalElevation = 0.dp
+                            ) {
+                                Text(
+                                    text = skill,
+                                    modifier = Modifier.padding(
+                                        horizontal = 11.dp, // 10-12px
+                                        vertical = 5.dp // 4-6px
+                                    ),
+                                    fontSize = 12.5.sp, // 12-13px
+                                    fontWeight = FontWeight(500),
+                                    color = Color(0xFF93C5FD)
+                                )
+                            }
                         }
                     }
                 }
             }
         }
-    }
-    
-    // Bottom Sheet Menu for recruiter owner
-    if (showMenuSheet && isRecruiter && isOwner) {
-        val sheetState = rememberModalBottomSheetState(
-            skipPartiallyExpanded = false
-        )
-        ModalBottomSheet(
-            onDismissRequest = { showMenuSheet = false },
-            sheetState = sheetState,
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            containerColor = MaterialTheme.colorScheme.surface,
-            dragHandle = {
-                Box(
-                    modifier = Modifier
-                        .width(40.dp)
-                        .height(4.dp)
-                        .padding(vertical = 12.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
-                )
-            }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 32.dp)
-            ) {
-                // Edit Mission
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            showMenuSheet = false
-                            onEdit?.invoke()
-                        }
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    color = Color.Transparent
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            modifier = Modifier.size(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                        ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Edit,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(24.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                        
-                        Text(
-                            text = "Edit Mission",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+        
+        // Bottom Sheet Menu for recruiter owner
+        if (showMenuSheet && isRecruiter && isOwner) {
+            val sheetState = rememberModalBottomSheetState(
+                skipPartiallyExpanded = false
+            )
+            ModalBottomSheet(
+                onDismissRequest = { showMenuSheet = false },
+                sheetState = sheetState,
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                containerColor = MaterialTheme.colorScheme.surface,
+                dragHandle = {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .padding(vertical = 12.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                    )
                 }
-                
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                )
-                
-                // Delete Mission
-                Surface(
+            ) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
-                            showMenuSheet = false
-                            onDelete?.invoke()
-                        }
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    color = Color.Transparent
+                        .padding(bottom = 32.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            modifier = Modifier.size(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
-                        ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Delete,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(24.dp),
-                                    tint = MaterialTheme.colorScheme.error
-                                )
+                    // Edit Mission
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                showMenuSheet = false
+                                onEdit?.invoke()
                             }
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        color = Color.Transparent
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                modifier = Modifier.size(48.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Edit,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                            
+                            Text(
+                                text = "Edit Mission",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
                         }
-                        
-                        Text(
-                            text = "Delete Mission",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f)
-                        )
+                    }
+                    
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    
+                    // Delete Mission
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                showMenuSheet = false
+                                onDelete?.invoke()
+                            }
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        color = Color.Transparent
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                modifier = Modifier.size(48.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Delete,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp),
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                            
+                            Text(
+                                text = "Delete Mission",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
-

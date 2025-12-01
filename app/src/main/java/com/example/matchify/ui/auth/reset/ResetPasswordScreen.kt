@@ -1,30 +1,35 @@
 package com.example.matchify.ui.auth.reset
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.matchify.R
 import com.example.matchify.data.remote.AuthApi
 import com.example.matchify.data.remote.AuthRepository
 import com.example.matchify.data.remote.dto.auth.*
-import com.example.matchify.ui.components.MD3OutlinedTextField
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResetPasswordScreen(
     onResetSuccess: () -> Unit,
@@ -42,91 +47,179 @@ fun ResetPasswordScreen(
         if (success) onResetSuccess()
     }
 
-    Column(
+    // Design colors from reference
+    val darkBackground = Color(0xFF0F172A)
+    val fieldBackground = Color(0xFF1E293B)
+    val textColor = Color(0xFFCBD5E1)
+    val blueColor = Color(0xFF3B82F6)
+    val whiteColor = Color(0xFFFFFFFF)
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.Start
+            .background(darkBackground)
     ) {
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text(
-            text = "Create new password",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.Bold
-        )
-
-        Text(
-            text = "Create your new password. If you forget it, then you have to do forgot password",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 6.dp)
-        )
-
-        Spacer(modifier = Modifier.height(30.dp))
-
-        // NEW PASSWORD - MD3 Outlined Text Field
-        MD3OutlinedTextField(
-            value = newPassword,
-            onValueChange = { viewModel.setNewPassword(it) },
-            label = "New Password",
-            placeholder = "New Password",
-            leadingIcon = Icons.Default.Lock,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth(),
-            errorText = null,
-            isPassword = true,
-            showPassword = showNewPassword,
-            onPasswordToggle = { viewModel.toggleNewPassword() },
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // CONFIRM NEW PASSWORD - MD3 Outlined Text Field
-        MD3OutlinedTextField(
-            value = confirmPassword,
-            onValueChange = { viewModel.setConfirmPassword(it) },
-            label = "Confirm New Password",
-            placeholder = "Confirm password",
-            leadingIcon = Icons.Default.Lock,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth(),
-            errorText = if (error != null && (newPassword != confirmPassword || confirmPassword.isEmpty())) error else null,
-            isPassword = true,
-            showPassword = showConfirmPassword,
-            onPasswordToggle = { viewModel.toggleConfirmPassword() },
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Button(
-            onClick = { viewModel.reset() },
-            enabled = newPassword.isNotEmpty() && confirmPassword.isNotEmpty() && !loading,
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp)
-                .padding(bottom = 20.dp),
-            shape = RoundedCornerShape(30.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF007AFF),
-                disabledContainerColor = Color(0xFFBAD7FF)
-            )
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            if (loading) {
-                CircularProgressIndicator(
-                    color = Color.White
-                )
-            } else {
+
+            // NEW PASSWORD FIELD
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    "Continue",
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold
+                    text = "New Password",
+                    color = textColor,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                TextField(
+                    value = newPassword,
+                    onValueChange = { viewModel.setNewPassword(it) },
+                    placeholder = {
+                        Text(
+                            text = "Enter your new password",
+                            color = textColor.copy(alpha = 0.6f)
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor,
+                        focusedPlaceholderColor = textColor.copy(alpha = 0.6f),
+                        unfocusedPlaceholderColor = textColor.copy(alpha = 0.6f),
+                        focusedContainerColor = fieldBackground,
+                        unfocusedContainerColor = fieldBackground,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        focusedTrailingIconColor = textColor,
+                        unfocusedTrailingIconColor = textColor
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    singleLine = true,
+                    visualTransformation = if (showNewPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    trailingIcon = {
+                        IconButton(onClick = { viewModel.toggleNewPassword() }) {
+                            Icon(
+                                imageVector = if (showNewPassword) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                                contentDescription = if (showNewPassword) "Hide password" else "Show password",
+                                tint = textColor
+                            )
+                        }
+                    },
+                    textStyle = androidx.compose.ui.text.TextStyle(
+                        color = textColor,
+                        fontSize = 16.sp
+                    )
                 )
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // CONFIRM PASSWORD FIELD
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Confirm New Password",
+                    color = textColor,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                TextField(
+                    value = confirmPassword,
+                    onValueChange = { viewModel.setConfirmPassword(it) },
+                    placeholder = {
+                        Text(
+                            text = "Confirm your new password",
+                            color = textColor.copy(alpha = 0.6f)
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor,
+                        focusedPlaceholderColor = textColor.copy(alpha = 0.6f),
+                        unfocusedPlaceholderColor = textColor.copy(alpha = 0.6f),
+                        focusedContainerColor = fieldBackground,
+                        unfocusedContainerColor = fieldBackground,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        focusedTrailingIconColor = textColor,
+                        unfocusedTrailingIconColor = textColor
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    singleLine = true,
+                    visualTransformation = if (showConfirmPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    trailingIcon = {
+                        IconButton(onClick = { viewModel.toggleConfirmPassword() }) {
+                            Icon(
+                                imageVector = if (showConfirmPassword) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                                contentDescription = if (showConfirmPassword) "Hide password" else "Show password",
+                                tint = textColor
+                            )
+                        }
+                    },
+                    textStyle = androidx.compose.ui.text.TextStyle(
+                        color = textColor,
+                        fontSize = 16.sp
+                    )
+                )
+                error?.let { errorMessage ->
+                    if (newPassword != confirmPassword || confirmPassword.isEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // CONTINUE BUTTON
+            Button(
+                onClick = { viewModel.reset() },
+                enabled = newPassword.isNotEmpty() && confirmPassword.isNotEmpty() && !loading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = blueColor,
+                    disabledContainerColor = blueColor.copy(alpha = 0.5f),
+                    contentColor = whiteColor,
+                    disabledContentColor = whiteColor.copy(alpha = 0.7f)
+                )
+            ) {
+                if (loading) {
+                    CircularProgressIndicator(
+                        color = whiteColor,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Continue",
+                        color = whiteColor,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.example.matchify.ui.missions.navigation
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.automirrored.outlined.Message
@@ -13,9 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,17 +21,8 @@ import com.example.matchify.ui.alerts.BadgeCountViewModel
 import com.example.matchify.ui.alerts.BadgeCountViewModelFactory
 
 /**
- * Material 3 Bottom Navigation Bar
- * 
- * Fully compliant with Material Design 3 guidelines:
- * - Fixed at bottom of screen
- * - Icon + label for each destination
- * - Active item: filled icon + active indicator
- * - Inactive items: outlined icons
- * - Badge support for unread counts
- * - Light/dark mode support
- * - Scroll-to-top on active tab re-selection
- * - Proper spacing and animations
+ * Bottom Navigation Bar - New Design
+ * Matching specifications exactly
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,60 +40,54 @@ fun MainBottomNavigation(
     val proposalsUnreadCount by badgeViewModel.proposalsUnreadCount.collectAsState()
     val conversationsUnreadCount by badgeViewModel.conversationsWithUnreadCount.collectAsState()
     
-    // Icon colors: white in dark mode, black in light mode
-    // Use MaterialTheme colorScheme to detect current theme (respects user preference from drawer)
-    val colorScheme = MaterialTheme.colorScheme
-    // Check if current theme is dark by comparing surface color brightness
-    // Dark theme surface is typically darker (lower brightness)
-    val surfaceColor = colorScheme.surface
-    val isDarkMode = (surfaceColor.red + surfaceColor.green + surfaceColor.blue) / 3f < 0.5f
-    
-    val iconColorSelected = if (isDarkMode) Color.White else Color.Black
-    val iconColorUnselected = if (isDarkMode) Color.White.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.6f)
-    val textColorSelected = if (isDarkMode) Color.White else Color.Black
-    val textColorUnselected = if (isDarkMode) Color.White.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.6f)
-    
-    // Use MD3 surface token for background - automatically adapts to app theme (from drawer settings)
-    val backgroundColor = colorScheme.surface
+    // Colors matching specifications
+    val backgroundColor = Color(0xFF0F172A) // Dark navy background
+    val iconColorActive = Color(0xFF3B82F6) // Active icon: #3B82F6
+    val iconColorInactive = Color(0xFF94A3B8) // Inactive icon: #94A3B8
+    val textColorActive = Color(0xFF3B82F6) // Active text: #3B82F6
+    val textColorInactive = Color(0xFF94A3B8) // Inactive text: #94A3B8
     
     NavigationBar(
-        modifier = modifier,
+        modifier = modifier
+            .height(75.dp), // 70-80px height
         containerColor = backgroundColor,
-        contentColor = iconColorSelected, // Use explicit icon color to ensure proper theming
+        contentColor = iconColorActive,
         tonalElevation = 0.dp
     ) {
         // Missions Tab
         NavigationBarItem(
             icon = {
                 NavigationBarIcon(
-                    icon = Icons.Filled.Work,
-                    outlinedIcon = Icons.Outlined.Work,
+                    icon = Icons.Filled.Explore,
+                    outlinedIcon = Icons.Outlined.Explore,
                     isSelected = currentRoute == "missions_list",
-                    badgeCount = null
+                    badgeCount = null,
+                    iconColorActive = iconColorActive,
+                    iconColorInactive = iconColorInactive
                 )
             },
             label = {
                 Text(
                     text = "Missions",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (currentRoute == "missions_list") FontWeight.SemiBold else FontWeight.Normal
+                    fontSize = 12.5.sp, // 12-13px
+                    fontWeight = if (currentRoute == "missions_list") FontWeight.SemiBold else FontWeight.Normal,
+                    color = if (currentRoute == "missions_list") textColorActive else textColorInactive
                 )
             },
             selected = currentRoute == "missions_list",
             onClick = {
                 if (currentRoute == "missions_list") {
-                    // Re-selecting active tab - scroll to top
                     onScrollToTop?.invoke("missions_list")
                 } else {
                     onNavigate("missions_list")
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = iconColorSelected,
-                selectedTextColor = textColorSelected,
-                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                unselectedIconColor = iconColorUnselected,
-                unselectedTextColor = textColorUnselected
+                selectedIconColor = iconColorActive,
+                selectedTextColor = textColorActive,
+                indicatorColor = Color.Transparent,
+                unselectedIconColor = iconColorInactive,
+                unselectedTextColor = textColorInactive
             )
         )
         
@@ -116,31 +98,33 @@ fun MainBottomNavigation(
                     icon = Icons.Filled.Description,
                     outlinedIcon = Icons.Outlined.Description,
                     isSelected = currentRoute == "proposals_list",
-                    badgeCount = if (proposalsUnreadCount > 0) proposalsUnreadCount.takeIf { it > 0 } else null
+                    badgeCount = if (proposalsUnreadCount > 0) proposalsUnreadCount.takeIf { it > 0 } else null,
+                    iconColorActive = iconColorActive,
+                    iconColorInactive = iconColorInactive
                 )
             },
             label = {
                 Text(
                     text = "Proposals",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (currentRoute == "proposals_list") FontWeight.SemiBold else FontWeight.Normal
+                    fontSize = 12.5.sp, // 12-13px
+                    fontWeight = if (currentRoute == "proposals_list") FontWeight.SemiBold else FontWeight.Normal,
+                    color = if (currentRoute == "proposals_list") textColorActive else textColorInactive
                 )
             },
             selected = currentRoute == "proposals_list",
             onClick = {
                 if (currentRoute == "proposals_list") {
-                    // Re-selecting active tab - scroll to top
                     onScrollToTop?.invoke("proposals_list")
                 } else {
                     onNavigate("proposals_list")
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = iconColorSelected,
-                selectedTextColor = textColorSelected,
-                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                unselectedIconColor = iconColorUnselected,
-                unselectedTextColor = textColorUnselected
+                selectedIconColor = iconColorActive,
+                selectedTextColor = textColorActive,
+                indicatorColor = Color.Transparent,
+                unselectedIconColor = iconColorInactive,
+                unselectedTextColor = textColorInactive
             )
         )
         
@@ -151,31 +135,33 @@ fun MainBottomNavigation(
                     icon = Icons.AutoMirrored.Filled.Message,
                     outlinedIcon = Icons.AutoMirrored.Outlined.Message,
                     isSelected = currentRoute == "messages_list",
-                    badgeCount = if (conversationsUnreadCount > 0) conversationsUnreadCount.takeIf { it > 0 } else null
+                    badgeCount = if (conversationsUnreadCount > 0) conversationsUnreadCount.takeIf { it > 0 } else null,
+                    iconColorActive = iconColorActive,
+                    iconColorInactive = iconColorInactive
                 )
             },
             label = {
                 Text(
                     text = "Messages",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (currentRoute == "messages_list") FontWeight.SemiBold else FontWeight.Normal
+                    fontSize = 12.5.sp, // 12-13px
+                    fontWeight = if (currentRoute == "messages_list") FontWeight.SemiBold else FontWeight.Normal,
+                    color = if (currentRoute == "messages_list") textColorActive else textColorInactive
                 )
             },
             selected = currentRoute == "messages_list",
             onClick = {
                 if (currentRoute == "messages_list") {
-                    // Re-selecting active tab - scroll to top
                     onScrollToTop?.invoke("messages_list")
                 } else {
                     onNavigate("messages_list")
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = iconColorSelected,
-                selectedTextColor = textColorSelected,
-                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                unselectedIconColor = iconColorUnselected,
-                unselectedTextColor = textColorUnselected
+                selectedIconColor = iconColorActive,
+                selectedTextColor = textColorActive,
+                indicatorColor = Color.Transparent,
+                unselectedIconColor = iconColorInactive,
+                unselectedTextColor = textColorInactive
             )
         )
         
@@ -186,31 +172,33 @@ fun MainBottomNavigation(
                     icon = Icons.Filled.Notifications,
                     outlinedIcon = Icons.Outlined.Notifications,
                     isSelected = currentRoute == "alerts_list",
-                    badgeCount = if (alertsUnreadCount > 0) alertsUnreadCount.takeIf { it > 0 } else null
+                    badgeCount = if (alertsUnreadCount > 0) alertsUnreadCount.takeIf { it > 0 } else null,
+                    iconColorActive = iconColorActive,
+                    iconColorInactive = iconColorInactive
                 )
             },
             label = {
                 Text(
                     text = "Alerts",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (currentRoute == "alerts_list") FontWeight.SemiBold else FontWeight.Normal
+                    fontSize = 12.5.sp, // 12-13px
+                    fontWeight = if (currentRoute == "alerts_list") FontWeight.SemiBold else FontWeight.Normal,
+                    color = if (currentRoute == "alerts_list") textColorActive else textColorInactive
                 )
             },
             selected = currentRoute == "alerts_list",
             onClick = {
                 if (currentRoute == "alerts_list") {
-                    // Re-selecting active tab - scroll to top
                     onScrollToTop?.invoke("alerts_list")
                 } else {
                     onNavigate("alerts_list")
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = iconColorSelected,
-                selectedTextColor = textColorSelected,
-                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                unselectedIconColor = iconColorUnselected,
-                unselectedTextColor = textColorUnselected
+                selectedIconColor = iconColorActive,
+                selectedTextColor = textColorActive,
+                indicatorColor = Color.Transparent,
+                unselectedIconColor = iconColorInactive,
+                unselectedTextColor = textColorInactive
             )
         )
     }
@@ -218,32 +206,29 @@ fun MainBottomNavigation(
 
 /**
  * Navigation bar icon with badge support
- * 
- * Material 3 compliant:
- * - Filled icon when selected
- * - Outlined icon when not selected
- * - Badge count (max 4 chars: "99+")
- * - Proper badge positioning
+ * Icon size: 22-26px
  */
 @Composable
 private fun NavigationBarIcon(
-    icon: ImageVector,
-    outlinedIcon: ImageVector,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    outlinedIcon: androidx.compose.ui.graphics.vector.ImageVector,
     isSelected: Boolean,
-    badgeCount: Int?
+    badgeCount: Int?,
+    iconColorActive: Color,
+    iconColorInactive: Color
 ) {
     Box {
         Icon(
             imageVector = if (isSelected) icon else outlinedIcon,
             contentDescription = null,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(24.dp), // 22-26px (middle value)
+            tint = if (isSelected) iconColorActive else iconColorInactive
         )
         
         // Badge
         if (badgeCount != null && badgeCount > 0) {
             val badgeText = if (badgeCount > 99) "99+" else badgeCount.toString()
             
-            // Badge color stays red/pink as shown in design
             Badge(
                 modifier = Modifier
                     .align(Alignment.TopEnd)

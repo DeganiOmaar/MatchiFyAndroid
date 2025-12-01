@@ -3,19 +3,23 @@ package com.example.matchify.ui.auth.verify
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.unit.sp
 import com.example.matchify.data.remote.AuthApi
 import com.example.matchify.data.remote.AuthRepository
 import com.example.matchify.data.remote.dto.auth.*
@@ -45,6 +49,7 @@ fun VerifyCodeScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VerifyCodeScreenContent(
     email: String,
@@ -54,131 +59,158 @@ fun VerifyCodeScreenContent(
     onCodeChange: (String) -> Unit,
     onVerifyClick: () -> Unit
 ) {
-    Column(
+    // Design colors from reference
+    val darkBackground = Color(0xFF0F172A)
+    val fieldBackground = Color(0xFF1E293B)
+    val textColor = Color(0xFFCBD5E1)
+    val blueColor = Color(0xFF3B82F6)
+    val whiteColor = Color(0xFFFFFFFF)
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.Start
+            .background(darkBackground)
     ) {
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        // TITLE
-        Text(
-            text = "OTP code verification",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // SUBTITLE
-        Text(
-            text = "A verification code has been sent to: ",
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Text(
-            text = email,
-            color = Color(0xFF007AFF),
-            fontWeight = FontWeight.Medium
-        )
-
-        Text(
-            text = " Enter the OTP code below to verify",
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        // OTP BOXES
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            repeat(6) { index ->
-                OtpBox(
-                    char = code.getOrNull(index)?.toString() ?: ""
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // HIDDEN TEXT FIELD (receives keyboard input)
-        OutlinedTextField(
-            value = code,
-            onValueChange = { onCodeChange(it.filter { c -> c.isDigit() }) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            visualTransformation = VisualTransformation.None,
+        Column(
             modifier = Modifier
-                .width(1.dp)
-                .height(0.dp)
-                .alpha(0.5f)
-        )
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
 
-        if (error != null) {
-            Spacer(modifier = Modifier.height(10.dp))
+            // TITLE
             Text(
-                error,
-                color = MaterialTheme.colorScheme.error
+                text = "OTP code verification",
+                color = textColor,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth()
             )
-        }
 
-        Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // CONTINUE BUTTON
-        Button(
-            onClick = onVerifyClick,
-            enabled = code.length == 6 && !loading,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp)
-                .padding(bottom = 30.dp),
-            shape = RoundedCornerShape(30.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF007AFF),
-                disabledContainerColor = Color(0xFFBAD7FF)
-            )
-        ) {
-            if (loading) {
-                CircularProgressIndicator(
-                    color = Color.White,
-                    strokeWidth = 2.dp
-                )
-            } else {
+            // SUBTITLE
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start
+            ) {
                 Text(
-                    "Continue",
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold
+                    text = "A verification code has been sent to: ",
+                    color = textColor,
+                    fontSize = 14.sp
                 )
             }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Text(
+                    text = email,
+                    color = blueColor,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = ". Enter the OTP code below to verify",
+                    color = textColor,
+                    fontSize = 14.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // OTP BOXES
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                repeat(6) { index ->
+                    OtpBox(
+                        char = code.getOrNull(index)?.toString() ?: "",
+                        textColor = textColor,
+                        fieldBackground = fieldBackground
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // HIDDEN TEXT FIELD (receives keyboard input)
+            OutlinedTextField(
+                value = code,
+                onValueChange = { onCodeChange(it.filter { c -> c.isDigit() }) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                visualTransformation = VisualTransformation.None,
+                modifier = Modifier
+                    .width(1.dp)
+                    .height(0.dp)
+                    .alpha(0f)
+            )
+
+            error?.let { errorMessage ->
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // CONTINUE BUTTON
+            Button(
+                onClick = onVerifyClick,
+                enabled = code.length == 6 && !loading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = blueColor,
+                    disabledContainerColor = blueColor.copy(alpha = 0.5f),
+                    contentColor = whiteColor,
+                    disabledContentColor = whiteColor.copy(alpha = 0.7f)
+                )
+            ) {
+                if (loading) {
+                    CircularProgressIndicator(
+                        color = whiteColor,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Continue",
+                        color = whiteColor,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
 @Composable
-fun OtpBox(char: String) {
+fun OtpBox(char: String, textColor: Color, fieldBackground: Color) {
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(56.dp)
             .background(
-                MaterialTheme.colorScheme.surfaceContainerHighest,
-                RoundedCornerShape(10.dp)
-            )
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.outline,
-                RoundedCornerShape(10.dp)
+                fieldBackground,
+                RoundedCornerShape(8.dp)
             ),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = char,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 24.sp,
+            color = textColor,
             fontWeight = FontWeight.Medium
         )
     }

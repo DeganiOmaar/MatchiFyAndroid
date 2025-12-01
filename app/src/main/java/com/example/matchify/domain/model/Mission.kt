@@ -39,8 +39,8 @@ data class Mission(
 
     val formattedBudget: String
         get() {
-            val formatter = java.text.NumberFormat.getNumberInstance(Locale.FRENCH)
-            return "${formatter.format(budget)} €"
+            // Format matching screenshot: "€500", "€1200", "€350" (no spaces, euro symbol first)
+            return "€$budget"
         }
     
     val proposals: Int

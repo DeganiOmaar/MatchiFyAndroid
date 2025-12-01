@@ -182,6 +182,13 @@ fun MainScreen(
                     onDrawerItemSelected = { itemType ->
                         listViewModel.setDrawerNavigationItem(itemType)
                     },
+                    onNavigateToAlerts = {
+                        navController.navigate("alerts_list") {
+                            popUpTo("missions_list") { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     viewModel = listViewModel
                 )
             }
