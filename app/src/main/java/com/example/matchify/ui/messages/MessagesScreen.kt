@@ -1,23 +1,15 @@
 package com.example.matchify.ui.messages
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,21 +21,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.matchify.R
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessagesScreen(
     onConversationClick: (String) -> Unit = {},
@@ -52,80 +40,157 @@ fun MessagesScreen(
     val conversations by viewModel.conversations.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     
-    // Search and filter state
     var searchText by remember { mutableStateOf("") }
-    var showFilterMenu by remember { mutableStateOf(false) }
     
     // Load conversations on first appearance
     LaunchedEffect(Unit) {
         viewModel.loadConversations()
     }
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Messages") }
-            )
-        }
-    ) { paddingValues ->
-        Box(
+    // Background color: #0F172A
+    val backgroundColor = Color(0xFF0F172A)
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                // Search Bar and Filter Section
-                SearchAndFilterSection(
-                    searchText = searchText,
-                    onSearchTextChange = { searchText = it },
-                    showFilterMenu = showFilterMenu,
-                    onFilterMenuToggle = { showFilterMenu = !showFilterMenu },
-                    onDismissFilterMenu = { showFilterMenu = false }
-                )
-                
-                // Content
-                when {
-                    isLoading && conversations.isEmpty() -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
+            // Page Title - "Messages"
+            Text(
+                text = "Messages",
+                fontSize = 22.sp,
+                fontWeight = FontWeight(700),
+                color = Color.White,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, top = 16.dp, end = 16.dp)
+            )
+            
+            // Search Bar
+            SearchBar(
+                searchText = searchText,
+                onSearchTextChange = { searchText = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+            )
+            
+            // Divider under search
+            HorizontalDivider(
+                color = Color(0xFF1E293B),
+                thickness = 1.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+            )
+            
+            // Message List
+            when {
+                isLoading && conversations.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color.White
+                        )
                     }
-                    conversations.isEmpty() -> {
-                        EmptyMessagesView()
-                    }
-                    else -> {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(conversations) { conversation ->
-                                ConversationRow(
-                                    conversation = conversation,
-                                    isRecruiter = viewModel.isRecruiter,
-                                    onClick = { onConversationClick(conversation.conversationId) }
-                                )
-                            }
+                }
+                conversations.isEmpty() -> {
+                    EmptyMessagesView()
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            horizontal = 16.dp,
+                            vertical = 8.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(conversations) { conversation ->
+                            ConversationRow(
+                                conversation = conversation,
+                                isRecruiter = viewModel.isRecruiter,
+                                onClick = { onConversationClick(conversation.conversationId) }
+                            )
+                            // Divider between conversations
+                            HorizontalDivider(
+                                color = Color(0xFF1E293B),
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
                         }
                     }
                 }
             }
-            
-            // Filter Menu Popup - positioned above filter button
-            FilterMenuPopup(
-                show = showFilterMenu,
-                onDismiss = { showFilterMenu = false },
-                onFilterSelected = { filterType ->
-                    showFilterMenu = false
-                    // TODO: Implement filter logic
-                }
-            )
         }
+    }
+}
+
+@Composable
+private fun SearchBar(
+    searchText: String,
+    onSearchTextChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Search bar container: height 48dp, background #1E293B, border radius 24dp
+    Box(
+        modifier = modifier
+            .height(48.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color(0xFF1E293B))
+    ) {
+        // TextField for input
+        BasicTextField(
+            value = searchText,
+            onValueChange = onSearchTextChange,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            textStyle = androidx.compose.ui.text.TextStyle(
+                fontSize = 14.sp,
+                color = Color.White
+            ),
+            singleLine = true,
+            decorationBox = { innerTextField ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    // Search icon - always on the left
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        modifier = Modifier.size(20.dp),
+                        tint = Color(0xFF9CA3AF)
+                    )
+                    
+                    Spacer(modifier = Modifier.width(12.dp))
+                    
+                    // Text input or placeholder
+                    Box(modifier = Modifier.weight(1f)) {
+                        if (searchText.isEmpty()) {
+                            Text(
+                                text = "Search",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFF9CA3AF)
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -144,129 +209,108 @@ private fun ConversationRow(
     val lastMessageText = conversation.lastMessageText ?: "No messages yet"
     val timestamp = conversation.formattedLastMessageTime
     val unreadCount = conversation.unreadCount
-    val isUnread = unreadCount > 0
     
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (!isUnread) {
-                MaterialTheme.colorScheme.surface
-            } else {
-                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
-            }
-        ),
-        border = if (isUnread) {
-            androidx.compose.foundation.BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-            )
-        } else null
+    // Row height: 72-80dp, padding 16dp horizontal
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 72.dp, max = 80.dp)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        // Avatar with online indicator
+        Box(
+            modifier = Modifier.size(48.dp)
         ) {
-            // Profile Image - matching alerts/proposals design exactly
-            ProfileImage(
-                imageUrl = imageUrl,
-                modifier = Modifier.size(50.dp),
-                isUnread = isUnread
+            // Avatar - diameter 48dp, circle, no border
+            AsyncImage(
+                model = imageUrl ?: "",
+                contentDescription = null,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop,
+                error = painterResource(id = R.drawable.avatar),
+                placeholder = painterResource(id = R.drawable.avatar)
             )
             
-            // Content - matching alerts/proposals design exactly
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Text(
-                    text = userName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = if (!isUnread) FontWeight.Normal else FontWeight.SemiBold,
-                    maxLines = 2
+            // Online indicator - green dot if online (for now, we'll hide it as we don't have online status)
+            // Uncomment and add online status logic when available
+            /*
+            if (isOnline) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF22C55E))
+                        .align(Alignment.BottomEnd)
+                        .offset(x = (-2).dp, y = (-2).dp)
                 )
-                
+            }
+            */
+        }
+        
+        // Middle Column - Name + Last Message
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            // Name - 16sp, weight 600, color #FFFFFF, single line
+            Text(
+                text = userName,
+                fontSize = 16.sp,
+                fontWeight = FontWeight(600),
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            
+            // Last message preview - 14sp, weight 400, color #9CA3AF, max 1 line
+            Text(
+                text = lastMessageText,
+                fontSize = 14.sp,
+                fontWeight = FontWeight(400),
+                color = Color(0xFF9CA3AF),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        
+        // Right Column - Time + Unread Badge
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // Time label - 12sp, weight 400, color #9CA3AF
+            if (timestamp.isNotEmpty()) {
                 Text(
-                    text = lastMessageText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2
+                    text = timestamp,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight(400),
+                    color = Color(0xFF9CA3AF),
+                    maxLines = 1
                 )
             }
             
-            // Time and Unread Badge - matching iOS layout exactly
-            // VStack aligned to trailing (right side)
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                // Timestamp - displayed at top right
-                if (timestamp.isNotEmpty()) {
+            // Unread count badge - only show when unreadCount > 0
+            if (unreadCount > 0) {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(Color(0xFF2563EB), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = timestamp,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
+                        text = if (unreadCount > 99) "99+" else unreadCount.toString(),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight(600),
+                        color = Color.White
                     )
-                }
-                
-                // Unread badge - displayed below timestamp, matching iOS style
-                if (unreadCount > 0) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(12.dp), // Capsule shape using high corner radius
-                        modifier = Modifier
-                            .heightIn(min = 18.dp)
-                            .widthIn(min = 18.dp)
-                    ) {
-                        Text(
-                            text = if (unreadCount > 99) "99+" else unreadCount.toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ProfileImage(
-    imageUrl: String?,
-    modifier: Modifier = Modifier,
-    isUnread: Boolean = false
-) {
-    Box(
-        modifier = modifier
-            .clip(CircleShape)
-            .then(
-                if (isUnread) {
-                    Modifier.border(
-                        2.dp,
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                        CircleShape
-                    )
-                } else {
-                    Modifier
-                }
-            )
-    ) {
-        AsyncImage(
-            model = imageUrl ?: "",
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop,
-            error = painterResource(id = R.drawable.avatar),
-            placeholder = painterResource(id = R.drawable.avatar)
-        )
     }
 }
 
@@ -281,240 +325,22 @@ private fun EmptyMessagesView() {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Icon(
-                imageVector = Icons.Filled.Message,
+                imageVector = Icons.Default.Search,
                 contentDescription = null,
                 modifier = Modifier.size(60.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                tint = Color(0xFF9CA3AF).copy(alpha = 0.5f)
             )
             Text(
                 text = "No Messages",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White
             )
             Text(
                 text = "You have no conversations yet.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                fontSize = 14.sp,
+                color = Color(0xFF9CA3AF)
             )
         }
     }
-}
-
-@Composable
-private fun SearchAndFilterSection(
-    searchText: String,
-    onSearchTextChange: (String) -> Unit,
-    showFilterMenu: Boolean,
-    onFilterMenuToggle: () -> Unit,
-    onDismissFilterMenu: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Search Bar - takes remaining space
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = onSearchTextChange,
-                modifier = Modifier.weight(1f),
-                placeholder = {
-                    Text(
-                        text = "Search",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                trailingIcon = {
-                    if (searchText.isNotEmpty()) {
-                        IconButton(onClick = { onSearchTextChange("") }) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = "Clear",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = MaterialTheme.colorScheme.outline,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                ),
-                textStyle = MaterialTheme.typography.bodyMedium,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search)
-            )
-            
-            // Filter Icon Button
-            Surface(
-                modifier = Modifier.size(48.dp),
-                onClick = onFilterMenuToggle,
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = androidx.compose.foundation.BorderStroke(
-                    1.dp,
-                    MaterialTheme.colorScheme.outline
-                )
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.FilterList,
-                        contentDescription = "Filter",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun FilterMenuPopup(
-    show: Boolean,
-    onDismiss: () -> Unit,
-    onFilterSelected: (FilterType) -> Unit
-) {
-    // Overlay to dismiss when clicking outside
-    if (show) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() }
-                ) { onDismiss() }
-                .zIndex(998f)
-        )
-    }
-    
-    // Menu positioned at top-right, aligned with filter button
-    // Positioned at 68.dp from top (padding from Scaffold) + 12.dp (section padding) + 48.dp (filter button height) + 8.dp offset
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .zIndex(999f),
-        contentAlignment = Alignment.TopEnd
-    ) {
-        AnimatedVisibility(
-            visible = show,
-            enter = fadeIn(animationSpec = tween(200)) + scaleIn(
-                initialScale = 0.85f,
-                animationSpec = tween(200)
-            ),
-            exit = fadeOut(animationSpec = tween(150)) + scaleOut(
-                targetScale = 0.85f,
-                animationSpec = tween(150)
-            ),
-            modifier = Modifier.padding(top = 76.dp, end = 16.dp)
-        ) {
-        Card(
-            modifier = Modifier
-                .width(180.dp)
-                .shadow(
-                    elevation = 8.dp,
-                    shape = RoundedCornerShape(12.dp)
-                ),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Unread Filter
-                FilterMenuItem(
-                    icon = Icons.Outlined.Email,
-                    title = "Unread",
-                    onClick = { onFilterSelected(FilterType.UNREAD) }
-                )
-                
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
-                    thickness = 0.5.dp
-                )
-                
-                // Favourite Filter
-                FilterMenuItem(
-                    icon = Icons.Filled.Star,
-                    title = "Favourite",
-                    onClick = { onFilterSelected(FilterType.FAVOURITE) }
-                )
-                
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
-                    thickness = 0.5.dp
-                )
-                
-                // Messages Filter
-                FilterMenuItem(
-                    icon = Icons.Filled.Message,
-                    title = "Messages",
-                    onClick = { onFilterSelected(FilterType.MESSAGES) }
-                )
-            }
-        }
-        }
-    }
-}
-
-@Composable
-private fun FilterMenuItem(
-    icon: ImageVector,
-    title: String,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick,
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 13.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-    }
-}
-
-enum class FilterType {
-    UNREAD,
-    FAVOURITE,
-    MESSAGES
 }

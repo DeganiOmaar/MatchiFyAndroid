@@ -1,7 +1,7 @@
 package com.example.matchify.ui.conversations
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,15 +9,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.DriveFileMoveRtl
-import androidx.compose.material.icons.filled.InsertDriveFile
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,17 +21,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.matchify.R
 import com.example.matchify.data.local.AuthPreferencesProvider
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConversationChatScreen(
     conversationId: String,
@@ -59,7 +54,6 @@ fun ConversationChatScreen(
     
     // Get avatar URLs
     val currentUserAvatarUrl = currentUser?.profileImageUrl
-    
     val otherUserAvatarUrl = conversation?.getOtherUserProfileImageURL(
         isRecruiter = viewModel.isRecruiter,
         baseURL = "http://10.0.2.2:3000"
@@ -70,9 +64,9 @@ fun ConversationChatScreen(
     LaunchedEffect(Unit) {
         viewModel.loadConversation()
         viewModel.loadMessages()
+        viewModel.markAsRead()
     }
     
-    // Reload messages when returning to this screen (e.g., after contract creation)
     LaunchedEffect(conversationId) {
         viewModel.loadMessages()
     }
@@ -83,15 +77,71 @@ fun ConversationChatScreen(
         }
     }
     
-    Scaffold(
-        topBar = {
-            ConversationTopBar(
+    // Full screen background color: #0F172A (dark navy)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0F172A))
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Header
+            ChatHeader(
                 conversation = conversation,
                 isRecruiter = viewModel.isRecruiter,
                 onBack = onBack
             )
-        },
-        bottomBar = {
+            
+            // Messages List
+            Box(modifier = Modifier.weight(1f)) {
+                if (isLoading && messages.isEmpty()) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = Color.White
+                    )
+                } else {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            start = 16.dp,
+                            top = 16.dp,
+                            end = 16.dp,
+                            bottom = 90.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(messages) { message ->
+                            val isContractMessage = message.isContractMessage == true ||
+                                                   (message.contractId != null && message.contractId.isNotBlank())
+                            
+                            if (isContractMessage && message.contractId != null) {
+                                ContractMessageBubble(
+                                    message = message,
+                                    isFromCurrentUser = viewModel.isMessageFromCurrentUser(message),
+                                    onContractClick = {
+                                        message.contractId?.let { contractId ->
+                                            onContractReview(contractId)
+                                        }
+                                    },
+                                    currentUserAvatarUrl = currentUserAvatarUrl,
+                                    otherUserAvatarUrl = otherUserAvatarUrl
+                                )
+                            } else {
+                                TextMessageBubble(
+                                    message = message,
+                                    isFromCurrentUser = viewModel.isMessageFromCurrentUser(message),
+                                    currentUserAvatarUrl = currentUserAvatarUrl,
+                                    otherUserAvatarUrl = otherUserAvatarUrl
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Input Bar
             MessageInputBar(
                 messageText = messageText,
                 onMessageTextChange = { viewModel.updateMessageText(it) },
@@ -101,51 +151,174 @@ fun ConversationChatScreen(
                 isRecruiter = viewModel.isRecruiter,
                 onContractClick = if (viewModel.isRecruiter) onCreateContractClick else null
             )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
+        }
+    }
+}
+
+// Header Component
+@Composable
+private fun ChatHeader(
+    conversation: com.example.matchify.domain.model.Conversation?,
+    isRecruiter: Boolean,
+    onBack: () -> Unit
+) {
+    // Container: Height 64dp, Background #1E293B (darker to separate from screen)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .background(Color(0xFF1E293B))
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Left Icon - Back arrow: Size 22dp, Color #3B82F6 (blue)
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier.size(48.dp)
         ) {
-            if (isLoading && messages.isEmpty()) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                modifier = Modifier.size(22.dp),
+                tint = Color(0xFF3B82F6)
+            )
+        }
+        
+        // Center Content - Avatar and Username (horizontal layout)
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            val imageUrl = conversation?.let { conv ->
+                conv.getOtherUserProfileImageURL(
+                    isRecruiter = isRecruiter,
+                    baseURL = "http://10.0.2.2:3000"
+                )
+            }
+            
+            // Avatar - diameter 42dp
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop,
+                error = painterResource(id = R.drawable.avatar),
+                placeholder = painterResource(id = R.drawable.avatar)
+            )
+            
+            Spacer(modifier = Modifier.width(8.dp))
+            
+            // Username - Font size 16sp, Weight 600, Color #FFFFFF
+            Text(
+                text = conversation?.getOtherUserName(isRecruiter) ?: "User",
+                fontSize = 16.sp,
+                fontWeight = FontWeight(600),
+                color = Color.White
+            )
+        }
+        
+        // Right Side Icon - Phone
+        IconButton(
+            onClick = { /* TODO: Implement phone call */ },
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                Icons.Default.Phone,
+                contentDescription = "Phone",
+                modifier = Modifier.size(22.dp),
+                tint = Color(0xFF3B82F6)
+            )
+        }
+    }
+}
+
+// Text Message Bubble Component
+@Composable
+private fun TextMessageBubble(
+    message: com.example.matchify.domain.model.Message,
+    isFromCurrentUser: Boolean,
+    currentUserAvatarUrl: String?,
+    otherUserAvatarUrl: String?
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = if (isFromCurrentUser) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        // Avatar for received messages (left side) - diameter 36dp
+        if (!isFromCurrentUser) {
+            AsyncImage(
+                model = otherUserAvatarUrl ?: "",
+                contentDescription = null,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop,
+                error = painterResource(id = R.drawable.avatar),
+                placeholder = painterResource(id = R.drawable.avatar)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        
+        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+        Column(
+            horizontalAlignment = if (isFromCurrentUser) Alignment.End else Alignment.Start,
+            modifier = Modifier.widthIn(max = screenWidth * 0.7f)
+        ) {
+            if (isFromCurrentUser) {
+                // Sent Text Message Bubble
+                // Background: #3B82F6
+                // Border radius: Top-left 16dp, Top-right 16dp, Bottom-left 16dp, Bottom-right 0dp (sharp)
+                Surface(
+                    shape = RoundedCornerShape(
+                        topStart = 16.dp,
+                        topEnd = 16.dp,
+                        bottomStart = 16.dp,
+                        bottomEnd = 0.dp
+                    ),
+                    color = Color(0xFF3B82F6),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    items(messages) { message ->
-                        // Check if this is a contract message
-                        // Detect contract messages by checking isContractMessage flag OR contractId presence
-                        val isContractMessage = message.isContractMessage == true || 
-                                               (message.contractId != null && message.contractId.isNotBlank())
-                        
-                        if (isContractMessage && message.contractId != null) {
-                            ContractMessageBubble(
-                                message = message,
-                                isFromCurrentUser = viewModel.isMessageFromCurrentUser(message),
-                                onContractClick = {
-                                    message.contractId?.let { contractId ->
-                                        onContractReview(contractId)
-                                    }
-                                },
-                                isRecruiter = viewModel.isRecruiter,
-                                currentUserAvatarUrl = currentUserAvatarUrl,
-                                otherUserAvatarUrl = otherUserAvatarUrl
-                            )
-                        } else {
-                            MessageBubble(
-                                message = message,
-                                isFromCurrentUser = viewModel.isMessageFromCurrentUser(message),
-                                currentUserAvatarUrl = currentUserAvatarUrl,
-                                otherUserAvatarUrl = otherUserAvatarUrl
-                            )
-                        }
+                    Column(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
+                    ) {
+                        // Text: Font size 15sp, Weight 400, Color #FFFFFF
+                        Text(
+                            text = message.content,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight(400),
+                            color = Color.White
+                        )
+                    }
+                }
+            } else {
+                // Received Text Message Bubble
+                // Background: #374151
+                // Border radius: Top-left 16dp, Top-right 16dp, Bottom-left 0dp (sharp), Bottom-right 16dp
+                Surface(
+                    shape = RoundedCornerShape(
+                        topStart = 16.dp,
+                        topEnd = 16.dp,
+                        bottomStart = 0.dp,
+                        bottomEnd = 16.dp
+                    ),
+                    color = Color(0xFF374151),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
+                    ) {
+                        // Text: Font size 15sp, Weight 400, Color #FFFFFF
+                        Text(
+                            text = message.content,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight(400),
+                            color = Color.White
+                        )
                     }
                 }
             }
@@ -153,297 +326,100 @@ fun ConversationChatScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ConversationTopBar(
-    conversation: com.example.matchify.domain.model.Conversation?,
-    isRecruiter: Boolean,
-    onBack: () -> Unit
-) {
-    TopAppBar(
-        title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Profile Image
-                val imageUrl = conversation?.let { conv ->
-                    conv.getOtherUserProfileImageURL(
-                        isRecruiter = isRecruiter,
-                        baseURL = "http://10.0.2.2:3000"
-                    )
-                }
-                
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                )
-                
-                Text(
-                    text = conversation?.getOtherUserName(isRecruiter) ?: "User",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        },
-        navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back")
-            }
-        }
-    )
-}
-
+// Contract Message Bubble Component
 @Composable
 private fun ContractMessageBubble(
     message: com.example.matchify.domain.model.Message,
     isFromCurrentUser: Boolean,
     onContractClick: () -> Unit,
-    isRecruiter: Boolean = false,
     currentUserAvatarUrl: String?,
     otherUserAvatarUrl: String?
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        horizontalArrangement = if (isFromCurrentUser) Arrangement.End else Arrangement.Start
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = if (isFromCurrentUser) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.Bottom
     ) {
-        // Avatar for received messages (left side)
+        // Avatar for received messages (left side) - diameter 36dp
         if (!isFromCurrentUser) {
-            MessageAvatar(
-                avatarUrl = otherUserAvatarUrl,
+            AsyncImage(
+                model = otherUserAvatarUrl ?: "",
+                contentDescription = null,
                 modifier = Modifier
                     .size(36.dp)
-                    .padding(end = 8.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop,
+                error = painterResource(id = R.drawable.avatar),
+                placeholder = painterResource(id = R.drawable.avatar)
             )
+            Spacer(modifier = Modifier.width(8.dp))
         }
         
+        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
         Column(
             horizontalAlignment = if (isFromCurrentUser) Alignment.End else Alignment.Start,
-            modifier = Modifier.widthIn(max = 280.dp)
+            modifier = Modifier.widthIn(max = screenWidth * 0.7f)
         ) {
-            // Unified bubble design - same colors as regular messages
             val bubbleColor = if (isFromCurrentUser) {
-                MaterialTheme.colorScheme.primary
+                Color(0xFF3B82F6)
             } else {
-                MaterialTheme.colorScheme.surfaceVariant
+                Color(0xFF374151)
             }
             
-            val textColor = if (isFromCurrentUser) {
-                MaterialTheme.colorScheme.onPrimary
+            val bubbleShape = if (isFromCurrentUser) {
+                RoundedCornerShape(
+                    topStart = 16.dp,
+                    topEnd = 16.dp,
+                    bottomStart = 16.dp,
+                    bottomEnd = 0.dp
+                )
             } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                RoundedCornerShape(
+                    topStart = 16.dp,
+                    topEnd = 16.dp,
+                    bottomStart = 0.dp,
+                    bottomEnd = 16.dp
+                )
             }
             
-            // Check if contract is signed for icon display
-            val signedKeywords = listOf("signed", "signé", "both parties", "Talent signed")
-            val isSigned = signedKeywords.any { message.content.contains(it, ignoreCase = true) } ||
-                         message.pdfUrl != null
-            
+            // Contract Bubble
             Surface(
-                shape = RoundedCornerShape(20.dp),
+                shape = bubbleShape,
                 color = bubbleColor,
                 onClick = onContractClick,
-                modifier = Modifier.shadow(
-                    elevation = 1.dp,
-                    shape = RoundedCornerShape(20.dp)
-                )
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
                 ) {
-                    Icon(
-                        Icons.Default.DriveFileMoveRtl,
-                        contentDescription = "Contract",
-                        modifier = Modifier.size(28.dp),
-                        tint = textColor
-                    )
-                    
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.Start
+                    // Contract icon and title row
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Contrat",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = textColor
-                            )
-                            
-                            if (isSigned) {
-                                Icon(
-                                    Icons.Default.CheckCircle,
-                                    contentDescription = "Signed",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = if (isSystemInDarkTheme()) {
-                                        Color(0xFF81C784)
-                                    } else {
-                                        Color(0xFF4CAF50)
-                                    }
-                                )
-                            }
-                        }
+                        // Contract icon: Size 20dp, Color #FFFFFF
+                        Icon(
+                            Icons.Default.Description,
+                            contentDescription = "Contract",
+                            modifier = Modifier.size(20.dp),
+                            tint = Color.White
+                        )
                         
+                        // Contract title: Font size 15sp, Weight 600, Color #FFFFFF
                         Text(
                             text = message.content,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontSize = 12.sp,
-                            color = textColor.copy(alpha = 0.8f),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(top = 2.dp)
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight(600),
+                            color = Color.White
                         )
                     }
                 }
             }
-            
-            // Timestamp below message
-            Text(
-                text = message.formattedTime,
-                style = MaterialTheme.typography.bodySmall,
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-            )
-        }
-        
-        // Avatar for sent messages (right side)
-        if (isFromCurrentUser) {
-            MessageAvatar(
-                avatarUrl = currentUserAvatarUrl,
-                modifier = Modifier
-                    .size(36.dp)
-                    .padding(start = 8.dp)
-            )
         }
     }
 }
 
-@Composable
-private fun MessageBubble(
-    message: com.example.matchify.domain.model.Message,
-    isFromCurrentUser: Boolean,
-    currentUserAvatarUrl: String?,
-    otherUserAvatarUrl: String?
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        horizontalArrangement = if (isFromCurrentUser) Arrangement.End else Arrangement.Start
-    ) {
-        // Avatar for received messages (left side)
-        if (!isFromCurrentUser) {
-            MessageAvatar(
-                avatarUrl = otherUserAvatarUrl,
-                modifier = Modifier
-                    .size(36.dp)
-                    .padding(end = 8.dp)
-            )
-        }
-        
-        Column(
-            horizontalAlignment = if (isFromCurrentUser) Alignment.End else Alignment.Start,
-            modifier = Modifier.widthIn(max = 280.dp)
-        ) {
-            // Modern chat bubble with large rounded corners
-            val bubbleColor = if (isFromCurrentUser) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant
-            }
-            
-            val textColor = if (isFromCurrentUser) {
-                MaterialTheme.colorScheme.onPrimary
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            }
-            
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = bubbleColor,
-                modifier = Modifier.shadow(
-                    elevation = 1.dp,
-                    shape = RoundedCornerShape(20.dp)
-                )
-            ) {
-                Text(
-                    text = message.content,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = textColor,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-                )
-            }
-            
-            // Timestamp below message
-            Text(
-                text = message.formattedTime,
-                style = MaterialTheme.typography.bodySmall,
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-            )
-        }
-        
-        // Avatar for sent messages (right side)
-        if (isFromCurrentUser) {
-            MessageAvatar(
-                avatarUrl = currentUserAvatarUrl,
-                modifier = Modifier
-                    .size(36.dp)
-                    .padding(start = 8.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun MessageAvatar(
-    avatarUrl: String?,
-    modifier: Modifier = Modifier
-) {
-    if (avatarUrl != null) {
-        AsyncImage(
-            model = avatarUrl,
-            contentDescription = "Avatar",
-            modifier = modifier
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
-            contentScale = ContentScale.Crop
-        )
-    } else {
-        // Placeholder icon or initial
-        Box(
-            modifier = modifier
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Default.Description,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-            )
-        }
-    }
-}
-
+// Input Bar Component
 @Composable
 private fun MessageInputBar(
     messageText: String,
@@ -454,103 +430,94 @@ private fun MessageInputBar(
     isRecruiter: Boolean = false,
     onContractClick: (() -> Unit)? = null
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 8.dp
+    // Container with darker background to separate from screen
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF1E293B))
+            .imePadding()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
-            // Contract button (Recruiter only) - Modern design
-            if (isRecruiter && onContractClick != null) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    FilledTonalButton(
-                        onClick = onContractClick,
-                        shape = RoundedCornerShape(20.dp),
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    ) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "Envoyer un contrat",
-                            style = MaterialTheme.typography.labelMedium
-                        )
+        // Left icon (+ button): Only visible for recruiters
+        if (isRecruiter) {
+            IconButton(
+                onClick = {
+                    if (onContractClick != null) {
+                        onContractClick()
                     }
-                }
-            }
-            
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                },
+                modifier = Modifier.size(48.dp)
             ) {
-                // Modern Material 3 Filled Text Field
-                OutlinedTextField(
-                    value = messageText,
-                    onValueChange = onMessageTextChange,
-                    modifier = Modifier.weight(1f),
-                    placeholder = { 
-                        Text(
-                            "Tapez un message...",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                        ) 
-                    },
-                    shape = RoundedCornerShape(24.dp),
-                    maxLines = 4,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    textStyle = MaterialTheme.typography.bodyLarge
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Attach",
+                    modifier = Modifier.size(24.dp),
+                    tint = Color(0xFF3B82F6)
                 )
-                
-                // Modern send button with FAB-like design
-                FloatingActionButton(
-                    onClick = onSendClick,
-                    modifier = Modifier.size(48.dp),
-                    containerColor = if (enabled) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.surfaceVariant
-                    },
-                    contentColor = if (enabled) {
-                        MaterialTheme.colorScheme.onPrimary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    },
-                    shape = CircleShape
-                ) {
-                    if (isSending) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    } else {
-                        Icon(
-                            Icons.Default.Send,
-                            contentDescription = "Envoyer",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
+            }
+        }
+        
+        // TextField with transparent background and border
+        Surface(
+            modifier = Modifier.weight(1f),
+            color = Color.Transparent,
+            shape = RoundedCornerShape(24.dp),
+            border = BorderStroke(1.dp, Color(0xFF374151))
+        ) {
+            TextField(
+                value = messageText,
+                onValueChange = onMessageTextChange,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(
+                        text = "Type a message…",
+                        fontSize = 15.sp,
+                        color = Color(0xFF9CA3AF)
+                    )
+                },
+                textStyle = androidx.compose.ui.text.TextStyle(
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight(400),
+                    color = Color.White
+                ),
+                colors = TextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedPlaceholderColor = Color(0xFF9CA3AF),
+                    unfocusedPlaceholderColor = Color(0xFF9CA3AF),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
+                ),
+                maxLines = 4,
+                singleLine = false
+            )
+        }
+        
+        // Send button (Arrow): Separate icon
+        IconButton(
+            onClick = onSendClick,
+            enabled = enabled,
+            modifier = Modifier.size(48.dp)
+        ) {
+            if (isSending) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp,
+                    color = Color(0xFF3B82F6)
+                )
+            } else {
+                Icon(
+                    Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Send",
+                    modifier = Modifier.size(24.dp),
+                    tint = if (enabled) Color(0xFF3B82F6) else Color(0xFF9CA3AF)
+                )
             }
         }
     }
 }
-

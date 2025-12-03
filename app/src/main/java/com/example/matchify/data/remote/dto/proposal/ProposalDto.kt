@@ -14,8 +14,12 @@ data class ProposalDto(
     @SerializedName("recruiterName") val recruiterName: String? = null,
     @SerializedName("status") val status: String,
     @SerializedName("message") val message: String,
+    @SerializedName("proposalContent") val proposalContent: String? = null,
     @SerializedName("proposedBudget") val proposedBudget: Int? = null,
     @SerializedName("estimatedDuration") val estimatedDuration: String? = null,
+    @SerializedName("rejectionReason") val rejectionReason: String? = null,
+    @SerializedName("aiScore") val aiScore: Int? = null,
+    @SerializedName("talent") val talent: com.example.matchify.domain.model.TalentInfo? = null,
     @SerializedName("createdAt") val createdAt: String? = null,
     @SerializedName("updatedAt") val updatedAt: String? = null
 ) {

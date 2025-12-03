@@ -13,8 +13,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -509,9 +512,8 @@ private fun formatProposalDate(dateString: String?): String {
     }
 }
 
-// Keep existing recruiter UI (not changing)
+// Recruiter UI with dark theme
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RecruiterProposalsScreen(
     proposals: List<Proposal>,
@@ -525,181 +527,310 @@ private fun RecruiterProposalsScreen(
     onToggleAiSort: () -> Unit,
     onProposalClick: (String) -> Unit
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Proposals") }
-            )
-        }
-    ) { paddingValues ->
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0F172A))
+    ) {
+        // Custom Header
+        Surface(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+                .fillMaxWidth()
+                .height(58.dp),
+            color = Color(0xFF0F172A)
         ) {
-            // Mission Selector & AI Sort (Recruiter only)
-            RecruiterMissionSelector(
-                missions = missions,
-                selectedMission = selectedMission,
-                isLoadingMissions = isLoadingMissions,
-                onMissionSelected = onMissionSelected,
-                aiSortEnabled = aiSortEnabled,
-                onToggleAiSort = onToggleAiSort,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-            )
-            
-            when {
-                isLoading && proposals.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                errorMessage != null -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = errorMessage ?: "Une erreur est survenue",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
-                selectedMission == null -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Description,
-                                contentDescription = null,
-                                modifier = Modifier.size(60.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                            )
-                            Text(
-                                text = "Select a mission to view proposals",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = "Choose a mission from the dropdown above",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-                proposals.isEmpty() -> {
-                    EmptyProposalsView()
-                }
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(proposals) { proposal ->
-                            ProposalRow(
-                                proposal = proposal,
-                                isRecruiter = true,
-                                showAiScore = aiSortEnabled,
-                                onClick = { onProposalClick(proposal.proposalId) },
-                                onArchive = {},
-                                onDelete = {}
-                            )
-                        }
-                    }
-                }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Proposals",
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight(650),
+                    color = Color.White
+                )
             }
         }
-    }
-}
-
-// Keep existing components for recruiter view
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun RecruiterMissionSelector(
-    missions: List<com.example.matchify.domain.model.Mission>,
-    selectedMission: com.example.matchify.domain.model.Mission?,
-    isLoadingMissions: Boolean,
-    onMissionSelected: (com.example.matchify.domain.model.Mission?) -> Unit,
-    aiSortEnabled: Boolean,
-    onToggleAiSort: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        var expanded by remember { mutableStateOf(false) }
         
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
+        // Mission Selector & AI Toggle
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            OutlinedTextField(
-                value = selectedMission?.title ?: "Select a mission",
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Mission") },
-                leadingIcon = {
-                    Icon(Icons.Filled.Work, contentDescription = null)
-                },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                },
+            // Mission Dropdown
+            var expanded by remember { mutableStateOf(false) }
+            
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .menuAnchor(),
-                enabled = !isLoadingMissions
-            )
+                    .clickable { if (!isLoadingMissions) expanded = true },
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFF1E293B),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF374151))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Work,
+                            contentDescription = null,
+                            tint = Color(0xFF3B82F6),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = selectedMission?.title ?: "Select a mission",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (selectedMission != null) Color.White else Color(0xFF9CA3AF),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            selectedMission?.let {
+                                Text(
+                                    text = it.formattedDate,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF6B7280)
+                                )
+                            }
+                        }
+                        
+                        // Unviewed count badge
+                        selectedMission?.unviewedCount?.let { count ->
+                            if (count > 0) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color(0xFFEF4444)
+                                ) {
+                                    Text(
+                                        text = count.toString(),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = null,
+                        tint = Color(0xFF9CA3AF)
+                    )
+                }
+            }
             
-            ExposedDropdownMenu(
+            // Dropdown Menu
+            DropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                modifier = Modifier
+                    .fillMaxWidth(0.9f)
+                    .background(Color(0xFF1E293B))
             ) {
                 missions.forEach { mission ->
                     DropdownMenuItem(
-                        text = { Text(mission.title) },
+                        text = {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = mission.title,
+                                        color = Color.White,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = mission.formattedDate,
+                                        color = Color(0xFF9CA3AF),
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    mission.unviewedCount?.let { count ->
+                                        if (count > 0) {
+                                            Surface(
+                                                shape = CircleShape,
+                                                color = Color(0xFFEF4444)
+                                            ) {
+                                                Text(
+                                                    text = count.toString(),
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color.White,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    
+                                    if (selectedMission?.missionId == mission.missionId) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = Color(0xFF3B82F6),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        },
                         onClick = {
                             onMissionSelected(mission)
                             expanded = false
-                        }
+                        },
+                        colors = MenuDefaults.itemColors(
+                            textColor = Color.White
+                        )
+                    )
+                }
+            }
+            
+            // AI Sort Toggle (only when mission selected)
+            if (selectedMission != null) {
+                Button(
+                    onClick = onToggleAiSort,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (aiSortEnabled) Color(0xFF3B82F6) else Color(0xFF1E293B),
+                        contentColor = if (aiSortEnabled) Color.White else Color(0xFF3B82F6)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    border = if (!aiSortEnabled) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF3B82F6)) else null
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (aiSortEnabled) "AI Sorting Enabled" else "Enable AI Sorting",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
         }
         
-        if (selectedMission != null) {
-            Button(
-                onClick = onToggleAiSort,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (aiSortEnabled) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.primaryContainer
+        // Content
+        Box(modifier = Modifier.weight(1f)) {
+            when {
+                isLoading && proposals.isEmpty() -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = Color(0xFF3B82F6)
+                    )
+                }
+                errorMessage != null -> {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = errorMessage,
+                            color = Color(0xFFEF4444),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 32.dp)
+                        )
                     }
-                )
-            ) {
-                Icon(
-                    Icons.Filled.AutoAwesome,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (aiSortEnabled) "AI Sorting Enabled" else "Enable AI Sorting",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
+                }
+                selectedMission == null -> {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Description,
+                            contentDescription = null,
+                            modifier = Modifier.size(60.dp),
+                            tint = Color(0xFF9CA3AF).copy(alpha = 0.4f)
+                        )
+                        Text(
+                            text = "Select a mission to view proposals",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "Choose a mission from the dropdown above",
+                            fontSize = 15.sp,
+                            color = Color(0xFF9CA3AF),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 40.dp)
+                        )
+                    }
+                }
+                proposals.isEmpty() -> {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Description,
+                            contentDescription = null,
+                            modifier = Modifier.size(60.dp),
+                            tint = Color(0xFF9CA3AF).copy(alpha = 0.4f)
+                        )
+                        Text(
+                            text = "No proposals yet",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "No proposals for this mission yet.",
+                            fontSize = 15.sp,
+                            color = Color(0xFF9CA3AF)
+                        )
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            start = 16.dp,
+                            top = 8.dp,
+                            end = 16.dp,
+                            bottom = 80.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(proposals) { proposal ->
+                            RecruiterProposalCard(
+                                proposal = proposal,
+                                showAiScore = aiSortEnabled,
+                                onClick = { onProposalClick(proposal.proposalId) }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -707,72 +838,109 @@ private fun RecruiterMissionSelector(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun ProposalRow(
+private fun RecruiterProposalCard(
     proposal: Proposal,
-    isRecruiter: Boolean,
-    showAiScore: Boolean = false,
-    onClick: () -> Unit,
-    onArchive: () -> Unit = {},
-    onDelete: () -> Unit = {}
+    showAiScore: Boolean,
+    onClick: () -> Unit
 ) {
-    // Keep existing ProposalRow implementation for recruiter
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth()
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        color = Color(0xFF1E293B),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF374151))
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+            // Top Row: Title and Status
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = proposal.missionTitle ?: "Mission",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Normal,
-                        maxLines = 2,
-                        modifier = Modifier.weight(1f)
-                    )
-                    
-                    ProposalStatusBadge(status = proposal.status)
-                }
-                
-                val userName = if (isRecruiter) {
-                    proposal.talentName
-                } else {
-                    proposal.recruiterName
-                }
-                if (!userName.isNullOrEmpty()) {
-                    Text(
-                        text = if (isRecruiter) "By $userName" else "From $userName",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
-                    )
-                }
-                
                 Text(
-                    text = proposal.message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2
+                    text = proposal.missionTitle ?: "Mission",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
                 
+                ProposalStatusBadge(status = proposal.status)
+            }
+            
+            // AI Score Badge (when enabled)
+            if (showAiScore && proposal.aiScore != null) {
+                val (scoreText, scoreColor) = when {
+                    proposal.aiScore >= 80 -> "High Match: ${proposal.aiScore}%" to Color(0xFF10B981)
+                    proposal.aiScore >= 60 -> "Good Match: ${proposal.aiScore}%" to Color(0xFF3B82F6)
+                    else -> "Match: ${proposal.aiScore}%" to Color(0xFF6B7280)
+                }
+                
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .background(scoreColor.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.AutoAwesome,
+                        contentDescription = null,
+                        tint = scoreColor,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = scoreText,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = scoreColor
+                    )
+                }
+            }
+            
+            // Talent Name
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Person,
+                    contentDescription = null,
+                    tint = Color(0xFF9CA3AF),
+                    modifier = Modifier.size(14.dp)
+                )
                 Text(
-                    text = formatProposalDate(proposal.createdAt),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    text = proposal.talentFullName,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF9CA3AF)
                 )
             }
+            
+            // Message Preview
+            Text(
+                text = proposal.message,
+                fontSize = 14.sp,
+                color = Color(0xFF9CA3AF),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 20.sp
+            )
+            
+            // Date
+            Text(
+                text = formatProposalDate(proposal.createdAt),
+                fontSize = 12.sp,
+                color = Color(0xFF6B7280)
+            )
         }
     }
 }

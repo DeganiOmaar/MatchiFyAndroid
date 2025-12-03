@@ -26,10 +26,11 @@ interface AiApi {
     
     /**
      * Analyse de compatibilité mission-profil
-     * GET /ai/mission-fit/{missionId}
+     * POST /ai/mission-fit/{missionId}
+     * Body: {} (vide, comme iOS)
      */
-    @GET("ai/mission-fit/{missionId}")
-    suspend fun getMissionFit(@Path("missionId") missionId: String): MissionFitResponseDto
+    @POST("ai/mission-fit/{missionId}")
+    suspend fun analyzeMissionFit(@Path("missionId") missionId: String): MissionFitResponseDto
     
     /**
      * Générer une proposition avec AI

@@ -1,16 +1,16 @@
 package com.example.matchify.ui.missions.details
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,10 +19,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.matchify.domain.model.postedDaysAgoText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,49 +44,86 @@ fun MissionDetailsScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
     val canApply by viewModel.canApply.collectAsState()
     val shouldShowApplyButton by viewModel.shouldShowApplyButton.collectAsState()
+    val isTogglingFavorite by viewModel.isTogglingFavorite.collectAsState()
+    val isTalent = viewModel.isTalent
     
-    var showFitAnalysis by remember { mutableStateOf(false) }
+    // State pour le popup d'analyse de mission
+    var showMissionFitAnalysis by remember { mutableStateOf(false) }
     
     LaunchedEffect(Unit) {
         viewModel.loadMission()
     }
     
+    // Dark theme colors matching proposals, messages, alerts
+    val darkBackground = Color(0xFF0F172A) // Dark navy background (same as proposals, messages, alerts)
+    val textPrimary = Color(0xFFFFFFFF) // White text
+    val textSecondary = Color(0xFF94A3B8) // Light gray text
+    val blueAccent = Color(0xFF3B82F6) // Blue accent
+    val dividerColor = Color(0xFF334155) // Divider color
+    
     Scaffold(
+        containerColor = darkBackground,
         topBar = {
-            TopAppBar(
-                title = { },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            // Header - 56-60dp height, #0F172A background
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp), // 56-60dp
+                color = darkBackground
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp), // 16dp padding from edges
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Left area - back button
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(42.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = textPrimary
+                        )
                     }
-                },
-                actions = {
-                    // AI Analyze button for talents (replaces favorite icon)
-                    if (shouldShowApplyButton) {
+                    
+                    // Center Title - perfectly centered
+                    Text(
+                        text = "Details",
+                        fontSize = 19.sp, // 18-20sp
+                        fontWeight = FontWeight(650), // 600-700
+                        color = textPrimary,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    // Right area - Gemini icon (only for talents) or empty spacer
+                    if (isTalent) {
                         IconButton(
-                            onClick = {
-                                mission?.let {
-                                    showFitAnalysis = true
-                                }
-                            }
+                            onClick = { showMissionFitAnalysis = true },
+                            modifier = Modifier.size(42.dp)
                         ) {
                             Icon(
                                 Icons.Default.AutoAwesome,
-                                contentDescription = "Analyze compatibility",
-                                tint = MaterialTheme.colorScheme.primary
+                                contentDescription = "Gemini",
+                                tint = textPrimary
                             )
                         }
+                    } else {
+                        Spacer(modifier = Modifier.size(42.dp))
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
+                }
+            }
         },
         bottomBar = {
-            if (shouldShowApplyButton) {
+            // Apply Now button - only for talents, not recruiters
+            if (shouldShowApplyButton && mission != null) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
+                    color = darkBackground,
                     shadowElevation = 8.dp
                 ) {
                     Button(
@@ -93,11 +135,17 @@ fun MissionDetailsScreen(
                         enabled = canApply && !isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        shape = RoundedCornerShape(16.dp)
+                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = blueAccent,
+                            contentColor = textPrimary
+                        )
                     ) {
                         Text(
-                            text = if (canApply) "Apply to this mission" else "Already applied",
+                            text = if (canApply) "Apply Now" else "Already applied",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
@@ -110,18 +158,20 @@ fun MissionDetailsScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        .background(darkBackground)
                         .padding(paddingValues),
-                    contentAlignment = androidx.compose.ui.Alignment.Center
+                    contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = blueAccent)
                 }
             }
             errorMessage != null -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        .background(darkBackground)
                         .padding(paddingValues),
-                    contentAlignment = androidx.compose.ui.Alignment.Center
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = errorMessage ?: "Error",
@@ -132,183 +182,200 @@ fun MissionDetailsScreen(
             mission != null -> {
                 MissionDetailsContent(
                     mission = mission!!,
-                    showFitAnalysis = showFitAnalysis,
-                    onShowFitAnalysis = { showFitAnalysis = it },
+                    darkBackground = darkBackground,
+                    textPrimary = textPrimary,
+                    textSecondary = textSecondary,
+                    blueAccent = blueAccent,
+                    dividerColor = dividerColor,
                     modifier = Modifier
                         .fillMaxSize()
+                        .background(darkBackground)
                         .padding(paddingValues)
                 )
             }
         }
+    }
+    
+    // Afficher le popup d'analyse de mission
+    if (showMissionFitAnalysis && isTalent) {
+        MissionFitAnalysisDialog(
+            missionId = missionId,
+            onDismiss = { showMissionFitAnalysis = false }
+        )
     }
 }
 
 @Composable
 private fun MissionDetailsContent(
     mission: com.example.matchify.domain.model.Mission,
-    showFitAnalysis: Boolean,
-    onShowFitAnalysis: (Boolean) -> Unit,
+    darkBackground: Color,
+    textPrimary: Color,
+    textSecondary: Color,
+    blueAccent: Color,
+    dividerColor: Color,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        Text(
-            text = "Mission Details",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        
-        Spacer(modifier = Modifier.height(6.dp))
-        
+        // Mission Title
         Text(
             text = mission.title,
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = textPrimary,
+            lineHeight = 32.sp
+        )
+        
+        // Posted date
+        Text(
+            text = mission.postedDaysAgoText,
+            fontSize = 14.sp,
+            color = textSecondary,
+            fontWeight = FontWeight.Normal
+        )
+        
+        // SUMMARY Section
+        Text(
+            text = "SUMMARY",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = textPrimary,
+            letterSpacing = 0.5.sp
         )
         
         Text(
-            text = mission.formattedDate,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp)
+            text = mission.description ?: "",
+            fontSize = 15.sp,
+            color = textSecondary,
+            lineHeight = 22.sp
         )
         
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Summary Section
-        Text(
-            text = "Summary",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold
+        // Divider
+        HorizontalDivider(
+            color = dividerColor,
+            thickness = 1.dp
         )
         
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        Text(
-            text = mission.description,
-            style = MaterialTheme.typography.bodyLarge,
-            lineHeight = MaterialTheme.typography.bodyLarge.fontSize * 1.5
-        )
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        Divider()
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Price Section
+        // Budget / Price Section
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Wallet icon
             Surface(
                 modifier = Modifier.size(44.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primaryContainer
+                shape = RoundedCornerShape(10.dp),
+                color = blueAccent.copy(alpha = 0.2f)
             ) {
-                Icon(
-                    Icons.Default.CreditCard,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(10.dp)
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.AttachMoney,
+                        contentDescription = null,
+                        tint = blueAccent,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
             
             Column {
                 Text(
                     text = "Budget / Price",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontSize = 14.sp,
+                    color = textSecondary,
+                    fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = mission.formattedBudget,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = textPrimary
                 )
             }
         }
         
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Skills Section
+        // Skills and Expertise Section
         Text(
             text = "Skills and Expertise",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = textPrimary,
+            letterSpacing = 0.5.sp
         )
         
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        if (mission.skills.isEmpty()) {
+        // Skills tags with wrapping
+        val skillsList = mission.skills ?: emptyList()
+        if (skillsList.isEmpty()) {
             Text(
                 text = "No skills specified.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                fontSize = 14.sp,
+                color = textSecondary
             )
         } else {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                mission.skills.forEach { skill ->
-                    Surface(
-                        shape = RoundedCornerShape(18.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
-                    ) {
-                        Text(
-                            text = skill,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
-                    }
+            FlowRowLayout(
+                items = skillsList,
+                horizontalSpacing = 8.dp,
+                verticalSpacing = 8.dp
+            ) { skill ->
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = textSecondary.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = skill,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = textSecondary,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                    )
                 }
             }
         }
         
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Activity Section
+        // Activity on this mission Section
         Text(
             text = "Activity on this mission",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = textPrimary,
+            letterSpacing = 0.5.sp
         )
         
-        Spacer(modifier = Modifier.height(16.dp))
-        
+        // Activity rows
         ActivityRow(
             title = "Proposals",
-            value = "${mission.proposals}"
+            value = formatProposalsCount(mission.proposals),
+            textPrimary = textPrimary,
+            textSecondary = textSecondary
         )
         
         ActivityRow(
             title = "Interviewing",
-            value = "${mission.interviewing}"
+            value = "${mission.interviewing}",
+            textPrimary = textPrimary,
+            textSecondary = textSecondary
         )
         
+        // Bottom spacing for Apply button
         Spacer(modifier = Modifier.height(24.dp))
-    }
-    
-    // Mission Fit Analysis Modal
-    if (showFitAnalysis) {
-        MissionFitAnalysisView(
-            missionId = mission.missionId,
-            onDismiss = { onShowFitAnalysis(false) }
-        )
     }
 }
 
 @Composable
-private fun ActivityRow(title: String, value: String) {
+private fun ActivityRow(
+    title: String,
+    value: String,
+    textPrimary: Color,
+    textSecondary: Color
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -317,14 +384,80 @@ private fun ActivityRow(title: String, value: String) {
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            fontSize = 15.sp,
+            color = textSecondary
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.SemiBold
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = textPrimary
         )
     }
 }
 
+private fun formatProposalsCount(count: Int): String {
+    return when {
+        count <= 5 -> "$count"
+        count <= 10 -> "5 to 10"
+        else -> "10+"
+    }
+}
+
+/**
+ * Layout personnalisé qui wrap les items comme FlowRow
+ * Permet aux tags de s'afficher sur plusieurs lignes si nécessaire
+ */
+@Composable
+private fun FlowRowLayout(
+    items: List<String>,
+    horizontalSpacing: Dp,
+    verticalSpacing: Dp,
+    content: @Composable (String) -> Unit
+) {
+    BoxWithConstraints {
+        val maxWidthPx = with(LocalDensity.current) { maxWidth.toPx() }
+        val density = LocalDensity.current
+        
+        // Calculer les lignes en fonction de la largeur disponible
+        val rowsList = mutableListOf<MutableList<String>>()
+        var currentRow = mutableListOf<String>()
+        var currentRowWidth = 0f
+        
+        items.forEach { skill ->
+            // Estimation de la largeur (approximative en dp)
+            // Largeur du texte + padding horizontal (14dp * 2) + marge
+            val estimatedWidthDp = (skill.length * 8 + 28 + 8).dp
+            val estimatedWidthPx = with(density) { estimatedWidthDp.toPx() }
+            
+            if (currentRowWidth + estimatedWidthPx > maxWidthPx && currentRow.isNotEmpty()) {
+                // Nouvelle ligne
+                rowsList.add(currentRow.toMutableList())
+                currentRow = mutableListOf(skill)
+                currentRowWidth = estimatedWidthPx
+            } else {
+                currentRow.add(skill)
+                currentRowWidth += estimatedWidthPx + with(density) { horizontalSpacing.toPx() }
+            }
+        }
+        
+        // Dernière ligne
+        if (currentRow.isNotEmpty()) {
+            rowsList.add(currentRow)
+        }
+        
+        Column(
+            verticalArrangement = Arrangement.spacedBy(verticalSpacing)
+        ) {
+            rowsList.forEach { row ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(horizontalSpacing)
+                ) {
+                    row.forEach { skill ->
+                        content(skill)
+                    }
+                }
+            }
+        }
+    }
+}

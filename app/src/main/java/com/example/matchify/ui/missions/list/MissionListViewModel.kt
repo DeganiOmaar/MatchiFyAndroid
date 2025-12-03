@@ -182,7 +182,9 @@ class MissionListViewModel(
                         interviewingCount = null,
                         hasApplied = null,
                         isFavorite = null,
-                        status = null
+                        status = null,
+                        matchScore = bestMatchDto.matchScore,
+                        reasoning = bestMatchDto.reasoning
                     )
                 }
                 
@@ -360,14 +362,20 @@ class MissionListViewModel(
             if (search.isNotEmpty()) {
                 filtered = filtered.filter { mission ->
                     mission.title.contains(search, ignoreCase = true) ||
-                    mission.description.contains(search, ignoreCase = true) ||
-                    mission.skills.any { it.contains(search, ignoreCase = true) }
+                    (mission.description?.contains(search, ignoreCase = true) ?: false) ||
+                    (mission.skills?.any { it.contains(search, ignoreCase = true) } ?: false)
                 }
             }
             
             // Sort based on tab
             when (tab) {
-                MissionTab.BEST_MATCHES, MissionTab.FAVORITES -> {
+                MissionTab.BEST_MATCHES -> {
+                    // Sort by matchScore descending
+                    filtered.sortedByDescending { mission ->
+                        mission.matchScore ?: 0
+                    }
+                }
+                MissionTab.FAVORITES -> {
                     // Sort by most recent
                     filtered.sortedByDescending { mission ->
                         mission.createdAt?.let {

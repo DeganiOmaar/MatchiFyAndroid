@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 
 class TalentProfileByIDViewModel(
     private val repository: UserRepository,
+    private val skillRepository: com.example.matchify.data.remote.SkillRepository,
     private val talentId: String
 ) : ViewModel() {
     
@@ -22,6 +23,9 @@ class TalentProfileByIDViewModel(
     
     private val _portfolio = MutableStateFlow<List<Project>>(emptyList())
     val portfolio: StateFlow<List<Project>> = _portfolio.asStateFlow()
+    
+    private val _skillNames = MutableStateFlow<List<String>>(emptyList())
+    val skillNames: StateFlow<List<String>> = _skillNames.asStateFlow()
     
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -40,10 +44,29 @@ class TalentProfileByIDViewModel(
                 val result = repository.getUserById(talentId)
                 _user.value = result.first
                 _portfolio.value = result.second
+                loadSkillNames()
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Failed to load profile"
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+    
+    private fun loadSkillNames() {
+        val skillIds = _user.value?.skills
+        if (skillIds.isNullOrEmpty()) {
+            _skillNames.value = emptyList()
+            return
+        }
+        
+        viewModelScope.launch {
+            try {
+                val skills = skillRepository.getSkillsByIds(skillIds)
+                _skillNames.value = skills.map { it.name }
+            } catch (e: Exception) {
+                // Fallback: use IDs if loading names fails
+                _skillNames.value = skillIds
             }
         }
     }
@@ -57,8 +80,9 @@ class TalentProfileByIDViewModelFactory(
             val apiService = ApiService.getInstance()
             val authPreferences = AuthPreferencesProvider.getInstance().get()
             val repository = UserRepository(apiService.userApi, authPreferences)
+            val skillRepository = com.example.matchify.data.remote.SkillRepository(apiService.skillApi)
             @Suppress("UNCHECKED_CAST")
-            return TalentProfileByIDViewModel(repository, talentId) as T
+            return TalentProfileByIDViewModel(repository, skillRepository, talentId) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

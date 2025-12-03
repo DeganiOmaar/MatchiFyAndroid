@@ -16,8 +16,12 @@ object ProposalDtoMapper {
             recruiterName = dto.recruiterName,
             status = dto.proposalStatus,
             message = dto.message,
+            proposalContent = dto.proposalContent,
             proposedBudget = dto.proposedBudget,
             estimatedDuration = dto.estimatedDuration,
+            rejectionReason = dto.rejectionReason,
+            aiScore = dto.aiScore,
+            talent = dto.talent,
             createdAt = dto.createdAt,
             updatedAt = dto.updatedAt
         )

@@ -45,20 +45,20 @@ object MissionDtoMapper {
 fun Mission.toCreateRequest(): CreateMissionRequest {
     return CreateMissionRequest(
         title = title,
-        description = description,
-        duration = duration,
-        budget = budget,
-        skills = skills
+        description = description ?: "",
+        duration = duration ?: "",
+        budget = budget ?: 0,
+        skills = skills ?: emptyList()
     )
 }
 
 fun Mission.toUpdateRequest(): UpdateMissionRequest {
     return UpdateMissionRequest(
         title = title,
-        description = description,
-        duration = duration,
-        budget = budget,
-        skills = skills
+        description = description ?: "",
+        duration = duration ?: "",
+        budget = budget ?: 0,
+        skills = skills ?: emptyList()
     )
 }
 

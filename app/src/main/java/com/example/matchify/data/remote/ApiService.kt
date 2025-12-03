@@ -32,7 +32,15 @@ class ApiService(private val authPreferences: AuthPreferences) {
         Log.d("ApiService", "Sending request: ${newRequest.url}")
         Log.d("ApiService", "Authorization: ${newRequest.header("Authorization")}")
 
-        chain.proceed(newRequest)
+        val response = chain.proceed(newRequest)
+        
+        // Log response for debugging
+        if (!response.isSuccessful) {
+            val errorBody = response.peekBody(Long.MAX_VALUE).string()
+            Log.e("ApiService", "HTTP ${response.code} Error: $errorBody")
+        }
+        
+        response
     }
 
     // -----------------------------------------------------------
@@ -45,11 +53,20 @@ class ApiService(private val authPreferences: AuthPreferences) {
     // -----------------------------------------------------------
     // 🔧 Instance Retrofit unique
     // -----------------------------------------------------------
+    private val gson = com.google.gson.GsonBuilder()
+        .serializeNulls() // This will be changed to NOT serialize nulls
+        .create()
+    
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(
+                com.google.gson.GsonBuilder()
+                    .setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.IDENTITY)
+                    // Don't serialize null values - backend doesn't want them
+                    .create()
+            ))
             .build()
     }
 

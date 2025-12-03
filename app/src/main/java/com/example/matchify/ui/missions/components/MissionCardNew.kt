@@ -12,6 +12,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -60,20 +61,52 @@ fun MissionCardNew(
                     .padding(horizontal = 18.dp, vertical = 18.dp), // 16-20px padding
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                // Header: Posted time (left) and icon (right)
+                // Header: Posted time (left), AI Badge, and icon (right)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Posted time - #94A3B8, 13px, weight 400
-                    Text(
-                        text = mission.timePostedText,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight(400),
-                        color = Color(0xFF94A3B8),
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.weight(1f)
-                    )
+                    ) {
+                        // Posted time - #94A3B8, 13px, weight 400
+                        Text(
+                            text = mission.timePostedText,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight(400),
+                            color = Color(0xFF94A3B8)
+                        )
+
+                        // AI Match Badge
+                        if (mission.matchScore != null) {
+                            Surface(
+                                color = Color(0xFF3B82F6).copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = Color(0xFF3B82F6),
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Text(
+                                        text = "AI Match",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF3B82F6)
+                                    )
+                                }
+                            }
+                        }
+                    }
                     
                     // Icon based on role and ownership
                     when {
@@ -129,19 +162,44 @@ fun MissionCardNew(
                     lineHeight = 20.sp
                 )
                 
-                // Price - #3B82F6, 15-16px, weight 600, spacing 4-6px below title
+                // Price and Match Score - #3B82F6, 15-16px, weight 600, spacing 4-6px below title
                 Spacer(modifier = Modifier.height(5.dp)) // 4-6px
-                Text(
-                    text = mission.formattedBudget,
-                    fontSize = 15.5.sp, // 15-16px
-                    fontWeight = FontWeight(600),
-                    color = Color(0xFF3B82F6)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = mission.formattedBudget,
+                        fontSize = 15.5.sp, // 15-16px
+                        fontWeight = FontWeight(600),
+                        color = Color(0xFF3B82F6)
+                    )
+
+                    if (mission.matchScore != null) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "${mission.matchScore}%",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF3B82F6)
+                            )
+                            Text(
+                                text = "match",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Color(0xFF94A3B8)
+                            )
+                        }
+                    }
+                }
                 
                 // Description - #CBD5E1, 14px, weight 400, max 2-3 lines, line height 1.3-1.4
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = mission.description,
+                    text = mission.description ?: "",
                     fontSize = 14.sp,
                     fontWeight = FontWeight(400),
                     color = Color(0xFFCBD5E1),
@@ -149,31 +207,47 @@ fun MissionCardNew(
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = 19.sp // 1.36 (14 * 1.36 ≈ 19)
                 )
+
+                // Reasoning
+                if (!mission.reasoning.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = mission.reasoning,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight(400),
+                        color = Color(0xFF3B82F6).copy(alpha = 0.8f),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 18.sp
+                    )
+                }
                 
                 // Skill Tags - background #1E293B, text #93C5FD, 12-13px, weight 500
-                if (mission.skills.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(7.dp), // 6-8px
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        items(mission.skills) { skill ->
-                            // Rounded pill tag
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = Color(0xFF1E293B),
-                                tonalElevation = 0.dp
-                            ) {
-                                Text(
-                                    text = skill,
-                                    modifier = Modifier.padding(
-                                        horizontal = 11.dp, // 10-12px
-                                        vertical = 5.dp // 4-6px
-                                    ),
-                                    fontSize = 12.5.sp, // 12-13px
-                                    fontWeight = FontWeight(500),
-                                    color = Color(0xFF93C5FD)
-                                )
+                mission.skills?.let { skillsList ->
+                    if (skillsList.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(7.dp), // 6-8px
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            items(skillsList) { skill ->
+                                // Rounded pill tag
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = Color(0xFF1E293B),
+                                    tonalElevation = 0.dp
+                                ) {
+                                    Text(
+                                        text = skill,
+                                        modifier = Modifier.padding(
+                                            horizontal = 11.dp, // 10-12px
+                                            vertical = 5.dp // 4-6px
+                                        ),
+                                        fontSize = 12.5.sp, // 12-13px
+                                        fontWeight = FontWeight(500),
+                                        color = Color(0xFF93C5FD)
+                                    )
+                                }
                             }
                         }
                     }

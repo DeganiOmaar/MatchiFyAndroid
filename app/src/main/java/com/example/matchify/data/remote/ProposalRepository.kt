@@ -44,8 +44,10 @@ class ProposalRepository(
         return ProposalDtoMapper.toDomain(dto)
     }
     
-    suspend fun updateProposalStatus(id: String, status: String): Proposal {
-        val request = UpdateProposalStatusRequest(status = status)
+    suspend fun updateProposalStatus(id: String, status: String, rejectionReason: String? = null): Proposal {
+        val request = UpdateProposalStatusRequest(status = status, rejectionReason = rejectionReason)
+        android.util.Log.d("ProposalRepository", "Updating status: id=$id, status=$status, reason=$rejectionReason")
+        android.util.Log.d("ProposalRepository", "Request body: $request")
         val dto = apiService.proposalApi.updateProposalStatus(id, request)
         return ProposalDtoMapper.toDomain(dto)
     }
@@ -108,6 +110,76 @@ class ProposalRepository(
         val aiRepository = com.example.matchify.data.remote.AiRepository(apiService.aiApi)
         val response = aiRepository.generateProposal(missionId)
         return response.proposalContent
+    }
+    
+    /**
+     * Générer une proposition avec AI en streaming temps réel
+     * @param missionId ID de la mission
+     * @return Flow de chunks de texte
+     */
+    fun generateProposalWithAIStream(missionId: String): kotlinx.coroutines.flow.Flow<String> = kotlinx.coroutines.flow.flow {
+        android.util.Log.d("ProposalRepository", "🔵 [STREAMING] Starting proposal generation for mission: $missionId")
+        
+        // Get auth token
+        val token = authPreferences.currentAccessToken.value
+        if (token.isNullOrBlank()) {
+            android.util.Log.e("ProposalRepository", "❌ [STREAMING] No auth token found")
+            return@flow
+        }
+        
+        android.util.Log.d("ProposalRepository", "✅ [STREAMING] Auth token found: ${token.take(20)}...")
+        
+        // Build SSE URL
+        val baseUrl = "http://10.0.2.2:3000"
+        val url = "$baseUrl/ai/proposals/generate/stream?missionId=$missionId"
+        android.util.Log.d("ProposalRepository", "🔵 [STREAMING] SSE URL: $url")
+        
+        // Create SSE client
+        val client = okhttp3.OkHttpClient.Builder()
+            .readTimeout(5, java.util.concurrent.TimeUnit.MINUTES)
+            .build()
+        val sseClient = com.example.matchify.data.remote.sse.SSEClient(client)
+        
+        android.util.Log.d("ProposalRepository", "🔵 [STREAMING] SSE client created, connecting...")
+        
+        var eventCount = 0
+        
+        // Connect and process events
+        sseClient.connect(url, token).collect { event ->
+            eventCount++
+            android.util.Log.d("ProposalRepository", "📨 [STREAMING] Event #$eventCount received: ${event.data.take(100)}...")
+            
+            // Parse JSON data
+            try {
+                val json = org.json.JSONObject(event.data)
+                
+                // Check for error
+                if (json.has("error") && json.getBoolean("error")) {
+                    val message = if (json.has("message")) json.getString("message") else "Unknown error"
+                    android.util.Log.e("ProposalRepository", "❌ [STREAMING] SSE Error: $message")
+                    return@collect
+                }
+                
+                // Check for done marker
+                if (json.has("done") && json.getBoolean("done")) {
+                    android.util.Log.d("ProposalRepository", "✅ [STREAMING] Stream complete (done marker received)")
+                    return@collect
+                }
+                
+                // Yield chunk
+                if (json.has("chunk")) {
+                    val chunk = json.getString("chunk")
+                    android.util.Log.d("ProposalRepository", "📝 [STREAMING] Yielding chunk: ${chunk.take(50)}...")
+                    emit(chunk)
+                } else {
+                    android.util.Log.w("ProposalRepository", "⚠️ [STREAMING] Event has no chunk field")
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("ProposalRepository", "⚠️ [STREAMING] Could not parse JSON: ${e.message}")
+            }
+        }
+        
+        android.util.Log.d("ProposalRepository", "🔵 [STREAMING] SSE loop ended, total events: $eventCount")
     }
 }
 

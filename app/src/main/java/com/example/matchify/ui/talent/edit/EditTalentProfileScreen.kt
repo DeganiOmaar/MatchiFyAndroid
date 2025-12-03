@@ -15,13 +15,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.matchify.R
-import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,42 +70,45 @@ fun EditTalentProfileScreen(
         }
     }
 
+    val darkBackground = Color(0xFF0F172A)
+    val cardBackground = Color(0xFF1E293B)
+    val whiteText = Color(0xFFFFFFFF)
+    val grayText = Color(0xFF9CA3AF)
+    val blueButton = Color(0xFF2563EB)
+
     Scaffold(
-        containerColor = Color(0xFFF5F7FA),
+        containerColor = darkBackground,
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFFF2F2F2),
+                color = darkBackground,
                 shadowElevation = 0.dp
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(40.dp)
                     ) {
-                        IconButton(
-                            onClick = onBack,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color(0xFF1A1A1A)
-                            )
-                        }
-                        Text(
-                            text = "Edit Profile",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1A1A1A)
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
                         )
                     }
+                    Text(
+                        text = "Edit Profile",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight(600),
+                        color = Color.White
+                    )
+                    // Empty box to balance the row
+                    Spacer(modifier = Modifier.size(40.dp))
                 }
             }
         }
@@ -113,73 +116,61 @@ fun EditTalentProfileScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F7FA))
+                .background(darkBackground)
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Spacer(modifier = Modifier.height(20.dp))
-
             // Avatar Section
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 20.dp),
+                    .padding(top = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Box {
-                    // Avatar image - priority: selectedImageUri > currentProfileImageUrl > default avatar
                     val currentUrl by viewModel.currentProfileImageUrl.collectAsState()
-                    
-                    when {
-                        selectedImageUri != null -> {
-                            AsyncImage(
-                                model = selectedImageUri,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(110.dp)
-                                    .clip(CircleShape)
-                                    .border(2.dp, Color.Gray.copy(alpha = 0.2f), CircleShape),
-                                contentScale = ContentScale.Crop,
-                                error = painterResource(id = R.drawable.avatar),
-                                placeholder = painterResource(id = R.drawable.avatar)
-                            )
-                        }
-                        !currentUrl.isNullOrBlank() -> {
-                            AsyncImage(
-                                model = currentUrl,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(110.dp)
-                                    .clip(CircleShape)
-                                    .border(2.dp, Color.Gray.copy(alpha = 0.2f), CircleShape),
-                                contentScale = ContentScale.Crop,
-                                error = painterResource(id = R.drawable.avatar),
-                                placeholder = painterResource(id = R.drawable.avatar)
-                            )
-                        }
-                        else -> {
-                            Image(
-                                painter = painterResource(id = R.drawable.avatar),
-                                contentDescription = "Default Avatar",
-                                modifier = Modifier
-                                    .size(110.dp)
-                                    .clip(CircleShape)
-                                    .border(2.dp, Color.Gray.copy(alpha = 0.2f), CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
+                    val modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, cardBackground, CircleShape)
+
+                    if (selectedImageUri != null) {
+                        AsyncImage(
+                            model = selectedImageUri,
+                            contentDescription = null,
+                            modifier = modifier,
+                            contentScale = ContentScale.Crop,
+                            error = painterResource(id = R.drawable.avatar),
+                            placeholder = painterResource(id = R.drawable.avatar)
+                        )
+                    } else if (!currentUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = currentUrl,
+                            contentDescription = null,
+                            modifier = modifier,
+                            contentScale = ContentScale.Crop,
+                            error = painterResource(id = R.drawable.avatar),
+                            placeholder = painterResource(id = R.drawable.avatar)
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.avatar),
+                            contentDescription = "Default Avatar",
+                            modifier = modifier,
+                            contentScale = ContentScale.Crop
+                        )
                     }
 
                     // Edit icon overlay
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .offset(x = 6.dp, y = 6.dp)
+                            .offset(x = 4.dp, y = 4.dp)
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF007AFF))
+                            .background(blueButton)
                             .clickable { imagePickerLauncher.launch("image/*") },
                         contentAlignment = Alignment.Center
                     ) {
@@ -187,176 +178,115 @@ fun EditTalentProfileScreen(
                             painter = painterResource(id = R.drawable.ic_edit),
                             contentDescription = "Change photo",
                             tint = Color.White,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Personal Info Section Header
-            Text(
-                text = "Personal Info",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1A1A1A),
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            // Full Name
-            OutlinedTextField(
-                value = viewModel.fullName.collectAsState().value,
-                onValueChange = { viewModel.fullName.value = it },
-                leadingIcon = {
-                    Icon(Icons.Filled.Person, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Full Name") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                singleLine = true,
-                shape = RoundedCornerShape(35.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
+            // Personal Info Section
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    text = "Personal Info",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight(600),
+                    color = whiteText
                 )
-            )
 
-            // Email
-            OutlinedTextField(
-                value = viewModel.email.collectAsState().value,
-                onValueChange = { viewModel.email.value = it },
-                leadingIcon = {
-                    Icon(Icons.Filled.Email, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Email") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
+                DarkTextField(
+                    value = viewModel.fullName.collectAsState().value,
+                    onValueChange = { viewModel.fullName.value = it },
+                    placeholder = "Full Name",
+                    leadingIcon = Icons.Filled.Person
+                )
+
+                DarkTextField(
+                    value = viewModel.email.collectAsState().value,
+                    onValueChange = { viewModel.email.value = it },
+                    placeholder = "Email",
+                    leadingIcon = Icons.Filled.Email,
                     keyboardType = KeyboardType.Email
-                ),
-                shape = RoundedCornerShape(35.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
                 )
-            )
 
-            // Phone
-            OutlinedTextField(
-                value = viewModel.phone.collectAsState().value,
-                onValueChange = { viewModel.phone.value = it },
-                leadingIcon = {
-                    Icon(Icons.Filled.Phone, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Phone") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
+                DarkTextField(
+                    value = viewModel.phone.collectAsState().value,
+                    onValueChange = { viewModel.phone.value = it },
+                    placeholder = "Phone",
+                    leadingIcon = Icons.Filled.Phone,
                     keyboardType = KeyboardType.Phone
-                ),
-                shape = RoundedCornerShape(35.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
                 )
-            )
 
-            // Location
-            OutlinedTextField(
-                value = viewModel.location.collectAsState().value,
-                onValueChange = { viewModel.location.value = it },
-                leadingIcon = {
-                    Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Location") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                singleLine = true,
-                shape = RoundedCornerShape(35.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
-                )
-            )
-
-            // Talents Section
-            Text(
-                text = "Talents",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1A1A1A),
-                modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = talentInput,
-                    onValueChange = { viewModel.talentInput.value = it },
-                    placeholder = { Text("Add talent (e.g. Developer, Photographer)") },
-                    modifier = Modifier.weight(1f),
-                    trailingIcon = {
-                        IconButton(
-                            onClick = { viewModel.addTalent() },
-                            enabled = talentInput.isNotEmpty()
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Add,
-                                contentDescription = "Add",
-                                tint = if (talentInput.isNotEmpty()) Color(0xFF007AFF) else Color.Gray
-                            )
-                        }
-                    },
-                    shape = RoundedCornerShape(35.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFCCCCCC),
-                        unfocusedBorderColor = Color(0xFFDDDDDD)
-                    )
+                DarkTextField(
+                    value = viewModel.location.collectAsState().value,
+                    onValueChange = { viewModel.location.value = it },
+                    placeholder = "Location",
+                    leadingIcon = Icons.Filled.LocationOn
                 )
             }
 
-            if (talents.isNotEmpty()) {
-                LazyRow(
+            // Talents Section
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Talents",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight(600),
+                    color = whiteText
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(top = 8.dp)
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    items(talents) { talent ->
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = Color.Gray.copy(alpha = 0.15f)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(
-                                    horizontal = 12.dp,
-                                    vertical = 8.dp
-                                ),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                    DarkTextField(
+                        value = talentInput,
+                        onValueChange = { viewModel.talentInput.value = it },
+                        placeholder = "Add talent (e.g. Developer)",
+                        modifier = Modifier.weight(1f),
+                        trailingIcon = {
+                            IconButton(
+                                onClick = { viewModel.addTalent() },
+                                enabled = talentInput.isNotEmpty()
                             ) {
-                                Text(
-                                    text = talent,
-                                    fontSize = 14.sp,
-                                    color = Color(0xFF1A1A1A)
+                                Icon(
+                                    imageVector = Icons.Rounded.Add,
+                                    contentDescription = "Add",
+                                    tint = if (talentInput.isNotEmpty()) blueButton else grayText
                                 )
-                                IconButton(
-                                    onClick = { viewModel.removeTalent(talent) },
-                                    modifier = Modifier.size(20.dp)
+                            }
+                        }
+                    )
+                }
+
+                if (talents.isNotEmpty()) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(talents) { talent ->
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = cardBackground
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(
+                                        horizontal = 12.dp,
+                                        vertical = 8.dp
+                                    ),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    Text(
+                                        text = talent,
+                                        fontSize = 14.sp,
+                                        color = whiteText
+                                    )
                                     Icon(
                                         imageVector = Icons.Rounded.Close,
                                         contentDescription = "Remove",
-                                        tint = Color.Red,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .clickable { viewModel.removeTalent(talent) },
+                                        tint = grayText
                                     )
                                 }
                             }
@@ -365,122 +295,116 @@ fun EditTalentProfileScreen(
                 }
             }
 
-            // Description
-            OutlinedTextField(
-                value = viewModel.description.collectAsState().value,
-                onValueChange = { viewModel.description.value = it },
-                leadingIcon = {
-                    Icon(Icons.Rounded.Description, contentDescription = null, tint = Color.Gray)
-                },
-                placeholder = { Text("Description") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 120.dp),
-                maxLines = 6,
-                minLines = 3,
-                shape = RoundedCornerShape(20.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
+            // Description Section
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Description",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight(600),
+                    color = whiteText
                 )
-            )
 
-            // Skills Section
-            Text(
-                text = "Skills",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1A1A1A),
-                modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = skillInput,
-                    onValueChange = { viewModel.skillInput.value = it },
-                    placeholder = { Text("Add skill") },
-                    modifier = Modifier.weight(1f),
-                    trailingIcon = {
-                        IconButton(
-                            onClick = { viewModel.addSkill() },
-                            enabled = skillInput.isNotEmpty()
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Add,
-                                contentDescription = "Add",
-                                tint = if (skillInput.isNotEmpty()) Color(0xFF007AFF) else Color.Gray
-                            )
-                        }
-                    },
-                    shape = RoundedCornerShape(35.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFCCCCCC),
-                        unfocusedBorderColor = Color(0xFFDDDDDD)
-                    )
+                DarkTextField(
+                    value = viewModel.description.collectAsState().value,
+                    onValueChange = { viewModel.description.value = it },
+                    placeholder = "Write something about yourself...",
+                    leadingIcon = Icons.Rounded.Description,
+                    singleLine = false,
+                    minLines = 4,
+                    maxLines = 8
                 )
             }
 
-            if (skills.isNotEmpty()) {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // Skills Section
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Skills",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight(600),
+                    color = whiteText
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    items(skills) { skill ->
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = Color.Gray.copy(alpha = 0.15f)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(
-                                    horizontal = 12.dp,
-                                    vertical = 8.dp
-                                ),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                    DarkTextField(
+                        value = skillInput,
+                        onValueChange = { viewModel.skillInput.value = it },
+                        placeholder = "Add skill",
+                        modifier = Modifier.weight(1f),
+                        trailingIcon = {
+                            IconButton(
+                                onClick = { viewModel.addSkill() },
+                                enabled = skillInput.isNotEmpty()
                             ) {
-                                Text(
-                                    text = skill,
-                                    fontSize = 14.sp,
-                                    color = Color.Black
-                                )
                                 Icon(
-                                    imageVector = Icons.Rounded.Close,
-                                    contentDescription = "Remove",
-                                    modifier = Modifier
-                                        .size(16.dp)
-                                        .clickable { viewModel.removeSkill(skill) },
-                                    tint = Color.Gray
+                                    imageVector = Icons.Rounded.Add,
+                                    contentDescription = "Add",
+                                    tint = if (skillInput.isNotEmpty()) blueButton else grayText
                                 )
+                            }
+                        }
+                    )
+                }
+
+                if (skills.isNotEmpty()) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(skills) { skill ->
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = cardBackground
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(
+                                        horizontal = 12.dp,
+                                        vertical = 8.dp
+                                    ),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = skill,
+                                        fontSize = 14.sp,
+                                        color = whiteText
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Rounded.Close,
+                                        contentDescription = "Remove",
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .clickable { viewModel.removeSkill(skill) },
+                                        tint = grayText
+                                    )
+                                }
                             }
                         }
                     }
                 }
+                
+                if (skills.size >= 10) {
+                    Text(
+                        text = "Maximum 10 skills reached",
+                        fontSize = 12.sp,
+                        color = Color(0xFFF59E0B) // Amber/Orange
+                    )
+                }
             }
-
-            if (skills.size >= 10) {
-                Text(
-                    text = "Maximum 10 skills reached",
-                    fontSize = 12.sp,
-                    color = Color(0xFFFF9500)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
 
             // Error message
             error?.let {
                 Text(
                     text = it,
-                    color = Color.Red,
-                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                    color = Color(0xFFEF4444), // Red
+                    fontSize = 14.sp,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Save Button
             Button(
@@ -488,23 +412,25 @@ fun EditTalentProfileScreen(
                 enabled = !isSaving,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(55.dp),
-                shape = RoundedCornerShape(30.dp),
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF007AFF),
-                    disabledContainerColor = Color(0xFFBAD7FF)
+                    containerColor = blueButton,
+                    disabledContainerColor = blueButton.copy(alpha = 0.5f)
                 )
             ) {
                 if (isSaving) {
                     CircularProgressIndicator(
-                        color = Color(0xFFF2F2F2),
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp),
                         strokeWidth = 2.dp
                     )
                 } else {
                     Text(
                         text = "Save Changes",
-                        color = Color(0xFFF2F2F2),
-                        fontWeight = FontWeight.SemiBold
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight(600),
+                        color = Color.White
                     )
                 }
             }
@@ -514,3 +440,51 @@ fun EditTalentProfileScreen(
     }
 }
 
+@Composable
+fun DarkTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    leadingIcon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    maxLines: Int = 1,
+    keyboardType: KeyboardType = KeyboardType.Text
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.fillMaxWidth(),
+        placeholder = { 
+            Text(
+                text = placeholder, 
+                color = Color(0xFF9CA3AF)
+            ) 
+        },
+        leadingIcon = leadingIcon?.let {
+            { Icon(it, contentDescription = null, tint = Color(0xFF9CA3AF)) }
+        },
+        trailingIcon = trailingIcon,
+        singleLine = singleLine,
+        minLines = minLines,
+        maxLines = maxLines,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = Color(0xFF1E293B),
+            unfocusedContainerColor = Color(0xFF1E293B),
+            disabledContainerColor = Color(0xFF1E293B),
+            focusedBorderColor = Color(0xFF3B82F6),
+            unfocusedBorderColor = Color(0xFF334155),
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White,
+            cursorColor = Color(0xFF3B82F6)
+        ),
+        textStyle = androidx.compose.ui.text.TextStyle(
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Normal
+        )
+    )
+}

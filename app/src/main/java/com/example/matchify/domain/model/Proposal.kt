@@ -18,6 +18,11 @@ enum class ProposalStatus(val value: String, val displayName: String) {
     REFUSED("REFUSED", "Refused")
 }
 
+data class TalentInfo(
+    @SerializedName("fullName") val fullName: String? = null,
+    @SerializedName("email") val email: String? = null
+)
+
 data class Proposal(
     @SerializedName("_id") val id: String? = null,
     val id_alt: String? = null,
@@ -29,9 +34,13 @@ data class Proposal(
     @SerializedName("recruiterName") val recruiterName: String? = null,
     @SerializedName("status") val status: ProposalStatus,
     @SerializedName("message") val message: String,
+    @SerializedName("proposalContent") val proposalContent: String? = null,
     @SerializedName("proposedBudget") val proposedBudget: Int? = null,
     @SerializedName("estimatedDuration") val estimatedDuration: String? = null,
     @SerializedName("archived") val archived: Boolean? = null,
+    @SerializedName("rejectionReason") val rejectionReason: String? = null,
+    @SerializedName("talent") val talent: TalentInfo? = null,
+    @SerializedName("aiScore") val aiScore: Int? = null,
     @SerializedName("createdAt") val createdAt: String? = null,
     @SerializedName("updatedAt") val updatedAt: String? = null
 ) {
@@ -54,5 +63,22 @@ data class Proposal(
     
     val isArchived: Boolean
         get() = archived ?: false
+
+    val talentFullName: String
+        get() {
+            // First check nested talent object for fullName (most reliable)
+            if (!talent?.fullName.isNullOrEmpty() && talent?.fullName?.contains("@") == false) {
+                return talent?.fullName!!
+            }
+            // Then check talentName, but only if it doesn't look like an email
+            if (!talentName.isNullOrEmpty()) {
+                // If it contains @, it's an email, so ignore it completely (return "Talent")
+                if (talentName.contains("@")) {
+                    return "Talent"
+                }
+                return talentName
+            }
+            return "Talent"
+        }
 }
 

@@ -4,28 +4,28 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.rounded.ChevronLeft
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.ui.platform.LocalContext
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,10 +35,14 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.matchify.R
 import com.example.matchify.domain.model.Project
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
+import android.net.Uri
 
 /**
- * Talent Profile Screen avec Material Design 3
- * Implémente toutes les spécifications M3 pour le profil talent
+ * Nouveau Talent Profile Screen - Design from scratch basé sur la capture d'écran
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +52,8 @@ fun TalentProfileScreen(
     onSettings: () -> Unit,
     onProjectClick: (Project) -> Unit = {},
     onAddProject: () -> Unit = {},
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onAnalyzeProfile: () -> Unit = {}
 ) {
     val user by viewModel.user.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -57,8 +62,6 @@ fun TalentProfileScreen(
     val skillNames by viewModel.skillNames.collectAsState()
     
     var showMenuSheet by remember { mutableStateOf(false) }
-    var isBioExpanded by remember { mutableStateOf(false) }
-    var showCvPreview by remember { mutableStateOf(false) }
     
     val context = LocalContext.current
     val isUploadingCV by viewModel.isUploadingCV.collectAsState()
@@ -83,168 +86,85 @@ fun TalentProfileScreen(
         viewModel.loadSkillNames()
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface,
-        topBar = {
-            // M3 Top App Bar (Center-Aligned)
-            M3TopAppBar(
-                onBack = onBack,
-                onMoreClick = { showMenuSheet = true }
-            )
-        }
-    ) { paddingValues ->
-        LazyColumn(
+    // Couleurs du thème sombre
+    val darkBackground = Color(0xFF0F172A)
+    val cardBackground = Color(0xFF1E293B)
+    val skillChipBackground = Color(0xFF3B82F6)
+    val whiteText = Color(0xFFFFFFFF)
+    val grayText = Color(0xFF9CA3AF)
+    val lightGrayText = Color(0xFFE5E7EB)
+    val greenText = Color(0xFF22C55E)
+    val blueButton = Color(0xFF2563EB)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(darkBackground)
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            // Error message
-            if (errorMessage != null) {
-                item {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        color = MaterialTheme.colorScheme.errorContainer,
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Text(
-                            text = errorMessage ?: "",
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-            }
+            // Header
+            ProfileHeader(
+                onBack = onBack,
+                onMoreClick = { showMenuSheet = true },
+                backgroundColor = darkBackground
+            )
 
-            // Top spacing for App Bar (8dp)
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
+            // Profile Avatar Section
+            ProfileAvatarSection(
+                imageUrl = user?.profileImageUrl,
+                name = user?.fullName ?: "Talent Name",
+                email = user?.email ?: "",
+                talent = user?.talent?.joinToString(", ") ?: ""
+            )
 
-            // Profile Avatar (centré, grandes dimensions)
-            item {
-                ProfileAvatar(
-                    imageUrl = user?.profileImageUrl,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 40.dp, bottom = 12.dp) // M3 spacing: 32-48dp top, 8-16dp bottom
-                )
-            }
-
-            // User Name (centré)
-            item {
-                Text(
-                    text = user?.fullName ?: "Talent Name",
-                    style = MaterialTheme.typography.headlineSmall, // Headline Small ou Title Medium M3
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface, // onBackground / onSurface (adaptatif)
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 32.dp) // Spacing avant About Me
-                )
-            }
-
-            // About Me Section
+            // Bio Section
             if (!user?.description.isNullOrBlank()) {
-                item {
-                    AboutMeSection(
-                        description = user?.description ?: "",
-                        isExpanded = isBioExpanded,
-                        onExpandedChange = { isBioExpanded = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(bottom = 32.dp) // Spacing avant Skills
-                    )
-                }
+                BioSection(
+                    bio = user?.description ?: ""
+                )
             }
 
-            // Skills Section (using skill names instead of IDs)
+            // Skills Section
             if (skillNames.isNotEmpty()) {
-                item {
-                    SkillsSection(
-                        skills = skillNames,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(bottom = 24.dp) // Spacing avant Portfolio
-                    )
-                }
+                SkillsSection(
+                    skills = skillNames
+                )
             }
 
             // Portfolio Section
-            item {
-                PortfolioSection(
-                    projects = projects,
-                    isLoading = isLoadingProjects,
-                    onProjectTap = { project ->
-                        onProjectClick(project)
-                    },
-                    onAddProject = {
-                        onAddProject()
-                    },
-                    showAddButton = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
-            }
-            
-            // CV Section (only if CV exists)
+            PortfolioSection(
+                projects = projects,
+                isLoading = isLoadingProjects,
+                onProjectClick = onProjectClick
+            )
+
+            // CV File Section
             user?.cvUrl?.let { cvUrl ->
                 if (cvUrl.isNotBlank()) {
-                    item {
-                        CvSection(
-                            cvUrl = cvUrl,
-                            onCvClick = {
-                                // Ouvrir le CV dans un navigateur ou viewer
-                                val cvUrlFull = user?.cvUrlURL ?: return@CvSection
-                                try {
-                                    val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(cvUrlFull))
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    android.util.Log.e("TalentProfileScreen", "Error opening CV: ${e.message}", e)
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .padding(bottom = 24.dp)
-                        )
-                    }
+                    CvFileSection(
+                        cvFileName = extractFileNameFromUrl(cvUrl) ?: "AdebayoAdekunle_CV.pdf",
+                        onCvClick = {
+                            val cvUrlFull = user?.cvUrlURL ?: return@CvFileSection
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(cvUrlFull))
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                android.util.Log.e("TalentProfileScreen", "Error opening CV: ${e.message}", e)
+                            }
+                        }
+                    )
                 }
             }
-            
-            // AI Profile Insights Section
-            item {
-                AIProfileInsightsView(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 24.dp)
-                )
-            }
 
-            // Bottom spacing
-            item {
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-        }
-        
-        // CV Upload Error Alert
-        cvUploadError?.let { error ->
-            LaunchedEffect(error) {
-                // L'erreur sera affichée dans errorMessage qui est déjà géré
-            }
+            // Analyze Profile Button
+            AnalyzeProfileButton(
+                onClick = onAnalyzeProfile,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp)
+            )
         }
         
         // CV Upload Loading Overlay
@@ -252,7 +172,7 @@ fun TalentProfileScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)),
+                    .background(Color.Black.copy(alpha = 0.6f)),
                 contentAlignment = Alignment.Center
             ) {
                 Card(
@@ -283,7 +203,7 @@ fun TalentProfileScreen(
             onDismissRequest = { showMenuSheet = false },
             sheetState = sheetState,
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = Color(0xFF1E293B),
             dragHandle = {
                 Box(
                     modifier = Modifier
@@ -306,7 +226,6 @@ fun TalentProfileScreen(
                 },
                 onAttachCV = {
                     showMenuSheet = false
-                    // Ouvrir le sélecteur de fichier
                     filePickerLauncher.launch("application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document")
                 }
             )
@@ -315,33 +234,27 @@ fun TalentProfileScreen(
 }
 
 /**
- * M3 Top App Bar (Center-Aligned)
- * - Titre centré "Profile"
- * - Bouton retour à gauche
- * - Bouton "More" à droite
- * - Élévation 0 (flat)
+ * Header avec back arrow, titre centré et menu icon
  */
 @Composable
-private fun M3TopAppBar(
+private fun ProfileHeader(
     onBack: () -> Unit,
-    onMoreClick: () -> Unit
+    onMoreClick: () -> Unit,
+    backgroundColor: Color
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface, // Surface color adaptatif
-        shadowElevation = 0.dp, // Élévation 0 (flat)
-        tonalElevation = 0.dp
+        color = backgroundColor
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(vertical = 12.dp)
-                .padding(top = 8.dp), // Safe area top padding
+                .height(56.dp)
+                .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Back Navigation Icon (gauche)
+            // Back arrow
             IconButton(
                 onClick = onBack,
                 modifier = Modifier.size(40.dp)
@@ -349,24 +262,20 @@ private fun M3TopAppBar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onSurface
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Centered Title
+            // Centered title
             Text(
                 text = "Profile",
-                style = MaterialTheme.typography.titleLarge, // Title Large M3
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                fontSize = 18.sp,
+                fontWeight = FontWeight(600),
+                color = Color.White
             )
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            // More actions button (droite)
+            // More menu icon
             IconButton(
                 onClick = onMoreClick,
                 modifier = Modifier.size(40.dp)
@@ -374,112 +283,404 @@ private fun M3TopAppBar(
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = "More",
-                    tint = MaterialTheme.colorScheme.onSurface
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Profile Avatar Section avec image circulaire, nom, email et talent
+ */
+@Composable
+private fun ProfileAvatarSection(
+    imageUrl: String?,
+    name: String,
+    email: String,
+    talent: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Avatar circulaire 120dp
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+        ) {
+            if (imageUrl != null && imageUrl.isNotBlank()) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    error = painterResource(id = R.drawable.avatar),
+                    placeholder = painterResource(id = R.drawable.avatar)
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = R.drawable.avatar),
+                    contentDescription = "Default Avatar",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
             }
         }
 
-        // Ligne de séparation subtile
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f),
-            thickness = 1.dp
+        // Name
+        Text(
+            text = name,
+            fontSize = 24.sp,
+            fontWeight = FontWeight(700),
+            color = Color.White,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 16.dp)
         )
-    }
-}
 
-/**
- * Profile Avatar (circulaire, centré, grandes dimensions)
- * M3: 120dp x 120dp, forme circulaire, sans bordure
- */
-@Composable
-private fun ProfileAvatar(
-    imageUrl: String?,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
-        if (imageUrl != null && imageUrl.isNotBlank()) {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(120.dp) // Large circular avatar
-                    .clip(CircleShape), // Material shape system - full circle
-                contentScale = ContentScale.Crop,
-                error = painterResource(id = R.drawable.avatar),
-                placeholder = painterResource(id = R.drawable.avatar)
-            )
-        } else {
-            Image(
-                painter = painterResource(id = R.drawable.avatar),
-                contentDescription = "Default Avatar",
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
+        // Email
+        Text(
+            text = email,
+            fontSize = 14.sp,
+            fontWeight = FontWeight(400),
+            color = Color(0xFF9CA3AF),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+
+        // Talent
+        if (talent.isNotBlank()) {
+            Text(
+                text = "Talent : $talent",
+                fontSize = 14.sp,
+                fontWeight = FontWeight(400),
+                color = Color(0xFF9CA3AF),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
     }
 }
 
 /**
- * About Me Section
- * M3: Title Medium pour le titre, Body Medium pour le texte
- * Support "Read More" avec troncature personnalisée
+ * Bio Section
  */
 @Composable
-private fun AboutMeSection(
-    description: String,
-    isExpanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+private fun BioSection(
+    bio: String
 ) {
-    val maxChars = 200
-    val shouldTruncate = !isExpanded && description.length > maxChars
-    val displayText = if (shouldTruncate) {
-        description.take(maxChars) + "..."
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(top = 32.dp)
+    ) {
+        // Section title
+        Text(
+            text = "Bio",
+            fontSize = 16.sp,
+            fontWeight = FontWeight(600),
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        // Bio text
+        Text(
+            text = bio,
+            fontSize = 14.sp,
+            fontWeight = FontWeight(400),
+            color = Color(0xFFE5E7EB),
+            lineHeight = 20.sp
+        )
+    }
+}
+
+/**
+ * Skills Section avec chips bleus qui wrap
+ */
+@Composable
+private fun SkillsSection(
+    skills: List<String>
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(top = 8.dp)
+    ) {
+        // Section title - grand texte blanc gras
+        Text(
+            text = "Skills",
+            fontSize = 24.sp,
+            fontWeight = FontWeight(700),
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        // Skills chips avec wrapping
+        FlowRowLayout(
+            items = skills,
+            horizontalSpacing = 8.dp,
+            verticalSpacing = 8.dp
+        ) { skill ->
+            SkillChip(skill = skill)
+        }
+    }
+}
+
+/**
+ * Layout personnalisé qui wrap les items comme FlowRow
+ */
+@Composable
+private fun FlowRowLayout(
+    items: List<String>,
+    horizontalSpacing: androidx.compose.ui.unit.Dp,
+    verticalSpacing: androidx.compose.ui.unit.Dp,
+    content: @Composable (String) -> Unit
+) {
+    BoxWithConstraints {
+        val maxWidthPx = with(LocalDensity.current) { maxWidth.toPx() }
+        val density = LocalDensity.current
+        
+        // Calculer les lignes en fonction de la largeur disponible
+        val rowsList = mutableListOf<MutableList<String>>()
+        var currentRow = mutableListOf<String>()
+        var currentRowWidth = 0f
+        
+        items.forEach { skill ->
+            // Estimation de la largeur (approximative en dp)
+            val estimatedWidthDp = (skill.length * 7 + 32).dp
+            val estimatedWidthPx = with(density) { estimatedWidthDp.toPx() }
+            
+            if (currentRowWidth + estimatedWidthPx > maxWidthPx && currentRow.isNotEmpty()) {
+                // Nouvelle ligne
+                rowsList.add(currentRow.toMutableList())
+                currentRow = mutableListOf(skill)
+                currentRowWidth = estimatedWidthPx
+            } else {
+                currentRow.add(skill)
+                currentRowWidth += estimatedWidthPx + with(density) { horizontalSpacing.toPx() }
+            }
+        }
+        
+        // Dernière ligne
+        if (currentRow.isNotEmpty()) {
+            rowsList.add(currentRow)
+        }
+        
+        Column(
+            verticalArrangement = Arrangement.spacedBy(verticalSpacing)
+        ) {
+            rowsList.forEach { row ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(horizontalSpacing)
+                ) {
+                    row.forEach { skill ->
+                        content(skill)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SkillChip(skill: String) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFF1E3A8A), // Bleu foncé
+        shadowElevation = 2.dp,
+        tonalElevation = 0.dp
+    ) {
+        Text(
+            text = skill,
+            fontSize = 14.sp,
+            fontWeight = FontWeight(500),
+            color = Color(0xFF60A5FA), // Bleu clair pour le texte
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+        )
+    }
+}
+
+/**
+ * Portfolio Section avec grille 2x2
+ */
+@Composable
+private fun PortfolioSection(
+    projects: List<Project>,
+    isLoading: Boolean,
+    onProjectClick: (Project) -> Unit
+) {
+    var currentPage by remember { mutableStateOf(0) }
+    val itemsPerPage = 4
+    val totalPages = kotlin.math.max(1, kotlin.math.ceil(projects.size.toDouble() / itemsPerPage.toDouble()).toInt())
+    
+    val startIndex = currentPage * itemsPerPage
+    val endIndex = kotlin.math.min(startIndex + itemsPerPage, projects.size)
+    val currentProjects = if (startIndex < projects.size) {
+        projects.subList(startIndex, endIndex)
     } else {
-        description
+        emptyList()
     }
 
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(top = 32.dp)
     ) {
-        // Section Title
+        // Section title - grand texte en haut à gauche
         Text(
-            text = "About Me",
-            style = MaterialTheme.typography.titleMedium, // Title Medium M3
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(bottom = 8.dp) // Bottom spacing 8-12dp
+            text = "Portfolio",
+            fontSize = 24.sp,
+            fontWeight = FontWeight(700),
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 20.dp)
         )
 
-        // Body Text avec "Read More"
-        Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = displayText,
-                style = MaterialTheme.typography.bodyMedium, // Body Medium M3
-                color = MaterialTheme.colorScheme.onSurfaceVariant, // onSurfaceVariant tone
-                lineHeight = 24.sp, // Paragraph spacing confortable
-                textAlign = TextAlign.Start // Align to start (left)
-            )
-
-            if (description.length > maxChars) {
-                TextButton(
-                    onClick = { onExpandedChange(!isExpanded) },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary
-                    )
+        if (isLoading && projects.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(400.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
+        } else if (projects.isEmpty()) {
+            // Empty state
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(400.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No portfolio items",
+                    color = Color(0xFF9CA3AF),
+                    fontSize = 14.sp
+                )
+            }
+        } else {
+            // Grille 2x2
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Première ligne (2 items)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = if (isExpanded) "Read Less" else "Read More",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
+                    // Top-left card
+                    if (currentProjects.isNotEmpty()) {
+                        PortfolioItemCard(
+                            project = currentProjects[0],
+                            onClick = { onProjectClick(currentProjects[0]) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    
+                    // Top-right card
+                    if (currentProjects.size > 1) {
+                        PortfolioItemCard(
+                            project = currentProjects[1],
+                            onClick = { onProjectClick(currentProjects[1]) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+                
+                // Deuxième ligne (2 items)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Bottom-left card
+                    if (currentProjects.size > 2) {
+                        PortfolioItemCard(
+                            project = currentProjects[2],
+                            onClick = { onProjectClick(currentProjects[2]) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    
+                    // Bottom-right card
+                    if (currentProjects.size > 3) {
+                        PortfolioItemCard(
+                            project = currentProjects[3],
+                            onClick = { onProjectClick(currentProjects[3]) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Pagination control horizontal - boutons aux extrémités
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Bouton gauche circulaire à gauche
+                IconButton(
+                    onClick = { if (currentPage > 0) currentPage-- },
+                    enabled = currentPage > 0,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            Color(0xFF1E293B),
+                            CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.ChevronLeft,
+                        contentDescription = "Previous",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                
+                // Indicateur de pagination centré
+                Text(
+                    text = "${currentPage + 1} / $totalPages",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight(400),
+                    color = Color(0xFFE5E7EB)
+                )
+                
+                // Bouton droit circulaire à droite
+                IconButton(
+                    onClick = { if (currentPage < totalPages - 1) currentPage++ },
+                    enabled = currentPage < totalPages - 1,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            Color(0xFF1E293B),
+                            CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.ChevronRight,
+                        contentDescription = "Next",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
@@ -487,62 +688,177 @@ private fun AboutMeSection(
     }
 }
 
-/**
- * Skills Section
- * M3: Title Medium pour le titre, Assist Chips pour les skills
- */
 @Composable
-private fun SkillsSection(
-    skills: List<String>,
+private fun PortfolioItemCard(
+    project: Project,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = modifier
+            .clickable(onClick = onClick)
     ) {
-        // Section Header
+        // Portfolio image avec gradient placeholder
+        val imageUrl = project.getFirstMediaUrl("http://10.0.2.2:3000")
+        
+        // Générer un gradient unique basé sur l'index du projet
+        val gradientColors = remember(project.id) {
+            generateGradientColors(project.id ?: project.title)
+        }
+        
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f),
+            shape = RoundedCornerShape(20.dp),
+            color = Color(0xFF1E293B)
+        ) {
+            Box {
+                if (imageUrl != null) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    // Gradient placeholder avec couleurs variées
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.linearGradient(
+                                    colors = gradientColors
+                                )
+                            )
+                    )
+                }
+            }
+        }
+
+        // Portfolio description en dessous
         Text(
-            text = "Skills",
-            style = MaterialTheme.typography.titleMedium, // Title Medium M3
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(bottom = 8.dp) // Bottom spacing 12dp
+            text = project.description ?: project.title,
+            fontSize = 13.sp,
+            fontWeight = FontWeight(400),
+            color = Color(0xFFE5E7EB),
+            maxLines = 2,
+            modifier = Modifier.padding(top = 12.dp),
+            lineHeight = 18.sp
+        )
+    }
+}
+
+/**
+ * Génère des couleurs de gradient uniques basées sur un identifiant
+ */
+private fun generateGradientColors(seed: String): List<Color> {
+    val hash = seed.hashCode()
+    val colors = listOf(
+        // Gradient 1: Purple to Pink
+        listOf(Color(0xFF4C1D95), Color(0xFF7C3AED), Color(0xFFEC4899)),
+        // Gradient 2: Teal to Blue
+        listOf(Color(0xFF0F766E), Color(0xFF14B8A6), Color(0xFF64748B)),
+        // Gradient 3: Purple to Cyan
+        listOf(Color(0xFF5B21B6), Color(0xFF6366F1), Color(0xFF06B6D4)),
+        // Gradient 4: Orange to Cream
+        listOf(Color(0xFFEA580C), Color(0xFFF97316), Color(0xFFFEF3C7))
+    )
+    return colors[kotlin.math.abs(hash) % colors.size]
+}
+
+/**
+ * CV File Section
+ */
+@Composable
+private fun CvFileSection(
+    cvFileName: String,
+    onCvClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(top = 32.dp)
+    ) {
+        // Section title
+        Text(
+            text = "CV File",
+            fontSize = 16.sp,
+            fontWeight = FontWeight(600),
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        // Skills Chips (M3 Assist Chips) - Horizontal wrapping layout
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp), // 8-12dp between chips
-            contentPadding = PaddingValues(0.dp)
+        // File container
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onCvClick),
+            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFF1E293B)
         ) {
-            items(skills) { skill ->
-                SkillChip(skill = skill)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Description,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = cvFileName,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight(500),
+                        color = Color(0xFFE5E7EB),
+                        maxLines = 1
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Default.Visibility,
+                    contentDescription = "Preview CV",
+                    tint = Color(0xFF9CA3AF),
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }
 }
 
 /**
- * Skill Chip (M3 Assist Chip)
- * - Pas d'icône (label seulement)
- * - Forme arrondie (M3 default)
- * - Surface container high color
- * - Élévation subtile (1-2dp)
+ * Analyze Profile Button
  */
 @Composable
-private fun SkillChip(skill: String) {
-    Surface(
-        shape = RoundedCornerShape(20.dp), // Rounded shape M3 default
-        color = MaterialTheme.colorScheme.surfaceContainerHigh, // Surface container high
-        tonalElevation = 1.dp, // Subtle elevation 1-2dp
-        shadowElevation = 1.dp
+private fun AnalyzeProfileButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFF2563EB)
+        )
     ) {
         Text(
-            text = skill,
-            style = MaterialTheme.typography.bodyMedium, // Body Medium
-            color = MaterialTheme.colorScheme.onSurface, // onSurface text
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 10.dp) // Horizontal and vertical padding
+            text = "Analyze Profile",
+            fontSize = 16.sp,
+            fontWeight = FontWeight(600),
+            color = Color.White
         )
     }
 }
@@ -564,31 +880,28 @@ private fun MenuBottomSheetContent(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         MenuItem(
-            icon = Icons.Rounded.Edit,
+            icon = Icons.Default.Description,
             title = "Edit Profile",
             onClick = onEditProfile,
-            iconColor = MaterialTheme.colorScheme.primary
+            iconColor = Color.White
         )
         
         MenuItem(
             icon = Icons.Default.Description,
             title = "Attach your CV",
             onClick = onAttachCV,
-            iconColor = MaterialTheme.colorScheme.primary
+            iconColor = Color.White
         )
 
         MenuItem(
-            icon = Icons.Rounded.Settings,
+            icon = Icons.Default.MoreVert,
             title = "Settings",
             onClick = onSettings,
-            iconColor = MaterialTheme.colorScheme.secondary
+            iconColor = Color(0xFF9CA3AF)
         )
     }
 }
 
-/**
- * Menu Item
- */
 @Composable
 private fun MenuItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -601,7 +914,7 @@ private fun MenuItem(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surface
+        color = Color(0xFF1E293B) // Same as sheet background or slightly lighter? Let's keep it transparent or same
     ) {
         Row(
             modifier = Modifier
@@ -619,10 +932,23 @@ private fun MenuItem(
 
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = Color.White
             )
         }
     }
 }
+
+/**
+ * Helper function to extract filename from URL
+ */
+private fun extractFileNameFromUrl(url: String): String? {
+    return try {
+        val uri = Uri.parse(url)
+        uri.lastPathSegment ?: "CV.pdf"
+    } catch (e: Exception) {
+        null
+    }
+}
+

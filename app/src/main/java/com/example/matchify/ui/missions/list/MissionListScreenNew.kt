@@ -37,7 +37,7 @@ import com.example.matchify.R
 import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.domain.model.Mission
 import com.example.matchify.ui.missions.components.MissionCardNew
-import com.example.matchify.ui.missions.components.NavigationDrawerContent
+import com.example.matchify.ui.missions.components.NewDrawerContent
 import com.example.matchify.ui.missions.components.DrawerMenuItemType
 import kotlinx.coroutines.launch
 
@@ -142,7 +142,7 @@ fun MissionListScreenNew(
     }
     
     // Navigation Drawer wraps the entire Scaffold
-    NavigationDrawerContent(
+    NewDrawerContent(
         drawerState = drawerState,
         currentRoute = currentRoute,
         onClose = {

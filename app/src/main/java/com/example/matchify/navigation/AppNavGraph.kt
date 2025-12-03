@@ -38,6 +38,7 @@ import com.example.matchify.ui.recruiter.edit.EditRecruiterProfileViewModelFacto
 import com.example.matchify.ui.talent.profile.TalentProfileScreen
 import com.example.matchify.ui.talent.profile.TalentProfileViewModel
 import com.example.matchify.ui.talent.profile.TalentProfileViewModelFactory
+import com.example.matchify.ui.talent.profile.AIProfileAnalysisScreen
 import com.example.matchify.ui.talent.edit.EditTalentProfileScreen
 import com.example.matchify.ui.talent.edit.EditTalentProfileViewModel
 import com.example.matchify.ui.talent.edit.EditTalentProfileViewModelFactory
@@ -215,7 +216,8 @@ fun AppNavGraph(
                 viewModel = vm,
                 onEditProfile = { navController.navigate("edit_talent_profile") },
                 onSettings = { navController.navigate("settings") },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onAnalyzeProfile = { navController.navigate("ai_profile_analysis") }
             )
         }
 
@@ -287,6 +289,13 @@ fun AppNavGraph(
                     profileViewModel.refreshProfile()
                     navController.popBackStack()
                 }
+            )
+        }
+
+        // AI PROFILE ANALYSIS
+        composable("ai_profile_analysis") {
+            AIProfileAnalysisScreen(
+                onBack = { navController.popBackStack() }
             )
         }
 

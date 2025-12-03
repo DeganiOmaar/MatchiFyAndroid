@@ -80,7 +80,7 @@ fun MissionRow(
             
             // Description - matching alerts message style exactly
             Text(
-                text = mission.description,
+                text = mission.description ?: "",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
@@ -94,7 +94,7 @@ fun MissionRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = mission.duration,
+                        text = mission.duration ?: "",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                 )

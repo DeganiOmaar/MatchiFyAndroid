@@ -2,18 +2,22 @@ package com.example.matchify.ui.contracts
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -21,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.graphics.BitmapFactory
 import android.util.Base64
@@ -43,53 +48,76 @@ fun ContractDetailScreen(
         viewModel.loadContract()
     }
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Contract Details") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0F172A))
+    ) {
+        // Custom Header
+        DetailHeader(onBack = onBack)
+
+        Box(modifier = Modifier.weight(1f)) {
+            when {
+                isLoading && contract == null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFF3B82F6))
                     }
                 }
-            )
-        }
-    ) { paddingValues ->
-        when {
-            isLoading && contract == null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = androidx.compose.ui.Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+                errorMessage != null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = errorMessage ?: "Une erreur est survenue",
+                            color = Color(0xFFEF4444)
+                        )
+                    }
                 }
-            }
-            errorMessage != null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = androidx.compose.ui.Alignment.Center
-                ) {
-                    Text(
-                        text = errorMessage ?: "Une erreur est survenue",
-                        color = MaterialTheme.colorScheme.error
+                contract != null -> {
+                    ContractDetailContent(
+                        contract = contract!!,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(16.dp)
                     )
                 }
             }
-            contract != null -> {
-                ContractDetailContent(
-                    contract = contract!!,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp, vertical = 16.dp)
-                )
-            }
         }
+    }
+}
+
+@Composable
+private fun DetailHeader(onBack: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .background(Color(0xFF1E293B))
+            .padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = onBack) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = Color(0xFF3B82F6),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        
+        Spacer(modifier = Modifier.width(8.dp))
+        
+        Text(
+            text = "Contract Details",
+            color = Color.White,
+            fontSize = 18.sp,
+            fontWeight = FontWeight(600)
+        )
     }
 }
 
@@ -100,119 +128,120 @@ private fun ContractDetailContent(
 ) {
     val context = LocalContext.current
     
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(24.dp)) {
-        // Title Section
-        Section(title = "Title") {
-            Text(
-                text = contract.title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(20.dp)) {
         
-        // Content Section
-        Section(title = "Content") {
-            Text(
-                text = contract.content,
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
+        // Status Badge
+        StatusBadge(status = contract.status)
         
-        // Payment Details Section
+        // Title Field
+        DarkReadOnlyField(
+            label = "Contract Title",
+            value = contract.title
+        )
+        
+        // Content Field
+        DarkReadOnlyField(
+            label = "Contract Terms",
+            value = contract.content,
+            singleLine = false
+        )
+        
+        // Payment Details
         if (!contract.paymentDetails.isNullOrEmpty()) {
-            Section(title = "Payment Details") {
-                Text(
-                    text = contract.paymentDetails!!,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
+            DarkReadOnlyField(
+                label = "Payment Details",
+                value = contract.paymentDetails!!
+            )
         }
         
-        // Dates Section
-        if (contract.startDate != null) {
-            Section(title = "Start Date") {
-                Text(
-                    text = formatDate(contract.startDate!!),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+        // Dates Row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            if (contract.startDate != null) {
+                Box(modifier = Modifier.weight(1f)) {
+                    DarkReadOnlyField(
+                        label = "Start Date",
+                        value = formatDate(contract.startDate!!)
+                    )
+                }
             }
-        }
-        
-        if (contract.endDate != null) {
-            Section(title = "End Date") {
-                Text(
-                    text = formatDate(contract.endDate!!),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+            
+            if (contract.endDate != null) {
+                Box(modifier = Modifier.weight(1f)) {
+                    DarkReadOnlyField(
+                        label = "End Date",
+                        value = formatDate(contract.endDate!!)
+                    )
+                }
             }
-        }
-        
-        // Status Section
-        Section(title = "Status") {
-            StatusBadge(status = contract.status)
         }
         
         // Signatures Section
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "Signatures",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight(600),
+                modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
             )
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFF1E293B),
+                border = BorderStroke(1.dp, Color(0xFF374151))
             ) {
-                Text(
-                    text = "Signatures:",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                
-                // Recruiter Signature - always show if present (matching iOS)
-                if (contract.recruiterSignature.isNotEmpty()) {
-                    SignatureDisplay(
-                        label = "Recruiter:",
-                        signature = contract.recruiterSignature
-                    )
-                }
-                
-                // Talent Signature - matching iOS logic exactly
-                if (contract.status == Contract.ContractStatus.SIGNED_BY_BOTH &&
-                    !contract.talentSignature.isNullOrEmpty()) {
-                    SignatureDisplay(
-                        label = "Talent:",
-                        signature = contract.talentSignature!!
-                    )
-                } else if (contract.status != Contract.ContractStatus.SIGNED_BY_BOTH) {
-                    // Show placeholder if contract not yet signed by talent - matching iOS exactly
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            text = "Talent:",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Recruiter Signature
+                    if (contract.recruiterSignature.isNotEmpty()) {
+                        SignatureDisplay(
+                            label = "Recruiter:",
+                            signature = contract.recruiterSignature
                         )
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(80.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color.Gray.copy(alpha = 0.1f)
+                    }
+                    
+                    // Talent Signature
+                    if (contract.status == Contract.ContractStatus.SIGNED_BY_BOTH &&
+                        !contract.talentSignature.isNullOrEmpty()) {
+                        SignatureDisplay(
+                            label = "Talent:",
+                            signature = contract.talentSignature!!
+                        )
+                    } else if (contract.status != Contract.ContractStatus.SIGNED_BY_BOTH) {
+                        // Pending signature placeholder
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = "Talent:",
+                                color = Color(0xFF9CA3AF),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight(500)
                             )
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = androidx.compose.ui.Alignment.CenterStart
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(80.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFF0F172A),
+                                border = BorderStroke(1.dp, Color(0xFF374151))
                             ) {
-                                Text(
-                                    text = "Pending signature",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                                    modifier = Modifier.padding(horizontal = 16.dp)
-                                )
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    Text(
+                                        text = "Pending signature",
+                                        color = Color(0xFF64748B),
+                                        fontSize = 14.sp,
+                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -220,10 +249,9 @@ private fun ContractDetailContent(
             }
         }
         
-        // PDF Link - matching iOS behavior exactly
+        // PDF Link
         val pdfUrl = contract.signedPdfUrl ?: contract.pdfUrl
         if (pdfUrl != null) {
-            // Build full URL - matching iOS logic
             val fullUrl = if (pdfUrl.startsWith("http")) {
                 pdfUrl
             } else {
@@ -232,53 +260,79 @@ private fun ContractDetailContent(
             
             Button(
                 onClick = {
-                    // Open PDF in browser/viewer - matching iOS Link behavior
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(fullUrl))
                     context.startActivity(intent)
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                )
+                    containerColor = Color(0xFF3B82F6).copy(alpha = 0.1f)
+                ),
+                shape = RoundedCornerShape(24.dp)
             ) {
                 Text(
-                    "View PDF",
-                    color = MaterialTheme.colorScheme.primary,
+                    "View PDF Document",
+                    color = Color(0xFF3B82F6),
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }
         }
+        
+        Spacer(modifier = Modifier.height(20.dp))
     }
 }
 
 @Composable
-private fun Section(title: String, content: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+private fun DarkReadOnlyField(
+    label: String,
+    value: String,
+    singleLine: Boolean = true
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = title,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = label,
+            color = Color(0xFF9CA3AF),
+            fontSize = 14.sp,
+            fontWeight = FontWeight(500),
+            modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
         )
-        content()
+        
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFF1E293B),
+            border = BorderStroke(1.dp, Color(0xFF374151))
+        ) {
+            Text(
+                text = value,
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight(400),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                maxLines = if (singleLine) 1 else Int.MAX_VALUE
+            )
+        }
     }
 }
 
 @Composable
 private fun StatusBadge(status: Contract.ContractStatus) {
     val (text, color) = when (status) {
-        Contract.ContractStatus.SENT_TO_TALENT -> "Envoyé au talent" to Color(0xFFFF9800)
-        Contract.ContractStatus.DECLINED_BY_TALENT -> "Refusé" to Color(0xFFF44336)
-        Contract.ContractStatus.SIGNED_BY_BOTH -> "Signé par les deux parties" to Color(0xFF4CAF50)
+        Contract.ContractStatus.SENT_TO_TALENT -> "Sent to Talent" to Color(0xFFFF9800)
+        Contract.ContractStatus.DECLINED_BY_TALENT -> "Declined" to Color(0xFFEF4444)
+        Contract.ContractStatus.SIGNED_BY_BOTH -> "Signed by Both Parties" to Color(0xFF10B981)
     }
     
     Surface(
         color = color.copy(alpha = 0.15f),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.3f))
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyMedium,
+            fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             color = color,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
@@ -294,19 +348,18 @@ private fun SignatureDisplay(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = Color(0xFF9CA3AF),
+            fontSize = 14.sp,
+            fontWeight = FontWeight(500)
         )
-        // Display signature image from base64 - matching iOS imageFromBase64 behavior
+        
         val signatureBitmap = decodeBase64ToBitmap(signature)
-        Card(
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(80.dp),
             shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.Gray.copy(alpha = 0.1f)
-            )
+            color = Color.White // White background for signature visibility
         ) {
             if (signatureBitmap != null) {
                 Image(
@@ -318,12 +371,12 @@ private fun SignatureDisplay(
             } else {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = androidx.compose.ui.Alignment.Center
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "Invalid signature",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color.Gray,
+                        fontSize = 12.sp
                     )
                 }
             }
@@ -331,13 +384,8 @@ private fun SignatureDisplay(
     }
 }
 
-/**
- * Decode base64 string to Bitmap - matching iOS imageFromBase64 function
- * Removes data URL prefix if present (e.g., "data:image/png;base64,")
- */
 private fun decodeBase64ToBitmap(base64String: String): android.graphics.Bitmap? {
     return try {
-        // Remove data URL prefix if present - matching iOS regex behavior
         val base64 = base64String.replace(
             Regex("data:image/[^;]+;base64,"),
             ""

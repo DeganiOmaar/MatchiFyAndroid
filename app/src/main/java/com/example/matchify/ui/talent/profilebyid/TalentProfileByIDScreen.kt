@@ -1,30 +1,41 @@
 package com.example.matchify.ui.talent.profilebyid
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.rounded.ChevronLeft
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.matchify.ui.talent.profile.PortfolioSection
+import com.example.matchify.R
+import com.example.matchify.domain.model.Project
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TalentProfileByIDScreen(
     talentId: String,
@@ -35,255 +46,354 @@ fun TalentProfileByIDScreen(
 ) {
     val user by viewModel.user.collectAsState()
     val portfolio by viewModel.portfolio.collectAsState()
+    val skillNames by viewModel.skillNames.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    
+    val context = LocalContext.current
     
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
     }
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Talent Profile",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+    // Couleurs du thème sombre (identiques à TalentProfileScreen)
+    val darkBackground = Color(0xFF0F172A)
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(darkBackground)
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center),
+                color = Color(0xFF3B82F6)
             )
+        } else if (errorMessage != null) {
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Error loading profile",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFFEF4444)
+                )
+                Text(
+                    text = errorMessage ?: "Unknown error",
+                    fontSize = 14.sp,
+                    color = Color(0xFF9CA3AF)
+                )
+                Button(onClick = { viewModel.loadProfile() }) {
+                    Text("Retry")
+                }
+            }
+        } else if (user != null) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Header
+                ProfileHeader(
+                    onBack = onBack,
+                    backgroundColor = darkBackground
+                )
+
+                // Profile Avatar Section
+                ProfileAvatarSection(
+                    imageUrl = user?.profileImageUrl,
+                    name = user?.fullName ?: "Talent Name",
+                    email = user?.email ?: "",
+                    talent = user?.talent?.joinToString(", ") ?: ""
+                )
+
+                // Bio Section
+                if (!user?.description.isNullOrBlank()) {
+                    BioSection(
+                        bio = user?.description ?: ""
+                    )
+                }
+
+                // Skills Section
+                if (skillNames.isNotEmpty()) {
+                    SkillsSection(
+                        skills = skillNames
+                    )
+                }
+
+                // Portfolio Section
+                PortfolioSection(
+                    projects = portfolio,
+                    isLoading = false,
+                    onProjectClick = { /* Read only for now or implement detail view */ }
+                )
+
+                // CV File Section
+                user?.cvUrl?.let { cvUrl ->
+                    if (cvUrl.isNotBlank()) {
+                        CvFileSection(
+                            cvFileName = extractFileNameFromUrl(cvUrl) ?: "CV.pdf",
+                            onCvClick = {
+                                val cvUrlFull = user?.cvUrlURL ?: return@CvFileSection
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(cvUrlFull))
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    android.util.Log.e("TalentProfileByID", "Error opening CV: ${e.message}", e)
+                                }
+                            }
+                        )
+                    }
+                }
+                
+                // Bottom spacing
+                Spacer(modifier = Modifier.height(40.dp))
+            }
         }
-    ) { paddingValues ->
+    }
+}
+
+/**
+ * Header avec back arrow et titre centré (sans menu edit)
+ */
+@Composable
+private fun ProfileHeader(
+    onBack: () -> Unit,
+    backgroundColor: Color
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = backgroundColor
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Back arrow
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            // Centered title (using weight to center properly)
+            Text(
+                text = "Talent Profile",
+                fontSize = 18.sp,
+                fontWeight = FontWeight(600),
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f)
+            )
+
+            // Empty box to balance the layout
+            Spacer(modifier = Modifier.size(40.dp))
+        }
+    }
+}
+
+/**
+ * Profile Avatar Section avec image circulaire, nom, email et talent
+ */
+@Composable
+private fun ProfileAvatarSection(
+    imageUrl: String?,
+    name: String,
+    email: String,
+    talent: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Avatar circulaire 120dp
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
+                .size(120.dp)
+                .clip(CircleShape)
         ) {
-            when {
-                isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
-                errorMessage != null -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = "Error loading profile",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Text(
-                            text = errorMessage ?: "Unknown error",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                user == null -> {
-                    Text(
-                        text = "User not found",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                else -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .background(MaterialTheme.colorScheme.background)
-                            .padding(horizontal = 20.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        // Avatar
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .size(120.dp)
-                        ) {
-                            val imageUrl = user!!.profileImageUrl
-                            if (imageUrl != null) {
-                                AsyncImage(
-                                    model = imageUrl,
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Surface(
-                                    modifier = Modifier.fillMaxSize(),
-                                    shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.surfaceContainerHighest
-                                ) {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = user!!.fullName.firstOrNull()?.toString() ?: "?",
-                                            style = MaterialTheme.typography.headlineMedium,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                            }
-                            
-                            Surface(
-                                modifier = Modifier.fillMaxSize(),
-                                shape = CircleShape,
-                                color = androidx.compose.ui.graphics.Color.Transparent,
-                                border = androidx.compose.foundation.BorderStroke(
-                                    width = 4.dp,
-                                    color = MaterialTheme.colorScheme.surface
-                                )
-                            ) {}
-                        }
-                        
-                        // Name
-                        Text(
-                            text = user!!.fullName,
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
-                        
-                        // Location
-                        if (!user!!.location.isNullOrBlank()) {
-                            Row(
-                                modifier = Modifier.align(Alignment.CenterHorizontally),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.LocationOn,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = user!!.location!!,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                        
-                        // Talent Categories
-                        if (!user!!.talent.isNullOrEmpty()) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                androidx.compose.foundation.lazy.LazyRow(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    contentPadding = PaddingValues(horizontal = 0.dp)
-                                ) {
-                                    items(user!!.talent!!.size, key = { index -> user!!.talent!![index] }) { index ->
-                                        Surface(
-                                            shape = RoundedCornerShape(12.dp),
-                                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                                        ) {
-                                            Text(
-                                                text = user!!.talent!![index],
-                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // Description
-                        if (!user!!.description.isNullOrBlank()) {
-                            Surface(
-                                shape = RoundedCornerShape(20.dp),
-                                color = MaterialTheme.colorScheme.surface,
-                                shadowElevation = 4.dp
-                            ) {
-                                Text(
-                                    text = user!!.description!!,
-                                    modifier = Modifier.padding(16.dp),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
-                            }
-                        }
-                        
-                        // Skills Card
-                        if (!user!!.skills.isNullOrEmpty()) {
-                            Surface(
-                                shape = RoundedCornerShape(20.dp),
-                                color = MaterialTheme.colorScheme.surface,
-                                shadowElevation = 4.dp,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(20.dp),
-                                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                                ) {
-                                    Text(
-                                        text = "Skills",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    
-                                    androidx.compose.foundation.lazy.LazyRow(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        contentPadding = PaddingValues(horizontal = 0.dp)
-                                    ) {
-                                        items(user!!.skills!!.size, key = { index -> user!!.skills!![index] }) { index ->
-                                            Surface(
-                                                shape = RoundedCornerShape(16.dp),
-                                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                                            ) {
-                                                Text(
-                                                    text = user!!.skills!![index],
-                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    color = MaterialTheme.colorScheme.primary,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // Portfolio Section (Read-only)
-                        if (portfolio.isNotEmpty()) {
-                            PortfolioSection(
-                                projects = portfolio,
-                                isLoading = false,
-                                onProjectTap = { project ->
-                                    // Read-only: no action on tap for recruiters
-                                },
-                                onAddProject = {},
-                                showAddButton = false,
-                                modifier = Modifier.padding(horizontal = 0.dp)
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(20.dp))
+            if (imageUrl != null && imageUrl.isNotBlank()) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    error = painterResource(id = R.drawable.avatar),
+                    placeholder = painterResource(id = R.drawable.avatar)
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = R.drawable.avatar),
+                    contentDescription = "Default Avatar",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+
+        // Name
+        Text(
+            text = name,
+            fontSize = 24.sp,
+            fontWeight = FontWeight(700),
+            color = Color.White,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 16.dp)
+        )
+
+        // Email
+        Text(
+            text = email,
+            fontSize = 14.sp,
+            fontWeight = FontWeight(400),
+            color = Color(0xFF9CA3AF),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+
+        // Talent
+        if (talent.isNotBlank()) {
+            Text(
+                text = "Talent : $talent",
+                fontSize = 14.sp,
+                fontWeight = FontWeight(400),
+                color = Color(0xFF9CA3AF),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+    }
+}
+
+/**
+ * Bio Section
+ */
+@Composable
+private fun BioSection(
+    bio: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(top = 32.dp)
+    ) {
+        // Section title
+        Text(
+            text = "Bio",
+            fontSize = 16.sp,
+            fontWeight = FontWeight(600),
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        // Bio text
+        Text(
+            text = bio,
+            fontSize = 14.sp,
+            fontWeight = FontWeight(400),
+            color = Color(0xFFE5E7EB),
+            lineHeight = 20.sp
+        )
+    }
+}
+
+/**
+ * Skills Section avec chips bleus qui wrap
+ */
+@Composable
+private fun SkillsSection(
+    skills: List<String>
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(top = 8.dp)
+    ) {
+        // Section title - grand texte blanc gras
+        Text(
+            text = "Skills",
+            fontSize = 24.sp,
+            fontWeight = FontWeight(700),
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        // Skills chips avec wrapping
+        FlowRowLayout(
+            items = skills,
+            horizontalSpacing = 8.dp,
+            verticalSpacing = 8.dp
+        ) { skill ->
+            SkillChip(skill = skill)
+        }
+    }
+}
+
+/**
+ * Layout personnalisé qui wrap les items comme FlowRow
+ */
+@Composable
+private fun FlowRowLayout(
+    items: List<String>,
+    horizontalSpacing: androidx.compose.ui.unit.Dp,
+    verticalSpacing: androidx.compose.ui.unit.Dp,
+    content: @Composable (String) -> Unit
+) {
+    BoxWithConstraints {
+        val maxWidthPx = with(LocalDensity.current) { maxWidth.toPx() }
+        val density = LocalDensity.current
+        
+        // Calculer les lignes en fonction de la largeur disponible
+        val rowsList = mutableListOf<MutableList<String>>()
+        var currentRow = mutableListOf<String>()
+        var currentRowWidth = 0f
+        
+        items.forEach { skill ->
+            // Estimation de la largeur (approximative en dp)
+            val estimatedWidthDp = (skill.length * 7 + 32).dp
+            val estimatedWidthPx = with(density) { estimatedWidthDp.toPx() }
+            
+            if (currentRowWidth + estimatedWidthPx > maxWidthPx && currentRow.isNotEmpty()) {
+                // Nouvelle ligne
+                rowsList.add(currentRow.toMutableList())
+                currentRow = mutableListOf(skill)
+                currentRowWidth = estimatedWidthPx
+            } else {
+                currentRow.add(skill)
+                currentRowWidth += estimatedWidthPx + with(density) { horizontalSpacing.toPx() }
+            }
+        }
+        
+        // Dernière ligne
+        if (currentRow.isNotEmpty()) {
+            rowsList.add(currentRow)
+        }
+        
+        Column(
+            verticalArrangement = Arrangement.spacedBy(verticalSpacing)
+        ) {
+            rowsList.forEach { row ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(horizontalSpacing)
+                ) {
+                    row.forEach { skill ->
+                        content(skill)
                     }
                 }
             }
@@ -291,3 +401,362 @@ fun TalentProfileByIDScreen(
     }
 }
 
+@Composable
+private fun SkillChip(skill: String) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFF1E3A8A), // Bleu foncé
+        shadowElevation = 2.dp,
+        tonalElevation = 0.dp
+    ) {
+        Text(
+            text = skill,
+            fontSize = 14.sp,
+            fontWeight = FontWeight(500),
+            color = Color(0xFF60A5FA), // Bleu clair pour le texte
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+        )
+    }
+}
+
+/**
+ * Portfolio Section avec grille 2x2
+ */
+@Composable
+private fun PortfolioSection(
+    projects: List<Project>,
+    isLoading: Boolean,
+    onProjectClick: (Project) -> Unit
+) {
+    var currentPage by remember { mutableStateOf(0) }
+    val itemsPerPage = 4
+    val totalPages = kotlin.math.max(1, kotlin.math.ceil(projects.size.toDouble() / itemsPerPage.toDouble()).toInt())
+    
+    val startIndex = currentPage * itemsPerPage
+    val endIndex = kotlin.math.min(startIndex + itemsPerPage, projects.size)
+    val currentProjects = if (startIndex < projects.size) {
+        projects.subList(startIndex, endIndex)
+    } else {
+        emptyList()
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(top = 32.dp)
+    ) {
+        // Section title - grand texte en haut à gauche
+        Text(
+            text = "Portfolio",
+            fontSize = 24.sp,
+            fontWeight = FontWeight(700),
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 20.dp)
+        )
+
+        if (isLoading && projects.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(400.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
+        } else if (projects.isEmpty()) {
+            // Empty state
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(400.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No portfolio items",
+                    color = Color(0xFF9CA3AF),
+                    fontSize = 14.sp
+                )
+            }
+        } else {
+            // Grille 2x2
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Première ligne (2 items)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Top-left card
+                    if (currentProjects.isNotEmpty()) {
+                        PortfolioItemCard(
+                            project = currentProjects[0],
+                            onClick = { onProjectClick(currentProjects[0]) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    
+                    // Top-right card
+                    if (currentProjects.size > 1) {
+                        PortfolioItemCard(
+                            project = currentProjects[1],
+                            onClick = { onProjectClick(currentProjects[1]) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+                
+                // Deuxième ligne (2 items)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Bottom-left card
+                    if (currentProjects.size > 2) {
+                        PortfolioItemCard(
+                            project = currentProjects[2],
+                            onClick = { onProjectClick(currentProjects[2]) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    
+                    // Bottom-right card
+                    if (currentProjects.size > 3) {
+                        PortfolioItemCard(
+                            project = currentProjects[3],
+                            onClick = { onProjectClick(currentProjects[3]) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Pagination control horizontal - boutons aux extrémités
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Bouton gauche circulaire à gauche
+                IconButton(
+                    onClick = { if (currentPage > 0) currentPage-- },
+                    enabled = currentPage > 0,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            Color(0xFF1E293B),
+                            CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.ChevronLeft,
+                        contentDescription = "Previous",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                
+                // Indicateur de pagination centré
+                Text(
+                    text = "${currentPage + 1} / $totalPages",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight(400),
+                    color = Color(0xFFE5E7EB)
+                )
+                
+                // Bouton droit circulaire à droite
+                IconButton(
+                    onClick = { if (currentPage < totalPages - 1) currentPage++ },
+                    enabled = currentPage < totalPages - 1,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            Color(0xFF1E293B),
+                            CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.ChevronRight,
+                        contentDescription = "Next",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PortfolioItemCard(
+    project: Project,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .clickable(onClick = onClick)
+    ) {
+        // Portfolio image avec gradient placeholder
+        val imageUrl = project.getFirstMediaUrl("http://10.0.2.2:3000")
+        
+        // Générer un gradient unique basé sur l'index du projet
+        val gradientColors = remember(project.id) {
+            generateGradientColors(project.id ?: project.title)
+        }
+        
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f),
+            shape = RoundedCornerShape(20.dp),
+            color = Color(0xFF1E293B)
+        ) {
+            Box {
+                if (imageUrl != null) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    // Gradient placeholder avec couleurs variées
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.linearGradient(
+                                    colors = gradientColors
+                                )
+                            )
+                    )
+                }
+            }
+        }
+
+        // Portfolio description en dessous
+        Text(
+            text = project.description ?: project.title,
+            fontSize = 13.sp,
+            fontWeight = FontWeight(400),
+            color = Color(0xFFE5E7EB),
+            maxLines = 2,
+            modifier = Modifier.padding(top = 12.dp),
+            lineHeight = 18.sp
+        )
+    }
+}
+
+/**
+ * Génère des couleurs de gradient uniques basées sur un identifiant
+ */
+private fun generateGradientColors(seed: String): List<Color> {
+    val hash = seed.hashCode()
+    val colors = listOf(
+        // Gradient 1: Purple to Pink
+        listOf(Color(0xFF4C1D95), Color(0xFF7C3AED), Color(0xFFEC4899)),
+        // Gradient 2: Teal to Blue
+        listOf(Color(0xFF0F766E), Color(0xFF14B8A6), Color(0xFF64748B)),
+        // Gradient 3: Purple to Cyan
+        listOf(Color(0xFF5B21B6), Color(0xFF6366F1), Color(0xFF06B6D4)),
+        // Gradient 4: Orange to Cream
+        listOf(Color(0xFFEA580C), Color(0xFFF97316), Color(0xFFFEF3C7))
+    )
+    return colors[kotlin.math.abs(hash) % colors.size]
+}
+
+/**
+ * CV File Section
+ */
+@Composable
+private fun CvFileSection(
+    cvFileName: String,
+    onCvClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(top = 32.dp)
+    ) {
+        // Section title
+        Text(
+            text = "CV File",
+            fontSize = 16.sp,
+            fontWeight = FontWeight(600),
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        // File container
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onCvClick),
+            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFF1E293B)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Description,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = cvFileName,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight(500),
+                        color = Color(0xFFE5E7EB),
+                        maxLines = 1
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Default.Visibility,
+                    contentDescription = "Preview CV",
+                    tint = Color(0xFF9CA3AF),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Helper function to extract filename from URL
+ */
+private fun extractFileNameFromUrl(url: String): String? {
+    return try {
+        val uri = Uri.parse(url)
+        uri.lastPathSegment ?: "CV.pdf"
+    } catch (e: Exception) {
+        null
+    }
+}

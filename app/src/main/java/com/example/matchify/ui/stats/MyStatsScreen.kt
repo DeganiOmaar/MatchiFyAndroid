@@ -1,6 +1,7 @@
 package com.example.matchify.ui.stats
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,19 +13,21 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.matchify.domain.model.Stats
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,30 +38,20 @@ fun MyStatsScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val selectedTimeframe by viewModel.selectedTimeframe.collectAsState()
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "My stats",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
-        ) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0F172A))
+    ) {
+        // Custom Header
+        StatsHeader()
+
+        Box(modifier = Modifier.weight(1f)) {
             if (isLoading && stats == null) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = Color(0xFF3B82F6)
+                )
             } else {
                 Column(
                     modifier = Modifier
@@ -72,7 +65,7 @@ fun MyStatsScreen(
                         formattedEarnings = viewModel.formattedEarnings
                     )
                     
-                    Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                    HorizontalDivider(color = Color(0xFF374151))
                     
                     // Job Success Score Section
                     JobSuccessScoreSection(
@@ -80,7 +73,7 @@ fun MyStatsScreen(
                         hasScore = viewModel.hasJobSuccessScore
                     )
                     
-                    Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                    HorizontalDivider(color = Color(0xFF374151))
                     
                     // Proposals Section
                     ProposalsSection(
@@ -96,6 +89,25 @@ fun MyStatsScreen(
 }
 
 @Composable
+private fun StatsHeader() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .background(Color(0xFF1E293B))
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "My stats",
+            color = Color.White,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
 private fun OverviewSection(
     formattedEarnings: String
 ) {
@@ -103,39 +115,50 @@ private fun OverviewSection(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Text(
-            text = "My stats",
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            text = "Overview",
+            color = Color.White,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
         )
         
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 text = "View proposal history, earnings, profile analytics, and your Job Success Score.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
+                color = Color.White,
+                fontSize = 16.sp
             )
             
             Text(
                 text = "Stats are not updated in real-time and may take up to 24 hours to reflect recent activity.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color(0xFF9CA3AF),
+                fontSize = 12.sp
             )
         }
         
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = "12-month earnings",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            Text(
-                text = formattedEarnings,
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFF1E293B),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF374151))
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "12-month earnings",
+                    color = Color(0xFF9CA3AF),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                
+                Text(
+                    text = formattedEarnings,
+                    color = Color.White,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -154,9 +177,9 @@ private fun JobSuccessScoreSection(
         ) {
             Text(
                 text = "Job Success Score",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold
             )
             
             IconButton(
@@ -167,15 +190,15 @@ private fun JobSuccessScoreSection(
                     imageVector = Icons.Default.Info,
                     contentDescription = "Info",
                     modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = Color(0xFF9CA3AF)
                 )
             }
         }
         
         Text(
             text = "Leverage Job Success insights to help you learn how to earn or regain a score.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = Color(0xFF9CA3AF),
+            fontSize = 14.sp
         )
         
         // Score Circle
@@ -194,16 +217,16 @@ private fun JobSuccessScoreSection(
                     CircularProgressIndicator(
                         progress = { if (hasScore && scoreText != "–") scoreText.toIntOrNull()?.div(100f) ?: 0f else 0f },
                         modifier = Modifier.size(120.dp),
-                        strokeWidth = 3.dp,
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        strokeWidth = 8.dp,
+                        color = Color(0xFF3B82F6), // Blue
+                        trackColor = Color(0xFF1E293B)
                     )
                     
                     Text(
                         text = scoreText,
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color.White,
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
                 
@@ -212,17 +235,19 @@ private fun JobSuccessScoreSection(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "No score",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = if (hasScore) "Current Score" else "No score yet",
+                        color = Color(0xFF9CA3AF),
+                        fontSize = 12.sp
                     )
                     
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        modifier = Modifier.size(12.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (!hasScore) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = Color(0xFF9CA3AF)
+                        )
+                    }
                 }
             }
         }
@@ -231,7 +256,7 @@ private fun JobSuccessScoreSection(
 
 @Composable
 private fun ProposalsSection(
-    stats: com.example.matchify.domain.model.Stats?,
+    stats: Stats?,
     selectedTimeframe: StatsTimeframe,
     onTimeframeSelected: (StatsTimeframe) -> Unit,
     proposalsSentText: String
@@ -247,11 +272,12 @@ private fun ProposalsSection(
         )
     )
     
-    fun calculateBarHeight(value: Int, maxValue: Int): androidx.compose.ui.unit.Dp {
+    fun calculateBarHeight(value: Int, maxValue: Int): Dp {
         if (maxValue == 0) return 4.dp
         val ratio = value.toFloat() / maxValue.toFloat()
         return maxOf(4.dp, (ratio * 80).dp)
     }
+    
     Column(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
@@ -263,28 +289,23 @@ private fun ProposalsSection(
         ) {
             Text(
                 text = "Proposals",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold
             )
             
-            // Dropdown Selector with Material 3 style
-            var showDropdown by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+            // Dropdown Selector
+            var showDropdown by remember { mutableStateOf(false) }
             
             Box {
-                TextButton(
+                Surface(
                     onClick = { showDropdown = !showDropdown },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    ),
+                    color = Color(0xFF1E293B),
                     shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .background(
-                            MaterialTheme.colorScheme.surfaceVariant,
-                            RoundedCornerShape(8.dp)
-                        )
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF374151))
                 ) {
                     Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
@@ -295,14 +316,14 @@ private fun ProposalsSection(
                                 StatsTimeframe.LAST_90_DAYS -> "Last 90 days"
                                 StatsTimeframe.LAST_12_MONTHS -> "Last 12 months"
                             },
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = Color.White,
+                            fontSize = 14.sp
                         )
                         
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = Color(0xFF9CA3AF),
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -312,10 +333,8 @@ private fun ProposalsSection(
                     expanded = showDropdown,
                     onDismissRequest = { showDropdown = false },
                     modifier = Modifier
-                        .background(
-                            MaterialTheme.colorScheme.surface,
-                            RoundedCornerShape(12.dp)
-                        )
+                        .background(Color(0xFF1E293B))
+                        .border(androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF374151)), RoundedCornerShape(4.dp))
                 ) {
                     StatsTimeframe.entries.forEach { timeframe ->
                         val isSelected = timeframe == selectedTimeframe
@@ -333,16 +352,16 @@ private fun ProposalsSection(
                                             StatsTimeframe.LAST_90_DAYS -> "Last 90 days"
                                             StatsTimeframe.LAST_12_MONTHS -> "Last 12 months"
                                         },
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = if (isSelected) Color(0xFF3B82F6) else Color.White,
+                                        fontSize = 14.sp
                                     )
                                     
                                     if (isSelected) {
                                         Icon(
                                             imageVector = Icons.Default.Check,
                                             contentDescription = "Selected",
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(20.dp)
+                                            tint = Color(0xFF3B82F6),
+                                            modifier = Modifier.size(16.dp)
                                         )
                                     }
                                 }
@@ -350,7 +369,12 @@ private fun ProposalsSection(
                             onClick = {
                                 onTimeframeSelected(timeframe)
                                 showDropdown = false
-                            }
+                            },
+                            colors = MenuDefaults.itemColors(
+                                textColor = Color.White,
+                                leadingIconColor = Color.White,
+                                trailingIconColor = Color.White
+                            )
                         )
                     }
                 }
@@ -360,9 +384,9 @@ private fun ProposalsSection(
         // Proposals Count
         Text(
             text = proposalsSentText,
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = Color.White,
+            fontSize = 32.sp,
+            fontWeight = FontWeight.Bold
         )
         
         // Graph and Stats Row
@@ -389,7 +413,7 @@ private fun ProposalsSection(
                                 .width(20.dp)
                                 .height(80.dp)
                                 .background(
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                    Color(0xFF1E293B),
                                     RoundedCornerShape(4.dp)
                                 ),
                             contentAlignment = Alignment.BottomCenter
@@ -418,7 +442,7 @@ private fun ProposalsSection(
                                 .width(20.dp)
                                 .height(80.dp)
                                 .background(
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                    Color(0xFF1E293B),
                                     RoundedCornerShape(4.dp)
                                 ),
                             contentAlignment = Alignment.BottomCenter
@@ -431,7 +455,7 @@ private fun ProposalsSection(
                                         maxValue = maxProposalValue
                                     ))
                                     .background(
-                                        Color(0xFF33B84D), // Accepted color (green)
+                                        Color(0xFF10B981), // Accepted color (green)
                                         RoundedCornerShape(4.dp)
                                     )
                             )
@@ -447,7 +471,7 @@ private fun ProposalsSection(
                                 .width(20.dp)
                                 .height(80.dp)
                                 .background(
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                    Color(0xFF1E293B),
                                     RoundedCornerShape(4.dp)
                                 ),
                             contentAlignment = Alignment.BottomCenter
@@ -460,7 +484,7 @@ private fun ProposalsSection(
                                         maxValue = maxProposalValue
                                     ))
                                     .background(
-                                        Color(0xFFE64A4A), // Refused color (red)
+                                        Color(0xFFEF4444), // Refused color (red)
                                         RoundedCornerShape(4.dp)
                                     )
                             )
@@ -485,8 +509,8 @@ private fun ProposalsSection(
                     )
                     Text(
                         text = "${stats?.proposalsSent ?: 0} proposals sent",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = Color.White,
+                        fontSize = 14.sp
                     )
                 }
                 
@@ -497,12 +521,12 @@ private fun ProposalsSection(
                     Box(
                         modifier = Modifier
                             .size(12.dp)
-                            .background(Color(0xFF33B84D), RoundedCornerShape(2.dp))
+                            .background(Color(0xFF10B981), RoundedCornerShape(2.dp))
                     )
                     Text(
                         text = "${stats?.proposalsAccepted ?: 0} proposals accepted",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = Color.White,
+                        fontSize = 14.sp
                     )
                 }
                 
@@ -513,12 +537,12 @@ private fun ProposalsSection(
                     Box(
                         modifier = Modifier
                             .size(12.dp)
-                            .background(Color(0xFFE64A4A), RoundedCornerShape(2.dp))
+                            .background(Color(0xFFEF4444), RoundedCornerShape(2.dp))
                     )
                     Text(
                         text = "${stats?.proposalsRefused ?: 0} proposals refused",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = Color.White,
+                        fontSize = 14.sp
                     )
                 }
             }

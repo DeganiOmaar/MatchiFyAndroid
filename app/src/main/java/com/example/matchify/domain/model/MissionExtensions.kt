@@ -55,3 +55,31 @@ val Mission.timePostedText: String
         }
     }
 
+/**
+ * Extension function to format "Posted X days ago" for mission details screen
+ */
+val Mission.postedDaysAgoText: String
+    get() {
+        if (createdAt == null) return "Posted recently"
+        
+        return try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+            inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+            val date = inputFormat.parse(createdAt)
+            
+            if (date == null) return "Posted recently"
+            
+            val now = Date()
+            val timeInterval = now.time - date.time
+            val days = (timeInterval / (1000 * 60 * 60 * 24)).toInt()
+            
+            when {
+                days == 0 -> "Posted today"
+                days == 1 -> "Posted yesterday"
+                else -> "Posted $days days ago"
+            }
+        } catch (e: Exception) {
+            "Posted recently"
+        }
+    }
+

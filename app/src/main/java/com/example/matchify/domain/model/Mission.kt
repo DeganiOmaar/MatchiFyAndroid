@@ -6,19 +6,22 @@ import java.util.*
 data class Mission(
     val id: String? = null,
     val _id: String? = null,
-    val title: String,
-    val description: String,
-    val duration: String,
-    val budget: Int,
-    val skills: List<String>,
-    val recruiterId: String,
+    val title: String = "",
+    val description: String? = null,
+    val duration: String? = null,
+    val budget: Int? = null,
+    val skills: List<String>? = null,
+    val recruiterId: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null,
     val proposalsCount: Int? = null,
     val interviewingCount: Int? = null,
+    val unviewedCount: Int? = null,
     val hasApplied: Boolean? = null,
     val isFavorite: Boolean? = null,
-    val status: String? = null
+    val status: String? = null,
+    val matchScore: Int? = null,
+    val reasoning: String? = null
 ) {
     val missionId: String
         get() = id ?: _id ?: ""
@@ -40,7 +43,7 @@ data class Mission(
     val formattedBudget: String
         get() {
             // Format matching screenshot: "€500", "€1200", "€350" (no spaces, euro symbol first)
-            return "€$budget"
+            return budget?.let { "€$it" } ?: "€0"
         }
     
     val proposals: Int

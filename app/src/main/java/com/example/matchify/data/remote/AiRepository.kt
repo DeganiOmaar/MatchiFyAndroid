@@ -28,8 +28,8 @@ class AiRepository(
     /**
      * Obtenir l'analyse de compatibilité mission-profil
      */
-    suspend fun getMissionFit(missionId: String): MissionFitResponseDto = withContext(Dispatchers.IO) {
-        api.getMissionFit(missionId)
+    suspend fun analyzeMissionFit(missionId: String): MissionFitResponseDto = withContext(Dispatchers.IO) {
+        api.analyzeMissionFit(missionId)
     }
     
     /**

@@ -2,13 +2,12 @@ package com.example.matchify.ui.alerts
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,10 +16,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.matchify.R
@@ -30,7 +33,6 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlertsScreen(
     onAlertClick: (String) -> Unit = {},
@@ -45,32 +47,64 @@ fun AlertsScreen(
         viewModel.loadAlerts()
     }
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Alerts") },
-                actions = {
-                    if (alerts.isNotEmpty() && unreadCount > 0) {
-                        TextButton(onClick = { viewModel.markAllAsRead() }) {
-                            Text("Mark All Read")
-                        }
+    // Dark theme colors - matching Proposals and Messages screens
+    val darkBackground = Color(0xFF0F172A) // Same as Proposals and Messages
+    val cardBackground = Color(0xFF111827) // Slightly lighter for cards
+    val textPrimary = Color(0xFFFFFFFF)
+    val textSecondary = Color(0xFFB4B4B4)
+    val blueDot = Color(0xFF4A90E2)
+    val redDot = Color(0xFFE74C3C)
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(darkBackground)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Header - matching Messages and Proposals style
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, top = 16.dp, end = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Title - same font size and weight as Messages and Proposals
+                Text(
+                    text = "Alerts",
+                    fontSize = 22.sp, // Same as Messages
+                    fontWeight = FontWeight(700), // Same as Messages
+                    color = textPrimary
+                )
+                
+                // Right-aligned button
+                if (unreadCount > 0) {
+                    TextButton(
+                        onClick = { viewModel.markAllAsRead() },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color(0xFF4A90E2)
+                        )
+                    ) {
+                        Text(
+                            text = "Mark all as read",
+                            fontSize = 14.sp
+                        )
                     }
                 }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
+            }
+            
+            // Content
             when {
                 isLoading && alerts.isEmpty() -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(
+                            color = Color(0xFF4A90E2)
+                        )
                     }
                 }
                 errorMessage != null -> {
@@ -80,12 +114,21 @@ fun AlertsScreen(
                     ) {
                         Text(
                             text = errorMessage ?: "Une erreur est survenue",
-                            color = MaterialTheme.colorScheme.error
+                            color = Color(0xFFE74C3C)
                         )
                     }
                 }
                 alerts.isEmpty() -> {
-                    EmptyAlertsView()
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No alerts",
+                            color = textSecondary,
+                            fontSize = 16.sp
+                        )
+                    }
                 }
                 else -> {
                     LazyColumn(
@@ -94,8 +137,14 @@ fun AlertsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(alerts) { alert ->
-                            AlertRow(
+                            AlertCard(
                                 alert = alert,
+                                darkBackground = darkBackground,
+                                cardBackground = cardBackground,
+                                textPrimary = textPrimary,
+                                textSecondary = textSecondary,
+                                blueDot = blueDot,
+                                redDot = redDot,
                                 onClick = {
                                     viewModel.markAsRead(alert.id)
                                     onAlertClick(alert.proposalId)
@@ -109,173 +158,154 @@ fun AlertsScreen(
     }
 }
 
-@Composable
-private fun EmptyAlertsView() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Notifications,
-                contentDescription = null,
-                modifier = Modifier.size(60.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-            Text(
-                text = "No Alerts",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = "You're all caught up!",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun AlertRow(
+private fun AlertCard(
     alert: Alert,
+    darkBackground: Color,
+    cardBackground: Color,
+    textPrimary: Color,
+    textSecondary: Color,
+    blueDot: Color,
+    redDot: Color,
     onClick: () -> Unit
 ) {
+    val isAccepted = alert.type == Alert.AlertType.PROPOSAL_ACCEPTED
+    val isRejected = alert.type == Alert.AlertType.PROPOSAL_REFUSED
+    val isUnread = !alert.isRead
+    
+    // Determine dot color based on alert type
+    val dotColor = when {
+        isAccepted -> blueDot
+        isRejected -> redDot
+        else -> blueDot
+    }
+    
+    // Determine icon background color based on alert type
+    val iconBackgroundColor = when {
+        isAccepted -> Color(0xFF2D5A3D) // Dark green (like in screenshot)
+        isRejected -> Color(0xFFF5F5DC) // Beige/light yellow (like in screenshot)
+        else -> Color(0xFFE8E8D0) // Light beige for other types
+    }
+    
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (alert.isRead) {
-                MaterialTheme.colorScheme.surface
-            } else {
-                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
-            }
-        ),
-        border = if (!alert.isRead) {
-            androidx.compose.foundation.BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-            )
-        } else null
+            containerColor = cardBackground
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Profile Image
-            ProfileImage(
-                imageUrl = alert.profileImageUrl,
-                modifier = Modifier.size(50.dp),
-                isUnread = !alert.isRead
-            )
+            // Unread dot indicator - positioned to the left of icon
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .align(Alignment.CenterVertically)
+            ) {
+                if (isUnread) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
+                            .background(dotColor)
+                    )
+                }
+            }
+            
+            // Recruiter icon
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(iconBackgroundColor),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!alert.recruiterProfileImage.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = alert.recruiterProfileImage,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                        error = painterResource(id = R.drawable.avatar),
+                        placeholder = painterResource(id = R.drawable.avatar)
+                    )
+                } else {
+                    // Use avatar.png as placeholder when no recruiter image
+                    Image(
+                        painter = painterResource(id = R.drawable.avatar),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
             
             // Content
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = alert.title,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = if (alert.isRead) FontWeight.Normal else FontWeight.SemiBold,
-                        maxLines = 2
-                    )
-                    
-                    if (!alert.isRead) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = CircleShape,
-                            modifier = Modifier.size(8.dp)
-                        ) {}
-                    }
-                }
+                // Title
+                Text(
+                    text = alert.title,
+                    color = textPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
                 
+                // Description
                 Text(
                     text = alert.message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = textSecondary,
+                    fontSize = 14.sp,
                     maxLines = 2
                 )
-                
-                Text(
-                    text = formatDate(alert.createdAt),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
             }
+            
+            // Timestamp - aligned to right
+            Text(
+                text = formatTimestamp(alert.createdAt),
+                color = textSecondary,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 8.dp)
+            )
         }
     }
 }
 
-@Composable
-private fun ProfileImage(
-    imageUrl: String?,
-    modifier: Modifier = Modifier,
-    isUnread: Boolean = false
-) {
-    Box(
-        modifier = modifier
-            .clip(CircleShape)
-            .then(
-                if (isUnread) {
-                    Modifier.border(
-                        2.dp,
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                        CircleShape
-                    )
-                } else {
-                    Modifier
-                }
-            )
-    ) {
-        AsyncImage(
-            model = imageUrl ?: "",
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop,
-            error = painterResource(id = R.drawable.avatar),
-            placeholder = painterResource(id = R.drawable.avatar)
-        )
-    }
-}
-
 @RequiresApi(Build.VERSION_CODES.O)
-private fun formatDate(dateString: String?): String {
+private fun formatTimestamp(dateString: String?): String {
     if (dateString == null) return ""
     
     return try {
         val formatter = DateTimeFormatter.ISO_DATE_TIME
         val date = Instant.from(formatter.parse(dateString))
         val now = Instant.now()
-        val diff = ChronoUnit.MINUTES.between(date, now)
+        val diffMinutes = ChronoUnit.MINUTES.between(date, now)
         
         when {
-            diff < 1 -> "Just now"
-            diff < 60 -> "${diff}m ago"
-            diff < 1440 -> {
-                val hours = diff / 60
+            diffMinutes < 1 -> "Just now"
+            diffMinutes < 60 -> "${diffMinutes}m ago"
+            diffMinutes < 1440 -> {
+                val hours = diffMinutes / 60
                 "${hours}h ago"
             }
-            diff < 10080 -> {
-                val days = diff / 1440
-                if (days == 1L) "Yesterday" else "$days days ago"
-            }
+            diffMinutes < 2880 -> "Yesterday"
             else -> {
                 val dateTime = date.atZone(java.time.ZoneId.systemDefault())
-                DateTimeFormatter.ofPattern("MMM d, yyyy").format(dateTime)
+                DateTimeFormatter.ofPattern("MM/dd/yy").format(dateTime)
             }
         }
     } catch (e: Exception) {

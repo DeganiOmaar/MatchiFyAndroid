@@ -35,10 +35,10 @@ class MissionEditViewModel(
                             _currentMission.value = event.mission
                             // Update form fields
                             title.value = event.mission.title
-                            description.value = event.mission.description
-                            duration.value = event.mission.duration
-                            budget.value = event.mission.budget.toString()
-                            skills.value = event.mission.skills
+                            description.value = event.mission.description ?: ""
+                            duration.value = event.mission.duration ?: ""
+                            budget.value = (event.mission.budget ?: 0).toString()
+                            skills.value = event.mission.skills ?: emptyList()
                         }
                     }
                     is MissionRealtimeEvent.MissionDeleted -> {
@@ -54,11 +54,11 @@ class MissionEditViewModel(
     }
 
     val title = MutableStateFlow(mission.title)
-    val description = MutableStateFlow(mission.description)
-    val duration = MutableStateFlow(mission.duration)
-    val budget = MutableStateFlow(mission.budget.toString())
+    val description = MutableStateFlow(mission.description ?: "")
+    val duration = MutableStateFlow(mission.duration ?: "")
+    val budget = MutableStateFlow((mission.budget ?: 0).toString())
     val skillInput = MutableStateFlow("")
-    val skills = MutableStateFlow(mission.skills)
+    val skills = MutableStateFlow(mission.skills ?: emptyList())
 
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving

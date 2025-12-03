@@ -35,6 +35,9 @@ class ProposalDetailsViewModel(
     private val _isUpdatingStatus = MutableStateFlow(false)
     val isUpdatingStatus: StateFlow<Boolean> = _isUpdatingStatus.asStateFlow()
     
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    
     val isRecruiter: Boolean
         get() {
             val prefs = AuthPreferencesProvider.getInstance().get()
@@ -92,22 +95,27 @@ class ProposalDetailsViewModel(
         updateStatus(ProposalStatus.ACCEPTED.name)
     }
     
-    fun refuseProposal() {
-        updateStatus(ProposalStatus.REFUSED.name)
+    fun refuseProposal(reason: String) {
+        updateStatus(ProposalStatus.REFUSED.name, reason)
     }
     
-    private fun updateStatus(status: String) {
+    private fun updateStatus(status: String, rejectionReason: String? = null) {
         viewModelScope.launch {
             _isUpdatingStatus.value = true
+            _errorMessage.value = null
             try {
-                val updatedProposal = proposalRepository.updateProposalStatus(proposalId, status)
+                android.util.Log.d("ProposalDetailsVM", "Updating proposal status to: $status, reason: $rejectionReason")
+                val updatedProposal = proposalRepository.updateProposalStatus(proposalId, status, rejectionReason)
                 _proposal.value = updatedProposal
+                android.util.Log.d("ProposalDetailsVM", "Proposal updated successfully: ${updatedProposal.status}")
                 
                 // If accepted, create conversation
                 if (status == ProposalStatus.ACCEPTED.name) {
                     loadConversation()
                 }
             } catch (e: Exception) {
+                android.util.Log.e("ProposalDetailsVM", "Error updating proposal status", e)
+                _errorMessage.value = "Failed to update proposal: ${e.message}"
                 e.printStackTrace()
             } finally {
                 _isUpdatingStatus.value = false

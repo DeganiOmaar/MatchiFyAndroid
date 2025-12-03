@@ -35,6 +35,7 @@ import com.example.matchify.ui.recruiter.edit.EditRecruiterProfileViewModelFacto
 import com.example.matchify.ui.talent.profile.TalentProfileScreen
 import com.example.matchify.ui.talent.profile.TalentProfileViewModel
 import com.example.matchify.ui.talent.profile.TalentProfileViewModelFactory
+import com.example.matchify.ui.talent.profile.AIProfileAnalysisScreen
 import com.example.matchify.ui.talent.edit.EditTalentProfileScreen
 import com.example.matchify.ui.talent.edit.EditTalentProfileViewModel
 import com.example.matchify.ui.talent.edit.EditTalentProfileViewModelFactory
@@ -137,10 +138,7 @@ fun MainScreen(
                                 }
                             }
                             DrawerMenuItemType.SETTINGS -> {
-                                navController.navigate("settings") {
-                                    popUpTo("missions_list") { saveState = true }
-                                    launchSingleTop = true
-                                }
+                                onOpenSettings()
                             }
                             DrawerMenuItemType.THEME -> {
                                 navController.navigate("theme") {
@@ -270,6 +268,9 @@ fun MainScreen(
                     },
                     onAddProject = {
                         navController.navigate("add_project")
+                    },
+                    onAnalyzeProfile = {
+                        navController.navigate("ai_profile_analysis")
                     }
                 )
             }
@@ -318,6 +319,12 @@ fun MainScreen(
                         profileViewModel.refreshProfile()
                         navController.popBackStack()
                     }
+                )
+            }
+            
+            composable("ai_profile_analysis") {
+                AIProfileAnalysisScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
             
@@ -452,22 +459,8 @@ fun MainScreen(
                 MyStatsScreen(viewModel = statsViewModel)
             }
             
-            composable("settings") {
-                val context = LocalContext.current
-                val settingsViewModel: com.example.matchify.ui.settings.SettingsViewModel = viewModel(
-                    factory = com.example.matchify.ui.settings.SettingsViewModelFactory(AuthPreferencesProvider.getInstance().get())
-                )
-                com.example.matchify.ui.settings.SettingsScreen(
-                    viewModel = settingsViewModel,
-                    onBack = { navController.popBackStack() },
-                    onLogoutSuccess = {
-                        navController.navigate("login") {
-                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    }
-                )
-            }
+            // Settings is now handled by the parent AppNavGraph
+            // composable("settings") { ... } removed to avoid nesting issues
             
             composable("add_project") {
                 val context = androidx.compose.ui.platform.LocalContext.current
