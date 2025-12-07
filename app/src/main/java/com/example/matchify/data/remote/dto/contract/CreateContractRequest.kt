@@ -12,17 +12,20 @@ data class CreateContractRequest(
     @SerializedName("title")
     val title: String,
     
-    @SerializedName("content")
-    val content: String,
+    @SerializedName("scope")
+    val scope: String,
+    
+    @SerializedName("budget")
+    val budget: String,
+    
+    @SerializedName("startDate")
+    val startDate: String,
+    
+    @SerializedName("endDate")
+    val endDate: String,
     
     @SerializedName("paymentDetails")
     val paymentDetails: String? = null,
-    
-    @SerializedName("startDate")
-    val startDate: String? = null,
-    
-    @SerializedName("endDate")
-    val endDate: String? = null,
     
     @SerializedName("recruiterSignature")
     val recruiterSignature: String

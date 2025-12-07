@@ -22,10 +22,11 @@ class CreateContractViewModel(
 ) : ViewModel() {
     
     val title = MutableStateFlow("")
-    val content = MutableStateFlow("")
+    val scope = MutableStateFlow("")
+    val budget = MutableStateFlow("")
     val paymentDetails = MutableStateFlow("")
-    val startDate = MutableStateFlow<Long?>(null)
-    val endDate = MutableStateFlow<Long?>(null)
+    val startDate = MutableStateFlow(System.currentTimeMillis())
+    val endDate = MutableStateFlow(System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000))  // 30 days from now
     val signatureBitmap = MutableStateFlow<Bitmap?>(null)
     
     private val _isLoading = MutableStateFlow(false)
@@ -46,8 +47,8 @@ class CreateContractViewModel(
         talentId: String,
         onSuccess: () -> Unit
     ) {
-        if (title.value.isEmpty() || content.value.isEmpty() || signatureBitmap.value == null) {
-            _errorMessage.value = "Veuillez remplir tous les champs requis"
+        if (title.value.isEmpty() || scope.value.isEmpty() || budget.value.isEmpty() || signatureBitmap.value == null) {
+            _errorMessage.value = "Please fill in all required fields"
             return
         }
         
@@ -59,17 +60,18 @@ class CreateContractViewModel(
                 val signatureBase64 = bitmapToBase64(signatureBitmap.value!!)
                 
                 val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-                val startDateStr = startDate.value?.let { dateFormatter.format(Date(it)) }
-                val endDateStr = endDate.value?.let { dateFormatter.format(Date(it)) }
+                val startDateStr = dateFormatter.format(Date(startDate.value))
+                val endDateStr = dateFormatter.format(Date(endDate.value))
                 
                 val request = CreateContractRequest(
                     missionId = missionId,
                     talentId = talentId,
                     title = title.value,
-                    content = content.value,
-                    paymentDetails = if (paymentDetails.value.isNotEmpty()) paymentDetails.value else null,
+                    scope = scope.value,
+                    budget = budget.value,
                     startDate = startDateStr,
                     endDate = endDateStr,
+                    paymentDetails = if (paymentDetails.value.isNotEmpty()) paymentDetails.value else null,
                     recruiterSignature = "data:image/png;base64,$signatureBase64"
                 )
                 
@@ -77,7 +79,7 @@ class CreateContractViewModel(
                 _contractCreated.value = contract
                 onSuccess()
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "Erreur lors de la création du contrat"
+                _errorMessage.value = e.message ?: "Error creating contract"
             } finally {
                 _isLoading.value = false
             }

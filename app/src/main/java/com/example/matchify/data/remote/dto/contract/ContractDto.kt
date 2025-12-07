@@ -36,6 +36,12 @@ data class ContractDto(
     @SerializedName("content")
     val content: String,
     
+    @SerializedName("scope")
+    val scope: String,
+    
+    @SerializedName("budget")
+    val budget: String,
+    
     @SerializedName("paymentDetails")
     val paymentDetails: String? = null,
     
@@ -75,6 +81,8 @@ fun ContractDto.toDomain(): Contract {
         talentId = talentId,
         title = title,
         content = content,
+        scope = scope,
+        budget = budget,
         paymentDetails = paymentDetails,
         startDate = startDate,
         endDate = endDate,

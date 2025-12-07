@@ -38,7 +38,8 @@ fun CreateContractScreen(
     viewModel: CreateContractViewModel = viewModel(factory = CreateContractViewModelFactory())
 ) {
     val title by viewModel.title.collectAsState()
-    val content by viewModel.content.collectAsState()
+    val scope by viewModel.scope.collectAsState()
+    val budget by viewModel.budget.collectAsState()
     val paymentDetails by viewModel.paymentDetails.collectAsState()
     val startDate by viewModel.startDate.collectAsState()
     val endDate by viewModel.endDate.collectAsState()
@@ -74,7 +75,8 @@ fun CreateContractScreen(
                     }
                 },
                 isSendEnabled = title.isNotEmpty() && 
-                               content.isNotEmpty() && 
+                               scope.isNotEmpty() && 
+                               budget.isNotEmpty() && 
                                signatureBitmap != null && 
                                !isLoading
             )
@@ -95,13 +97,21 @@ fun CreateContractScreen(
                     singleLine = true
                 )
                 
-                // Content Field (multi-line)
+                // Scope Field (multi-line)
                 DarkTextField(
-                    value = content,
-                    onValueChange = { viewModel.content.value = it },
-                    label = "Contract Terms",
+                    value = scope,
+                    onValueChange = { viewModel.scope.value = it },
+                    label = "Project Scope and Deliverables",
                     singleLine = false,
                     minLines = 5
+                )
+                
+                // Budget Field
+                DarkTextField(
+                    value = budget,
+                    onValueChange = { viewModel.budget.value = it },
+                    label = "Budget and Payment Terms",
+                    singleLine = true
                 )
                 
                 // Payment Details Field
@@ -114,15 +124,15 @@ fun CreateContractScreen(
                 
                 // Start Date Field
                 DarkDateField(
-                    value = startDate?.let { dateFormatter.format(Date(it)) } ?: "",
-                    label = "Start Date (optional)",
+                    value = dateFormatter.format(Date(startDate)),
+                    label = "Start Date",
                     onClick = { showStartDatePicker = true }
                 )
                 
                 // End Date Field
                 DarkDateField(
-                    value = endDate?.let { dateFormatter.format(Date(it)) } ?: "",
-                    label = "End Date (optional)",
+                    value = dateFormatter.format(Date(endDate)),
+                    label = "End Date",
                     onClick = { showEndDatePicker = true }
                 )
                 
@@ -150,7 +160,7 @@ fun CreateContractScreen(
     // Date Pickers
     if (showStartDatePicker) {
         DarkDatePickerDialog(
-            initialDate = startDate ?: System.currentTimeMillis(),
+            initialDate = startDate,
             onDateSelected = { timestamp ->
                 viewModel.startDate.value = timestamp
                 showStartDatePicker = false
@@ -161,7 +171,7 @@ fun CreateContractScreen(
     
     if (showEndDatePicker) {
         DarkDatePickerDialog(
-            initialDate = endDate ?: System.currentTimeMillis(),
+            initialDate = endDate,
             onDateSelected = { timestamp ->
                 viewModel.endDate.value = timestamp
                 showEndDatePicker = false
