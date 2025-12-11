@@ -39,6 +39,7 @@ import com.example.matchify.domain.model.Mission
 import com.example.matchify.ui.missions.components.MissionCardNew
 import com.example.matchify.ui.missions.components.NewDrawerContent
 import com.example.matchify.ui.missions.components.DrawerMenuItemType
+import com.example.matchify.ui.components.CustomAppBar
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -164,62 +165,19 @@ fun MissionListScreenNew(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF0F172A)) // Dark navy background
+                        .background(Color(0xFF0F172A))
                 ) {
-                    // Header Section - Avatar left, Bell right
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 18.dp), // Top padding 16-20px
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Circular profile avatar - 40-44px
-                        Surface(
-                            modifier = Modifier
-                                .size(42.dp) // 40-44px
-                                .clickable { 
-                                    scope.launch {
-                                        drawerState.open()
-                                    }
-                                    viewModel.openProfileDrawer()
-                                },
-                            shape = CircleShape,
-                            color = Color(0xFF1E293B)
-                        ) {
-                            Box {
-                                val profileImageUrl = user?.profileImageUrl
-                                if (profileImageUrl != null) {
-                                    AsyncImage(
-                                        model = profileImageUrl,
-                                        contentDescription = "Profile",
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    Image(
-                                        painter = painterResource(R.drawable.avatar),
-                                        contentDescription = "Avatar",
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
+                    // Reusable AppBar
+                    CustomAppBar(
+                        title = "Missions",
+                        profileImageUrl = user?.profileImageUrl,
+                        onProfileClick = {
+                            scope.launch {
+                                drawerState.open()
                             }
+                            viewModel.openProfileDrawer()
                         }
-                        
-                        // Notification bell - 22-24px, white
-                        IconButton(
-                            onClick = { onNavigateToAlerts() },
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Notifications,
-                                contentDescription = "Notifications",
-                                tint = Color.White,
-                                modifier = Modifier.size(23.dp) // 22-24px
-                            )
-                        }
-                    }
+                    )
                     
                     // Search Bar - 48-52px height, #1E293B background, 12px radius
                     Surface(

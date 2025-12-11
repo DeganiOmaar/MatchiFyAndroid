@@ -329,17 +329,101 @@ fun MainScreen(
             }
             
             composable("proposals_list") {
+                val scope = rememberCoroutineScope()
                 com.example.matchify.ui.proposals.ProposalsScreen(
                     onProposalClick = { proposalId ->
                         navController.navigate("proposal_details/$proposalId")
+                    },
+                    onDrawerItemSelected = { itemType ->
+                        when (itemType) {
+                            DrawerMenuItemType.PROFILE -> {
+                                val profileRoute = if (userRole == "talent") "talent_profile" else "recruiter_profile"
+                                navController.navigate(profileRoute) {
+                                    popUpTo("proposals_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.MY_STATS -> {
+                                navController.navigate("my_stats") {
+                                    popUpTo("proposals_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.SETTINGS -> {
+                                onOpenSettings()
+                            }
+                            DrawerMenuItemType.THEME -> {
+                                navController.navigate("theme") {
+                                    popUpTo("proposals_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.CHAT_BOT -> {
+                                navController.navigate("chatbot") {
+                                    popUpTo("proposals_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.LOG_OUT -> {
+                                scope.launch {
+                                    val result = runCatching { authSessionManager.logout() }
+                                    if (result.isFailure) {
+                                        Log.e("MainScreen", "Logout from drawer failed", result.exceptionOrNull())
+                                    }
+                                    onLogout()
+                                }
+                            }
+                        }
                     }
                 )
             }
             
             composable("alerts_list") {
+                val scope = rememberCoroutineScope()
                 com.example.matchify.ui.alerts.AlertsScreen(
                     onAlertClick = { proposalId ->
                         navController.navigate("proposal_details/$proposalId")
+                    },
+                    onDrawerItemSelected = { itemType ->
+                        when (itemType) {
+                            DrawerMenuItemType.PROFILE -> {
+                                val profileRoute = if (userRole == "talent") "talent_profile" else "recruiter_profile"
+                                navController.navigate(profileRoute) {
+                                    popUpTo("alerts_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.MY_STATS -> {
+                                navController.navigate("my_stats") {
+                                    popUpTo("alerts_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.SETTINGS -> {
+                                onOpenSettings()
+                            }
+                            DrawerMenuItemType.THEME -> {
+                                navController.navigate("theme") {
+                                    popUpTo("alerts_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.CHAT_BOT -> {
+                                navController.navigate("chatbot") {
+                                    popUpTo("alerts_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.LOG_OUT -> {
+                                scope.launch {
+                                    val result = runCatching { authSessionManager.logout() }
+                                    if (result.isFailure) {
+                                        Log.e("MainScreen", "Logout from drawer failed", result.exceptionOrNull())
+                                    }
+                                    onLogout()
+                                }
+                            }
+                        }
                     }
                 )
             }
@@ -375,9 +459,51 @@ fun MainScreen(
                     }
                 }
                 
+                val scope = rememberCoroutineScope()
                 com.example.matchify.ui.messages.MessagesScreen(
                     onConversationClick = { conversationId ->
                         navController.navigate("conversation_chat/$conversationId")
+                    },
+                    onDrawerItemSelected = { itemType ->
+                        when (itemType) {
+                            DrawerMenuItemType.PROFILE -> {
+                                val profileRoute = if (userRole == "talent") "talent_profile" else "recruiter_profile"
+                                navController.navigate(profileRoute) {
+                                    popUpTo("messages_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.MY_STATS -> {
+                                navController.navigate("my_stats") {
+                                    popUpTo("messages_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.SETTINGS -> {
+                                onOpenSettings()
+                            }
+                            DrawerMenuItemType.THEME -> {
+                                navController.navigate("theme") {
+                                    popUpTo("messages_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.CHAT_BOT -> {
+                                navController.navigate("chatbot") {
+                                    popUpTo("messages_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.LOG_OUT -> {
+                                scope.launch {
+                                    val result = runCatching { authSessionManager.logout() }
+                                    if (result.isFailure) {
+                                        Log.e("MainScreen", "Logout from drawer failed", result.exceptionOrNull())
+                                    }
+                                    onLogout()
+                                }
+                            }
+                        }
                     },
                     viewModel = messagesViewModel
                 )

@@ -17,6 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,16 +32,27 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.matchify.R
+import kotlinx.coroutines.launch
 
 @Composable
 fun MessagesScreen(
     onConversationClick: (String) -> Unit = {},
+    onDrawerItemSelected: (com.example.matchify.ui.missions.components.DrawerMenuItemType) -> Unit = {},
     viewModel: MessagesViewModel = viewModel(factory = MessagesViewModelFactory())
 ) {
     val conversations by viewModel.conversations.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     
     var searchText by remember { mutableStateOf("") }
+    
+    // Get user for avatar
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { com.example.matchify.data.local.AuthPreferencesProvider.getInstance().get() }
+    val user by prefs.user.collectAsState(initial = null)
+    
+    // Drawer state
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
     
     // Load conversations on first appearance
     LaunchedEffect(Unit) {
@@ -50,27 +62,42 @@ fun MessagesScreen(
     // Background color: #0F172A
     val backgroundColor = Color(0xFF0F172A)
     
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundColor)
+    // Navigation Drawer wraps the entire content
+    com.example.matchify.ui.missions.components.NewDrawerContent(
+        drawerState = drawerState,
+        currentRoute = null,
+        onClose = {
+            scope.launch {
+                drawerState.close()
+            }
+        },
+        onMenuItemSelected = { itemType ->
+            scope.launch {
+                drawerState.close()
+            }
+            onDrawerItemSelected(itemType)
+        }
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .background(backgroundColor)
         ) {
-            // Page Title - "Messages"
-            Text(
-                text = "Messages",
-                fontSize = 22.sp,
-                fontWeight = FontWeight(700),
-                color = Color.White,
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, top = 16.dp, end = 16.dp)
-            )
-            
+                    .fillMaxSize()
+            ) {
+                // Custom AppBar
+                com.example.matchify.ui.components.CustomAppBar(
+                    title = "Messages",
+                    profileImageUrl = user?.profileImageUrl,
+                    onProfileClick = {
+                        scope.launch {
+                            drawerState.open()
+                        }
+                    }
+                )
+                
             // Search Bar
             SearchBar(
                 searchText = searchText,
@@ -127,6 +154,7 @@ fun MessagesScreen(
                             )
                         }
                     }
+                }
                 }
             }
         }

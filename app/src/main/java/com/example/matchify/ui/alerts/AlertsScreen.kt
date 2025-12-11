@@ -28,6 +28,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.matchify.R
 import com.example.matchify.domain.model.Alert
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -36,12 +39,22 @@ import java.time.temporal.ChronoUnit
 @Composable
 fun AlertsScreen(
     onAlertClick: (String) -> Unit = {},
+    onDrawerItemSelected: (com.example.matchify.ui.missions.components.DrawerMenuItemType) -> Unit = {},
     viewModel: AlertsViewModel = viewModel(factory = AlertsViewModelFactory())
 ) {
     val alerts by viewModel.alerts.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val unreadCount by viewModel.unreadCount.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    
+    // Get user for avatar
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { com.example.matchify.data.local.AuthPreferencesProvider.getInstance().get() }
+    val user by prefs.user.collectAsState(initial = null)
+    
+    // Drawer state
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
     
     LaunchedEffect(Unit) {
         viewModel.loadAlerts()
@@ -55,46 +68,56 @@ fun AlertsScreen(
     val blueDot = Color(0xFF4A90E2)
     val redDot = Color(0xFFE74C3C)
     
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(darkBackground)
+    // Navigation Drawer wraps the entire content
+    com.example.matchify.ui.missions.components.NewDrawerContent(
+        drawerState = drawerState,
+        currentRoute = null,
+        onClose = {
+            scope.launch {
+                drawerState.close()
+            }
+        },
+        onMenuItemSelected = { itemType ->
+            scope.launch {
+                drawerState.close()
+            }
+            onDrawerItemSelected(itemType)
+        }
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(darkBackground)
         ) {
-            // Header - matching Messages and Proposals style
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, top = 16.dp, end = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                // Title - same font size and weight as Messages and Proposals
-                Text(
-                    text = "Alerts",
-                    fontSize = 22.sp, // Same as Messages
-                    fontWeight = FontWeight(700), // Same as Messages
-                    color = textPrimary
+                // Custom AppBar with Mark All Read button
+                com.example.matchify.ui.components.CustomAppBar(
+                    title = "Alerts",
+                    profileImageUrl = user?.profileImageUrl,
+                    onProfileClick = {
+                        scope.launch {
+                            drawerState.open()
+                        }
+                    },
+                    rightAction = if (unreadCount > 0) {
+                        {
+                            TextButton(
+                                onClick = { viewModel.markAllAsRead() },
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = Color(0xFF4A90E2)
+                                )
+                            ) {
+                                Text(
+                                    text = "Mark all",
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    } else null
                 )
                 
-                // Right-aligned button
-                if (unreadCount > 0) {
-                    TextButton(
-                        onClick = { viewModel.markAllAsRead() },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color(0xFF4A90E2)
-                        )
-                    ) {
-                        Text(
-                            text = "Mark all as read",
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-            }
-            
             // Content
             when {
                 isLoading && alerts.isEmpty() -> {
@@ -153,6 +176,7 @@ fun AlertsScreen(
                         }
                     }
                 }
+                }
             }
         }
     }
@@ -160,7 +184,7 @@ fun AlertsScreen(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun AlertCard(
+fun AlertCard(
     alert: Alert,
     darkBackground: Color,
     cardBackground: Color,
@@ -286,7 +310,7 @@ private fun AlertCard(
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-private fun formatTimestamp(dateString: String?): String {
+fun formatTimestamp(dateString: String?): String {
     if (dateString == null) return ""
     
     return try {

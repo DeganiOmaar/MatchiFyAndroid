@@ -37,6 +37,7 @@ import coil.compose.AsyncImage
 import com.example.matchify.R
 import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.domain.model.Proposal
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -46,6 +47,7 @@ import java.time.temporal.ChronoUnit
 @Composable
 fun ProposalsScreen(
     onProposalClick: (String) -> Unit = {},
+    onDrawerItemSelected: (com.example.matchify.ui.missions.components.DrawerMenuItemType) -> Unit = {},
     viewModel: ProposalsViewModel = viewModel(factory = ProposalsViewModelFactory())
 ) {
     val proposals by viewModel.proposals.collectAsState()
@@ -73,7 +75,8 @@ fun ProposalsScreen(
             aiSortEnabled = aiSortEnabled,
             onMissionSelected = { viewModel.selectMission(it) },
             onToggleAiSort = { viewModel.toggleAiSort() },
-            onProposalClick = onProposalClick
+            onProposalClick = onProposalClick,
+            onDrawerItemSelected = onDrawerItemSelected
         )
     } else {
         // New Talent UI - completely rebuilt
@@ -85,7 +88,8 @@ fun ProposalsScreen(
             selectedTab = selectedTab,
             onTabSelected = { viewModel.selectTab(it) },
             onFilterSelected = { viewModel.selectStatusFilter(it) },
-            onProposalClick = onProposalClick
+            onProposalClick = onProposalClick,
+            onDrawerItemSelected = onDrawerItemSelected
         )
     }
 }
@@ -100,74 +104,48 @@ private fun TalentProposalsScreen(
     selectedTab: ProposalTab,
     onTabSelected: (ProposalTab) -> Unit,
     onFilterSelected: (ProposalStatusFilter) -> Unit,
-    onProposalClick: (String) -> Unit
+    onProposalClick: (String) -> Unit,
+    onDrawerItemSelected: (com.example.matchify.ui.missions.components.DrawerMenuItemType) -> Unit
 ) {
-    // Get user for avatar (same as Mission screen)
+    // Get user for avatar
     val context = androidx.compose.ui.platform.LocalContext.current
-    val prefs = remember { AuthPreferencesProvider.getInstance().get() }
+    val prefs = remember { com.example.matchify.data.local.AuthPreferencesProvider.getInstance().get() }
     val user by prefs.user.collectAsState(initial = null)
     
-    Scaffold(
-        topBar = {
-            // Header - 56-60dp height, #0F172A background
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(58.dp), // 56-60dp
-                color = Color(0xFF0F172A)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp), // 16dp padding from edges
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Left Menu Icon - same as Mission screen (avatar)
-                    Surface(
-                        modifier = Modifier
-                            .size(42.dp) // Same size as Mission screen
-                            .clickable { /* Open drawer - same as Mission screen */ },
-                        shape = CircleShape,
-                        color = Color(0xFF1E293B)
-                    ) {
-                        Box {
-                            val profileImageUrl = user?.profileImageUrl
-                            if (profileImageUrl != null) {
-                                AsyncImage(
-                                    model = profileImageUrl,
-                                    contentDescription = "Profile",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Image(
-                                    painter = painterResource(R.drawable.avatar),
-                                    contentDescription = "Avatar",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                        }
-                    }
-                    
-                    // Center Title - perfectly centered, 18-20sp, weight 600-700, white
-                    Text(
-                        text = "Proposals",
-                        fontSize = 19.sp, // 18-20sp
-                        fontWeight = FontWeight(650), // 600-700
-                        color = Color(0xFFFFFFFF),
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center
-                    )
-                    
-                    // Right area - empty (no icon), same size as left for perfect centering
-                    Spacer(modifier = Modifier.size(42.dp))
-                }
+    // Drawer state
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    
+    // Navigation Drawer wraps the entire Scaffold
+    com.example.matchify.ui.missions.components.NewDrawerContent(
+        drawerState = drawerState,
+        currentRoute = null,
+        onClose = {
+            scope.launch {
+                drawerState.close()
             }
         },
-        containerColor = Color(0xFF0F172A) // Dark navy background
-    ) { paddingValues ->
+        onMenuItemSelected = { itemType ->
+            scope.launch {
+                drawerState.close()
+            }
+            onDrawerItemSelected(itemType)
+        }
+    ) {
+        Scaffold(
+            topBar = {
+                com.example.matchify.ui.components.CustomAppBar(
+                    title = "Proposals",
+                    profileImageUrl = user?.profileImageUrl,
+                    onProfileClick = {
+                        scope.launch {
+                            drawerState.open()
+                        }
+                    }
+                )
+            },
+            containerColor = Color(0xFF0F172A) // Dark navy background
+        ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -242,6 +220,7 @@ private fun TalentProposalsScreen(
                             )
                         }
                     }
+                }
                 }
             }
         }
@@ -525,35 +504,50 @@ private fun RecruiterProposalsScreen(
     aiSortEnabled: Boolean,
     onMissionSelected: (com.example.matchify.domain.model.Mission?) -> Unit,
     onToggleAiSort: () -> Unit,
-    onProposalClick: (String) -> Unit
+    onProposalClick: (String) -> Unit,
+    onDrawerItemSelected: (com.example.matchify.ui.missions.components.DrawerMenuItemType) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0F172A))
-    ) {
-        // Custom Header
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp),
-            color = Color(0xFF0F172A)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Proposals",
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight(650),
-                    color = Color.White
-                )
+    // Get user for avatar
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { com.example.matchify.data.local.AuthPreferencesProvider.getInstance().get() }
+    val user by prefs.user.collectAsState(initial = null)
+    
+    // Drawer state
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    
+    // Navigation Drawer wraps the entire content
+    com.example.matchify.ui.missions.components.NewDrawerContent(
+        drawerState = drawerState,
+        currentRoute = null,
+        onClose = {
+            scope.launch {
+                drawerState.close()
             }
+        },
+        onMenuItemSelected = { itemType ->
+            scope.launch {
+                drawerState.close()
+            }
+            onDrawerItemSelected(itemType)
         }
-        
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF0F172A))
+        ) {
+            // Custom AppBar
+            com.example.matchify.ui.components.CustomAppBar(
+                title = "Proposals",
+                profileImageUrl = user?.profileImageUrl,
+                onProfileClick = {
+                    scope.launch {
+                        drawerState.open()
+                    }
+                }
+            )
+            
         // Mission Selector & AI Toggle
         Column(
             modifier = Modifier
@@ -830,6 +824,7 @@ private fun RecruiterProposalsScreen(
                             )
                         }
                     }
+                }
                 }
             }
         }
