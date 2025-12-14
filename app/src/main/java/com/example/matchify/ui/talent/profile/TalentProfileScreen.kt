@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material3.*
@@ -139,7 +140,8 @@ fun TalentProfileScreen(
             PortfolioSection(
                 projects = projects,
                 isLoading = isLoadingProjects,
-                onProjectClick = onProjectClick
+                onProjectClick = onProjectClick,
+                onAddProject = onAddProject
             )
 
             // CV File Section
@@ -513,7 +515,8 @@ private fun SkillChip(skill: String) {
 private fun PortfolioSection(
     projects: List<Project>,
     isLoading: Boolean,
-    onProjectClick: (Project) -> Unit
+    onProjectClick: (Project) -> Unit,
+    onAddProject: () -> Unit
 ) {
     var currentPage by remember { mutableStateOf(0) }
     val itemsPerPage = 4
@@ -533,14 +536,35 @@ private fun PortfolioSection(
             .padding(horizontal = 24.dp)
             .padding(top = 32.dp)
     ) {
-        // Section title - grand texte en haut à gauche
-        Text(
-            text = "Portfolio",
-            fontSize = 24.sp,
-            fontWeight = FontWeight(700),
-            color = Color.White,
-            modifier = Modifier.padding(bottom = 20.dp)
-        )
+        // Section title row with Add button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Portfolio",
+                fontSize = 24.sp,
+                fontWeight = FontWeight(700),
+                color = Color.White
+            )
+
+            IconButton(
+                onClick = onAddProject,
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(Color(0xFF2563EB), CircleShape) // Blue background
+            ) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.Add,
+                    contentDescription = "Add Project",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
 
         if (isLoading && projects.isEmpty()) {
             Box(

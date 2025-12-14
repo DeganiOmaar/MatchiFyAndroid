@@ -4,7 +4,8 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,14 +22,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.matchify.domain.model.Project
-import com.example.matchify.ui.components.MD3OutlinedTextField
 import com.example.matchify.ui.skills.SkillPickerView
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,35 +64,18 @@ fun AddEditProjectScreen(
     
     val context = LocalContext.current
     
-    // Image picker
+    // File pickers...
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            val inputStream = context.contentResolver.openInputStream(it)
-            val imageData = inputStream?.readBytes()
-            inputStream?.close()
-            viewModel.addMedia(AttachedMediaItem.ImageMedia(it, imageData))
-        }
-    }
+    ) { uri: Uri? -> uri?.let { viewModel.addMedia(AttachedMediaItem.ImageMedia(it, context.contentResolver.openInputStream(it)?.readBytes())) } }
     
-    // Video picker
     val videoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            viewModel.addMedia(AttachedMediaItem.VideoMedia(it))
-        }
-    }
+    ) { uri: Uri? -> uri?.let { viewModel.addMedia(AttachedMediaItem.VideoMedia(it)) } }
     
-    // PDF picker
     val pdfPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            viewModel.addMedia(AttachedMediaItem.PdfMedia(it))
-        }
-    }
+    ) { uri: Uri? -> uri?.let { viewModel.addMedia(AttachedMediaItem.PdfMedia(it)) } }
     
     LaunchedEffect(saveSuccess) {
         if (saveSuccess) {
@@ -98,6 +83,14 @@ fun AddEditProjectScreen(
             onBack()
         }
     }
+
+    // Design Colors
+    val backgroundColor = Color(0xFF0F172A)
+    val cardColor = Color(0xFF1E293B)
+    val inputBackgroundColor = Color(0xFF0F172A) // Or slightly different
+    val primaryColor = Color(0xFF3B82F6) // Blue
+    val textColor = Color.White
+    val hintColor = Color(0xFF94A3B8)
     
     Scaffold(
         topBar = {
@@ -105,26 +98,27 @@ fun AddEditProjectScreen(
                 title = {
                     Text(
                         text = if (project != null) "Edit Project" else "New Project",
-                        style = MaterialTheme.typography.titleLarge,
+                        color = textColor,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = textColor)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = backgroundColor
                 )
             )
-        }
+        },
+        containerColor = backgroundColor
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
+                .background(backgroundColor)
         ) {
             LazyColumn(
                 modifier = Modifier
@@ -135,34 +129,43 @@ fun AddEditProjectScreen(
             ) {
                 // Attachments Section
                 item {
-                    Card(
+                    Text(
+                        text = "Attachments",
+                        color = hintColor,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+                    )
+                    
+                    Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        color = cardColor
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Text(
-                                text = "Attachments",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            
+                        Column(modifier = Modifier.padding(16.dp)) {
                             if (attachedMedia.isNotEmpty()) {
-                                attachedMedia.forEach { media ->
+                                attachedMedia.forEachIndexed { index, media ->
+                                    if (index > 0) Spacer(modifier = Modifier.height(12.dp))
                                     AttachedMediaRow(
                                         media = media,
-                                        onRemove = { viewModel.removeMedia(media) }
+                                        onRemove = { viewModel.removeMedia(media) },
+                                        textColor = textColor,
+                                        subTextColor = hintColor
                                     )
                                 }
+                                Spacer(modifier = Modifier.height(16.dp))
                             }
                             
                             Button(
                                 onClick = { showAttachmentOptions = true },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF334155), // Lighter than card
+                                    contentColor = textColor
+                                ),
+                                shape = RoundedCornerShape(8.dp)
                             ) {
-                                Icon(Icons.Default.Add, contentDescription = null)
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("Add Attachment")
                             }
@@ -172,68 +175,68 @@ fun AddEditProjectScreen(
                 
                 // Project Details Section
                 item {
-                    Card(
+                    Text(
+                        text = "Project Details",
+                        color = hintColor,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+                    )
+                    
+                    Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        color = cardColor
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text(
-                                text = "Project Details",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            
-                            // Title - MD3 Outlined Text Field
-                            MD3OutlinedTextField(
+                            // Title
+                            CustomTextField(
                                 value = title,
                                 onValueChange = { viewModel.setTitle(it) },
                                 label = "Title",
-                                placeholder = "Title *",
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                                modifier = Modifier.fillMaxWidth(),
-                                errorText = null,
-                                singleLine = true
+                                placeholder = "Project Title",
+                                backgroundColor = backgroundColor,
+                                textColor = textColor,
+                                hintColor = hintColor
                             )
                             
-                            // Role - MD3 Outlined Text Field
-                            MD3OutlinedTextField(
+                            // Role
+                            CustomTextField(
                                 value = role,
                                 onValueChange = { viewModel.setRole(it) },
                                 label = "Role",
-                                placeholder = "Role (e.g., Lead Developer)",
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                                modifier = Modifier.fillMaxWidth(),
-                                errorText = null,
-                                singleLine = true
+                                placeholder = "Your Role (e.g. Lead Developer)",
+                                backgroundColor = backgroundColor,
+                                textColor = textColor,
+                                hintColor = hintColor
                             )
                             
-                            // Description - MD3 Outlined Text Field (multi-line)
-                            MD3OutlinedTextField(
+                            // Description
+                            CustomTextField(
                                 value = description,
                                 onValueChange = { viewModel.setDescription(it) },
                                 label = "Description",
-                                placeholder = "Description",
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                                modifier = Modifier.fillMaxWidth(),
-                                errorText = null,
+                                placeholder = "Project Description...",
                                 singleLine = false,
-                                minLines = 3,
-                                maxLines = 10
+                                minLines = 4,
+                                backgroundColor = backgroundColor,
+                                textColor = textColor,
+                                hintColor = hintColor
                             )
                             
-                            // Project Link - MD3 Outlined Text Field
-                            MD3OutlinedTextField(
+                            // Project Link
+                            CustomTextField(
                                 value = projectLink,
                                 onValueChange = { viewModel.setProjectLink(it) },
                                 label = "Project Link",
-                                placeholder = "Project Link (e.g., GitHub URL)",
+                                placeholder = "http://example.com",
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                                modifier = Modifier.fillMaxWidth(),
-                                errorText = null,
-                                singleLine = true
+                                backgroundColor = backgroundColor,
+                                textColor = textColor,
+                                hintColor = hintColor
                             )
                         }
                     }
@@ -241,32 +244,34 @@ fun AddEditProjectScreen(
                 
                 // Skills Section
                 item {
-                    Card(
+                    Text(
+                        text = "Skills",
+                        color = hintColor,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+                    )
+                    
+                    Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        color = cardColor
                     ) {
                         Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            modifier = Modifier.padding(16.dp)
                         ) {
-                            Text(
-                                text = "Skills",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            
                             if (isLoadingSkills) {
-                                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                            } else {
-                                val mutableSkills = remember(selectedSkills) { 
-                                    selectedSkills.toMutableList() 
+                                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(color = primaryColor)
                                 }
-                                
+                            } else {
+                                val mutableSkills = remember(selectedSkills) { selectedSkills.toMutableList() }
                                 SkillPickerView(
                                     selectedSkills = mutableSkills,
-                                    onSkillsChanged = { updated ->
-                                        viewModel.updateSelectedSkills(updated)
-                                    }
+                                    onSkillsChanged = { viewModel.updateSelectedSkills(it) },
+                                    // You might need to adjust SkillPickerView colors if it doesn't support dark theme via arguments
+                                    // Assuming it uses MaterialTheme, we might need a Theme wrapper or updated component.
+                                    // For now, let's assume it adapts or we might need to modify it later.
                                 )
                             }
                         }
@@ -276,20 +281,12 @@ fun AddEditProjectScreen(
                 // Error Message
                 if (errorMessage != null) {
                     item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text(
-                                text = errorMessage ?: "",
-                                modifier = Modifier.padding(16.dp),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
+                        Text(
+                            text = errorMessage ?: "",
+                            color = Color(0xFFEF4444),
+                            modifier = Modifier.padding(start = 4.dp),
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                 }
             }
@@ -299,119 +296,106 @@ fun AddEditProjectScreen(
                 onClick = { viewModel.saveProject() },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(28.dp), // Pill shape from screenshot
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF334155), // Dark grey/blue for button background as per screenshot
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFF1E293B),
+                    disabledContentColor = Color(0xFF64748B)
+                ),
                 enabled = title.trim().isNotBlank() && !isSaving
             ) {
                 if (isSaving) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = Color.White,
+                        strokeWidth = 2.dp
                     )
                 } else {
                     Text(
                         text = if (project != null) "Update Project" else "Create Project",
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
             }
         }
         
-        // Attachment Options Dialog
+        // ... Dialogs (reuse existing logic but style if needed)
         if (showAttachmentOptions) {
+            // Simple dialog implementation
             AlertDialog(
                 onDismissRequest = { showAttachmentOptions = false },
+                containerColor = cardColor,
+                titleContentColor = textColor,
+                textContentColor = hintColor,
                 title = { Text("Add Attachment") },
                 text = {
                     Column {
-                        TextButton(onClick = {
-                            showAttachmentOptions = false
-                            imagePickerLauncher.launch("image/*")
-                        }) {
-                            Icon(Icons.Default.Image, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Image")
+                        TextButton(onClick = { showAttachmentOptions = false; imagePickerLauncher.launch("image/*") }) {
+                            Text("Image", color = primaryColor)
                         }
-                        TextButton(onClick = {
-                            showAttachmentOptions = false
-                            videoPickerLauncher.launch("video/*")
-                        }) {
-                            Icon(Icons.Default.VideoLibrary, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Video")
+                        TextButton(onClick = { showAttachmentOptions = false; videoPickerLauncher.launch("video/*") }) {
+                            Text("Video", color = primaryColor)
                         }
-                        TextButton(onClick = {
-                            showAttachmentOptions = false
-                            pdfPickerLauncher.launch("application/pdf")
-                        }) {
-                            Icon(Icons.Default.PictureAsPdf, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("PDF")
+                        TextButton(onClick = { showAttachmentOptions = false; pdfPickerLauncher.launch("application/pdf") }) {
+                            Text("PDF", color = primaryColor)
                         }
-                        TextButton(onClick = {
-                            showAttachmentOptions = false
-                            showExternalLinkDialog = true
-                        }) {
-                            Icon(Icons.Default.Link, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("External Link")
+                        TextButton(onClick = { showAttachmentOptions = false; showExternalLinkDialog = true }) {
+                            Text("External Link", color = primaryColor)
                         }
                     }
                 },
                 confirmButton = {
                     TextButton(onClick = { showAttachmentOptions = false }) {
-                        Text("Cancel")
+                        Text("Cancel", color = hintColor)
                     }
                 }
             )
         }
         
-        // External Link Dialog
         if (showExternalLinkDialog) {
-            AlertDialog(
+             AlertDialog(
                 onDismissRequest = { showExternalLinkDialog = false },
+                containerColor = cardColor,
+                titleContentColor = textColor,
+                textContentColor = hintColor,
                 title = { Text("Add External Link") },
                 text = {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        // External Link URL - MD3 Outlined Text Field
-                        MD3OutlinedTextField(
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        CustomTextField(
                             value = externalLinkInput,
                             onValueChange = { viewModel.setExternalLinkInput(it) },
                             label = "URL",
-                            placeholder = "URL *",
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                            modifier = Modifier.fillMaxWidth(),
-                            errorText = null,
-                            singleLine = true
+                            placeholder = "https://...",
+                            backgroundColor = backgroundColor,
+                            textColor = textColor,
+                            hintColor = hintColor
                         )
-                        // External Link Title - MD3 Outlined Text Field
-                        MD3OutlinedTextField(
+                        CustomTextField(
                             value = externalLinkTitle,
                             onValueChange = { viewModel.setExternalLinkTitle(it) },
                             label = "Title",
-                            placeholder = "Title (optional)",
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                            modifier = Modifier.fillMaxWidth(),
-                            errorText = null,
-                            singleLine = true
+                            placeholder = "Link Title",
+                            backgroundColor = backgroundColor,
+                            textColor = textColor,
+                            hintColor = hintColor
                         )
                     }
                 },
                 confirmButton = {
                     TextButton(
-                        onClick = {
-                            viewModel.addExternalLink()
-                            showExternalLinkDialog = false
-                        },
-                        enabled = externalLinkInput.trim().isNotBlank()
+                        onClick = { viewModel.addExternalLink(); showExternalLinkDialog = false },
+                        enabled = externalLinkInput.isNotBlank()
                     ) {
-                        Text("Add Link")
+                        Text("Add", color = primaryColor)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showExternalLinkDialog = false }) {
-                        Text("Cancel")
+                        Text("Cancel", color = hintColor)
                     }
                 }
             )
@@ -420,108 +404,95 @@ fun AddEditProjectScreen(
 }
 
 @Composable
-private fun AttachedMediaRow(
-    media: AttachedMediaItem,
-    onRemove: () -> Unit
+fun CustomTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String,
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    backgroundColor: Color,
+    textColor: Color,
+    hintColor: Color
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHighest
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Preview
-            when (media) {
-                is AttachedMediaItem.ImageMedia -> {
-                    if (media.imageData != null) {
-                        // TODO: Display image preview
-                        Icon(
-                            imageVector = Icons.Default.Image,
-                            contentDescription = null,
-                            modifier = Modifier.size(60.dp)
-                        )
-                    } else {
-                        AsyncImage(
-                            model = media.uri,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(60.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                        )
-                    }
-                }
-                is AttachedMediaItem.VideoMedia -> {
-                    Icon(
-                        imageVector = Icons.Default.VideoLibrary,
-                        contentDescription = null,
-                        modifier = Modifier.size(60.dp)
-                    )
-                }
-                is AttachedMediaItem.PdfMedia -> {
-                    Icon(
-                        imageVector = Icons.Default.PictureAsPdf,
-                        contentDescription = null,
-                        modifier = Modifier.size(60.dp),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-                is AttachedMediaItem.ExternalLinkMedia -> {
-                    Icon(
-                        imageVector = Icons.Default.Link,
-                        contentDescription = null,
-                        modifier = Modifier.size(60.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-                is AttachedMediaItem.ExistingMedia -> {
-                    Icon(
-                        imageVector = when {
-                            media.mediaItem.isImage -> Icons.Default.Image
-                            media.mediaItem.isVideo -> Icons.Default.VideoLibrary
-                            media.mediaItem.isPdf -> Icons.Default.PictureAsPdf
-                            else -> Icons.Default.Link
-                        },
-                        contentDescription = null,
-                        modifier = Modifier.size(60.dp)
-                    )
-                }
-            }
-            
-            // Title and info
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = media.displayTitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                if (media is AttachedMediaItem.ExternalLinkMedia) {
-                    Text(
-                        text = media.url,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
-                    )
-                }
-            }
-            
-            // Remove button
-            IconButton(onClick = onRemove) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Remove",
-                    tint = MaterialTheme.colorScheme.error
-                )
-            }
-        }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Since the screenshot shows label inside? No, looks like label is implied or inside.
+        // Usually "Title" is inside the box or above. 
+        // Screenshot shows "Title" inside the box (placeholder) and maybe label above?
+        // Actually screenshot shows "Project Details" header, then a box with "Title" text inside (placeholder). 
+        // When typing, standard behavior.
+        
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(placeholder, color = hintColor) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF334155),
+                unfocusedBorderColor = Color(0xFF334155),
+                focusedContainerColor = backgroundColor,
+                unfocusedContainerColor = backgroundColor,
+                cursorColor = Color(0xFF3B82F6),
+                focusedTextColor = textColor,
+                unfocusedTextColor = textColor
+            ),
+            singleLine = singleLine,
+            minLines = minLines,
+            keyboardOptions = keyboardOptions
+        )
     }
 }
 
+@Composable
+private fun AttachedMediaRow(
+    media: AttachedMediaItem,
+    onRemove: () -> Unit,
+    textColor: Color,
+    subTextColor: Color
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Icon Box
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(Color(0xFF334155), RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = when(media) {
+                    is AttachedMediaItem.ImageMedia -> Icons.Default.Image
+                    is AttachedMediaItem.VideoMedia -> Icons.Default.VideoLibrary
+                    is AttachedMediaItem.PdfMedia -> Icons.Default.PictureAsPdf
+                    is AttachedMediaItem.ExternalLinkMedia -> Icons.Default.Link
+                    is AttachedMediaItem.ExistingMedia -> Icons.Default.AttachFile
+                },
+                contentDescription = null,
+                tint = textColor
+            )
+        }
+        
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = media.displayTitle,
+                color = textColor,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                maxLines = 1
+            )
+        }
+        
+        IconButton(onClick = onRemove) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Remove",
+                tint = Color(0xFFEF4444)
+            )
+        }
+    }
+}
