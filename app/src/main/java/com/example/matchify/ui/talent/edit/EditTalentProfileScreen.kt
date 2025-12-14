@@ -25,6 +25,9 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.matchify.R
+import com.example.matchify.ui.skills.SkillPickerView
+import com.example.matchify.domain.model.Skill
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +56,7 @@ fun EditTalentProfileScreen(
     val selectedImageUri by viewModel.selectedImageUri.collectAsState()
     val talents by viewModel.talents.collectAsState()
     val talentInput by viewModel.talentInput.collectAsState()
-    val skills by viewModel.skills.collectAsState()
+    val skills: List<Skill> by viewModel.skills.collectAsState()
     val skillInput by viewModel.skillInput.collectAsState()
 
     // Handle navigation back after save
@@ -315,6 +320,8 @@ fun EditTalentProfileScreen(
                 )
             }
 
+
+
             // Skills Section
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
@@ -324,74 +331,16 @@ fun EditTalentProfileScreen(
                     color = whiteText
                 )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    DarkTextField(
-                        value = skillInput,
-                        onValueChange = { viewModel.skillInput.value = it },
-                        placeholder = "Add skill",
-                        modifier = Modifier.weight(1f),
-                        trailingIcon = {
-                            IconButton(
-                                onClick = { viewModel.addSkill() },
-                                enabled = skillInput.isNotEmpty()
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Add,
-                                    contentDescription = "Add",
-                                    tint = if (skillInput.isNotEmpty()) blueButton else grayText
-                                )
-                            }
-                        }
-                    )
+                val mutableSkills = remember(skills) { 
+                    skills.toMutableList() 
                 }
 
-                if (skills.isNotEmpty()) {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(skills) { skill ->
-                            Surface(
-                                shape = RoundedCornerShape(20.dp),
-                                color = cardBackground
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(
-                                        horizontal = 12.dp,
-                                        vertical = 8.dp
-                                    ),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = skill,
-                                        fontSize = 14.sp,
-                                        color = whiteText
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Rounded.Close,
-                                        contentDescription = "Remove",
-                                        modifier = Modifier
-                                            .size(16.dp)
-                                            .clickable { viewModel.removeSkill(skill) },
-                                        tint = grayText
-                                    )
-                                }
-                            }
-                        }
+                SkillPickerView(
+                    selectedSkills = mutableSkills,
+                    onSkillsChanged = { updated ->
+                        viewModel.updateSelectedSkills(updated)
                     }
-                }
-                
-                if (skills.size >= 10) {
-                    Text(
-                        text = "Maximum 10 skills reached",
-                        fontSize = 12.sp,
-                        color = Color(0xFFF59E0B) // Amber/Orange
-                    )
-                }
+                )
             }
 
             // Error message
