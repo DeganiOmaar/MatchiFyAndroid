@@ -7,6 +7,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 // Change to a class that can be initialized with dependencies
 class ApiService(private val authPreferences: AuthPreferences) {
@@ -43,11 +44,16 @@ class ApiService(private val authPreferences: AuthPreferences) {
         response
     }
 
+
+
     // -----------------------------------------------------------
     // 🌐 Client HTTP
     // -----------------------------------------------------------
     private val client = OkHttpClient.Builder()
         .addInterceptor(authInterceptor)
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
     // -----------------------------------------------------------
