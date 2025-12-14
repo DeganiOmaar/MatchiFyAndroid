@@ -50,14 +50,9 @@ fun OfferDetailsScreen(
     ) {
         Scaffold(
             topBar = {
-                com.example.matchify.ui.components.CustomAppBar(
+                com.example.matchify.ui.components.MatchifyTopAppBar(
                     title = "Offer Details",
-                    profileImageUrl = user?.profileImageUrl,
-                    onProfileClick = {
-                        scope.launch {
-                            drawerState.open()
-                        }
-                    }
+                    onBack = onBack
                 )
             },
             containerColor = Color(0xFF0F172A)

@@ -31,6 +31,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.matchify.domain.model.Offer
+import com.example.matchify.ui.components.MatchifyTopAppBar
 import com.example.matchify.ui.talent.edit.DarkTextField
 import java.io.File
 import java.io.FileOutputStream
@@ -75,27 +76,9 @@ fun EditOfferScreen(
     Scaffold(
         containerColor = Color(0xFF0F172A),
         topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        "Edit Offer",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    ) 
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.Rounded.Close,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0F172A)
-                )
+            MatchifyTopAppBar(
+                title = "Edit Offer",
+                onBack = onBack
             )
         }
     ) { paddingValues ->

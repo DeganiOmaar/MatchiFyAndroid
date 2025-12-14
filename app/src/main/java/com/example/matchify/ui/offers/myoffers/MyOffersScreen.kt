@@ -63,14 +63,9 @@ fun MyOffersScreen(
                         .fillMaxWidth()
                         .background(Color(0xFF0F172A))
                 ) {
-                    com.example.matchify.ui.components.CustomAppBar(
+                    com.example.matchify.ui.components.MatchifyTopAppBar(
                         title = "My Offers",
-                        profileImageUrl = user?.profileImageUrl,
-                        onProfileClick = {
-                            scope.launch {
-                                drawerState.open()
-                            }
-                        }
+                        onBack = onBack
                     )
                     
                     // Search Bar

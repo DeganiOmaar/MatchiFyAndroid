@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.matchify.domain.model.OfferCategory
+import com.example.matchify.ui.components.MatchifyTopAppBar
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import com.example.matchify.ui.talent.edit.DarkTextField
 import kotlinx.coroutines.launch
 import java.io.File
