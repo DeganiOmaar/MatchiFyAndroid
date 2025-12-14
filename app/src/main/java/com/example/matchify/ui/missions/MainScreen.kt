@@ -55,6 +55,7 @@ import com.example.matchify.ui.stats.MyStatsViewModelFactory
 import androidx.compose.runtime.LaunchedEffect
 import com.example.matchify.domain.session.AuthSessionManager
 import android.util.Log
+import androidx.compose.ui.Alignment
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -133,6 +134,24 @@ fun MainScreen(
                             }
                             DrawerMenuItemType.MY_STATS -> {
                                 navController.navigate("my_stats") {
+                                    popUpTo("missions_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.CREATE_OFFER -> {
+                                navController.navigate("category_selection") {
+                                    popUpTo("missions_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.MY_OFFERS -> {
+                                navController.navigate("my_offers") {
+                                    popUpTo("missions_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.BROWSE_OFFERS -> {
+                                navController.navigate("browse_offers") {
                                     popUpTo("missions_list") { saveState = true }
                                     launchSingleTop = true
                                 }
@@ -349,6 +368,24 @@ fun MainScreen(
                                     launchSingleTop = true
                                 }
                             }
+                            DrawerMenuItemType.CREATE_OFFER -> {
+                                navController.navigate("category_selection") {
+                                    popUpTo("proposals_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.MY_OFFERS -> {
+                                navController.navigate("my_offers") {
+                                    popUpTo("proposals_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.BROWSE_OFFERS -> {
+                                navController.navigate("browse_offers") {
+                                    popUpTo("proposals_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
                             DrawerMenuItemType.SETTINGS -> {
                                 onOpenSettings()
                             }
@@ -395,6 +432,24 @@ fun MainScreen(
                             }
                             DrawerMenuItemType.MY_STATS -> {
                                 navController.navigate("my_stats") {
+                                    popUpTo("alerts_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.CREATE_OFFER -> {
+                                navController.navigate("category_selection") {
+                                    popUpTo("alerts_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.MY_OFFERS -> {
+                                navController.navigate("my_offers") {
+                                    popUpTo("alerts_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.BROWSE_OFFERS -> {
+                                navController.navigate("browse_offers") {
                                     popUpTo("alerts_list") { saveState = true }
                                     launchSingleTop = true
                                 }
@@ -475,6 +530,24 @@ fun MainScreen(
                             }
                             DrawerMenuItemType.MY_STATS -> {
                                 navController.navigate("my_stats") {
+                                    popUpTo("messages_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.CREATE_OFFER -> {
+                                navController.navigate("category_selection") {
+                                    popUpTo("messages_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.MY_OFFERS -> {
+                                navController.navigate("my_offers") {
+                                    popUpTo("messages_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.BROWSE_OFFERS -> {
+                                navController.navigate("browse_offers") {
                                     popUpTo("messages_list") { saveState = true }
                                     launchSingleTop = true
                                 }
@@ -699,6 +772,116 @@ fun MainScreen(
                 com.example.matchify.ui.chatbot.ChatBotScreen(
                     onBack = { navController.popBackStack() }
                 )
+            }
+            
+            // Offers
+            composable("category_selection") {
+                com.example.matchify.ui.offers.category.CategorySelectionScreen(
+                    onBack = { navController.popBackStack() },
+                    onCategorySelected = { category ->
+                        val categoryEnum = com.example.matchify.domain.model.OfferCategory.values()
+                            .firstOrNull { it.displayName == category }
+                        if (categoryEnum != null) {
+                            navController.navigate("create_offer/${categoryEnum.name}")
+                        }
+                    }
+                )
+            }
+            
+            composable("create_offer/{category}") { backStackEntry ->
+                val categoryName = backStackEntry.arguments?.getString("category") ?: ""
+                val category = try {
+                    com.example.matchify.domain.model.OfferCategory.valueOf(categoryName)
+                } catch (e: Exception) {
+                    com.example.matchify.domain.model.OfferCategory.DEVELOPMENT
+                }
+                
+                com.example.matchify.ui.offers.create.CreateOfferScreen(
+                    category = category,
+                    onBack = { navController.popBackStack() },
+                    onOfferCreated = {
+                        navController.popBackStack(route = "missions_list", inclusive = false)
+                    }
+                )
+            }
+            
+            composable("my_offers") {
+                com.example.matchify.ui.offers.myoffers.MyOffersScreen(
+                    onBack = { navController.popBackStack() },
+                    onOfferClick = { offerId ->
+                        navController.navigate("edit_offer/$offerId")
+                    }
+                )
+            }
+            
+            composable("edit_offer/{offerId}") { backStackEntry ->
+                val offerId = backStackEntry.arguments?.getString("offerId") ?: ""
+                // Load offer and show edit screen
+                val viewModel: com.example.matchify.ui.offers.myoffers.MyOffersViewModel = 
+                    androidx.lifecycle.viewmodel.compose.viewModel(
+                        factory = com.example.matchify.ui.offers.myoffers.MyOffersViewModelFactory()
+                    )
+                
+                LaunchedEffect(Unit) {
+                    viewModel.loadMyOffers()
+                }
+                
+                val offer = viewModel.offers.firstOrNull { it.id == offerId }
+                
+                if (offer != null) {
+                    com.example.matchify.ui.offers.edit.EditOfferScreen(
+                        offer = offer,
+                        onBack = { navController.popBackStack() },
+                        onOfferUpdated = {
+                            navController.popBackStack()
+                        }
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
+            
+            composable("browse_offers") {
+                com.example.matchify.ui.offers.browse.BrowseOffersScreen(
+                    onBack = { navController.popBackStack() },
+                    onOfferClick = { offerId ->
+                        navController.navigate("offer_details/$offerId")
+                    }
+                )
+            }
+            
+            composable("offer_details/{offerId}") { backStackEntry ->
+                val offerId = backStackEntry.arguments?.getString("offerId") ?: ""
+                // Load offer and show details
+                val viewModel: com.example.matchify.ui.offers.browse.BrowseOffersViewModel = 
+                    androidx.lifecycle.viewmodel.compose.viewModel(
+                        factory = com.example.matchify.ui.offers.browse.BrowseOffersViewModelFactory()
+                    )
+                
+                LaunchedEffect(Unit) {
+                    viewModel.loadOffers()
+                }
+                
+                val offer = viewModel.offers.firstOrNull { it.id == offerId }
+                
+                if (offer != null) {
+                    com.example.matchify.ui.offers.details.OfferDetailsScreen(
+                        offer = offer,
+                        onBack = { navController.popBackStack() }
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
             }
             
             // Contracts

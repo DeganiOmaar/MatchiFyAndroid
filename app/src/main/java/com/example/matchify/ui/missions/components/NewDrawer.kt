@@ -28,6 +28,9 @@ import com.example.matchify.ui.theme.ThemeType
 enum class DrawerMenuItemType {
     PROFILE,
     MY_STATS,
+    CREATE_OFFER,
+    MY_OFFERS,
+    BROWSE_OFFERS,
     CHAT_BOT,
     SETTINGS,
     THEME,
@@ -42,6 +45,7 @@ data class DrawerMenuItem(
     companion object {
         fun recruiterItems(): List<DrawerMenuItem> = listOf(
             DrawerMenuItem("Profile", Icons.Default.Person, DrawerMenuItemType.PROFILE),
+            DrawerMenuItem("Browse Offers", Icons.Default.Search, DrawerMenuItemType.BROWSE_OFFERS),
             DrawerMenuItem("Chat Bot", Icons.Default.Message, DrawerMenuItemType.CHAT_BOT),
             DrawerMenuItem("Settings", Icons.Default.Settings, DrawerMenuItemType.SETTINGS),
             DrawerMenuItem("Theme", Icons.Default.DarkMode, DrawerMenuItemType.THEME)
@@ -50,6 +54,8 @@ data class DrawerMenuItem(
         fun talentItems(): List<DrawerMenuItem> = listOf(
             DrawerMenuItem("Profile", Icons.Default.Person, DrawerMenuItemType.PROFILE),
             DrawerMenuItem("My Stats", Icons.Default.Assessment, DrawerMenuItemType.MY_STATS),
+            DrawerMenuItem("Create Offer", Icons.Default.Add, DrawerMenuItemType.CREATE_OFFER),
+            DrawerMenuItem("My Offers", Icons.Default.List, DrawerMenuItemType.MY_OFFERS),
             DrawerMenuItem("Chat Bot", Icons.Default.Message, DrawerMenuItemType.CHAT_BOT),
             DrawerMenuItem("Settings", Icons.Default.Settings, DrawerMenuItemType.SETTINGS),
             DrawerMenuItem("Theme", Icons.Default.DarkMode, DrawerMenuItemType.THEME)
@@ -327,6 +333,9 @@ private fun isItemSelected(
             currentRoute == "recruiter_profile" || currentRoute == "talent_profile"
         }
         DrawerMenuItemType.MY_STATS -> currentRoute == "my_stats"
+        DrawerMenuItemType.CREATE_OFFER -> currentRoute == "category_selection" || currentRoute?.startsWith("create_offer") == true
+        DrawerMenuItemType.MY_OFFERS -> currentRoute == "my_offers"
+        DrawerMenuItemType.BROWSE_OFFERS -> currentRoute == "browse_offers"
         DrawerMenuItemType.CHAT_BOT -> currentRoute == "chatbot"
         DrawerMenuItemType.SETTINGS -> currentRoute == "settings"
         DrawerMenuItemType.THEME -> currentRoute == "theme"
