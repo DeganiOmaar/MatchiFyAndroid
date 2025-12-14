@@ -135,7 +135,7 @@ fun TalentProfileByIDScreen(
                 user?.cvUrl?.let { cvUrl ->
                     if (cvUrl.isNotBlank()) {
                         CvFileSection(
-                            cvFileName = extractFileNameFromUrl(cvUrl) ?: "CV.pdf",
+                            cvFileName = "${user?.fullName ?: "Talent"} - CV.pdf",
                             onCvClick = {
                                 val cvUrlFull = user?.cvUrlURL ?: return@CvFileSection
                                 try {
