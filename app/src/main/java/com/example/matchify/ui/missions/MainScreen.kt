@@ -872,7 +872,10 @@ fun MainScreen(
                 if (offer != null) {
                     com.example.matchify.ui.offers.details.OfferDetailsScreen(
                         offer = offer,
-                        onBack = { navController.popBackStack() }
+                        onBack = { navController.popBackStack() },
+                        onNavigateToChat = { conversationId ->
+                            navController.navigate("conversation_chat/$conversationId")
+                        }
                     )
                 } else {
                     Box(

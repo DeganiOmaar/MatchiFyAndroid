@@ -6,6 +6,8 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.http.*
 
+import com.example.matchify.domain.model.AddReviewRequest
+
 interface OfferApi {
     
     @GET("offers")
@@ -16,6 +18,12 @@ interface OfferApi {
     
     @GET("offers/{id}")
     suspend fun getOfferById(@Path("id") id: String): Offer
+    
+    @POST("offers/{id}/reviews")
+    suspend fun addReview(
+        @Path("id") id: String,
+        @Body request: AddReviewRequest
+    ): Offer
     
     @Multipart
     @JvmSuppressWildcards

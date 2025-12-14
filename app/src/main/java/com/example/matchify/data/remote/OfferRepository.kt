@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.example.matchify.data.local.AuthPreferences
 import com.example.matchify.domain.model.Offer
+import com.example.matchify.domain.model.AddReviewRequest
 import com.example.matchify.domain.model.UpdateOfferRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -141,6 +142,11 @@ class OfferRepository(
     
     suspend fun deleteOffer(id: String): Offer = withContext(Dispatchers.IO) {
         api.deleteOffer(id)
+    }
+    
+    suspend fun addReview(id: String, rating: Int, message: String): Offer = withContext(Dispatchers.IO) {
+        val request = AddReviewRequest(rating, message)
+        api.addReview(id, request)
     }
     
     fun isOfferOwner(offer: Offer): Boolean {

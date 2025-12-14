@@ -18,11 +18,20 @@ data class Offer(
     val galleryImages: List<String>? = null,
     val introductionVideo: String? = null,
     val capabilities: List<String>? = null,
+    val reviews: List<Review>? = null,
     val talentId: String,
     val dateOfPosting: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null
 ) {
+
+    data class Review(
+        val recruiterId: String,
+        val recruiterName: String,
+        val rating: Int,
+        val message: String,
+        val createdAt: String
+    )
     val formattedPrice: String
         get() {
             val formatter = NumberFormat.getNumberInstance(Locale.FRANCE)
@@ -82,4 +91,9 @@ data class UpdateOfferRequest(
 
 data class OffersResponse(
     val offers: List<Offer>
+)
+
+data class AddReviewRequest(
+    val rating: Int,
+    val message: String
 )
