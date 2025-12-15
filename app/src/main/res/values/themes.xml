@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.MatchiFy" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.MatchiFy" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Splash Screen (Android 12+) -->
+        <item name="android:windowSplashScreenBackground">@color/matchify_white</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/logomatchify</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        
+        <!-- Legacy Splash Screen (Android 11 and below) -->
+        <item name="android:windowBackground">@drawable/splash_background</item>
+    </style>
 </resources>

@@ -7,4 +7,10 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- MatchiFy Brand Colors -->
+    <color name="matchify_navy">#1E3A8A</color>
+    <color name="matchify_cyan">#06B6D4</color>
+    <color name="matchify_light_cyan">#E0F2FE</color>
+    <color name="matchify_white">#FFFFFF</color>
 </resources>

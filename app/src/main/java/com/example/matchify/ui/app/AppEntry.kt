@@ -17,7 +17,7 @@ fun AppEntry(context: Context = LocalContext.current) {
         startDestination = provider.getStartDestination()
     }
 
-    // WAIT until we know where to navigate
+    // Navigate directly when ready
     if (startDestination != null) {
         AppNavGraph(
             navController = navController,

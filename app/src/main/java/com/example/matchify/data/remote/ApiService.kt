@@ -9,15 +9,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-// Change to a class that can be initialized with dependencies
 class ApiService(private val authPreferences: AuthPreferences) {
 
-    // 🔥 IMPORTANT: localhost pour Android
     private val baseUrl = "http://10.0.2.2:3000/"
 
-    // -----------------------------------------------------------
-    // 🔐 Interceptor pour ajouter automatiquement le Bearer Token
-    // -----------------------------------------------------------
     private val authInterceptor = Interceptor { chain ->
         val token = authPreferences.currentAccessToken.value
 
@@ -35,7 +30,6 @@ class ApiService(private val authPreferences: AuthPreferences) {
 
         val response = chain.proceed(newRequest)
         
-        // Log response for debugging
         if (!response.isSuccessful) {
             val errorBody = response.peekBody(Long.MAX_VALUE).string()
             Log.e("ApiService", "HTTP ${response.code} Error: $errorBody")
@@ -46,9 +40,7 @@ class ApiService(private val authPreferences: AuthPreferences) {
 
 
 
-    // -----------------------------------------------------------
-    // 🌐 Client HTTP
-    // -----------------------------------------------------------
+
     private val client = OkHttpClient.Builder()
         .addInterceptor(authInterceptor)
         .connectTimeout(60, TimeUnit.SECONDS)
@@ -56,11 +48,8 @@ class ApiService(private val authPreferences: AuthPreferences) {
         .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
-    // -----------------------------------------------------------
-    // 🔧 Instance Retrofit unique
-    // -----------------------------------------------------------
     private val gson = com.google.gson.GsonBuilder()
-        .serializeNulls() // This will be changed to NOT serialize nulls
+        .serializeNulls()
         .create()
     
     private val retrofit: Retrofit by lazy {
@@ -70,106 +59,74 @@ class ApiService(private val authPreferences: AuthPreferences) {
             .addConverterFactory(GsonConverterFactory.create(
                 com.google.gson.GsonBuilder()
                     .setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.IDENTITY)
-                    // Don't serialize null values - backend doesn't want them
                     .create()
             ))
             .build()
     }
 
-    // -----------------------------------------------------------
-    // 🔐 AUTH API
-    // -----------------------------------------------------------
+
     val authApi: AuthApi by lazy {
         retrofit.create(AuthApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // 👔 RECRUITER API (Profile + Edit + Multipart)
-    // -----------------------------------------------------------
     val recruiterApi: RecruiterApi by lazy {
         retrofit.create(RecruiterApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // 🎨 TALENT API (Profile + Edit + Multipart)
-    // -----------------------------------------------------------
+
     val talentApi: TalentApi by lazy {
         retrofit.create(TalentApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // 📋 MISSION API (CRUD operations)
-    // -----------------------------------------------------------
+
     val missionApi: MissionApi by lazy {
         retrofit.create(MissionApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // 📝 PROPOSAL API
-    // -----------------------------------------------------------
+
     val proposalApi: ProposalApi by lazy {
         retrofit.create(ProposalApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // 💬 CONVERSATION API
-    // -----------------------------------------------------------
+
     val conversationApi: ConversationApi by lazy {
         retrofit.create(ConversationApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // ⭐ FAVORITE API
-    // -----------------------------------------------------------
     val favoriteApi: FavoriteApi by lazy {
         retrofit.create(FavoriteApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // 🎨 PORTFOLIO API
-    // -----------------------------------------------------------
+
     val portfolioApi: PortfolioApi by lazy {
         retrofit.create(PortfolioApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // 👤 USER API
-    // -----------------------------------------------------------
+
     val userApi: UserApi by lazy {
         retrofit.create(UserApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // 🎯 SKILL API
-    // -----------------------------------------------------------
+
     val skillApi: SkillApi by lazy {
         retrofit.create(SkillApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // 🔔 ALERT API
-    // -----------------------------------------------------------
+
     val alertApi: AlertApi by lazy {
         retrofit.create(AlertApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // 📄 CONTRACT API
-    // -----------------------------------------------------------
+
     val contractApi: ContractApi by lazy {
         retrofit.create(ContractApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // 🤖 AI API
-    // -----------------------------------------------------------
+
     val aiApi: AiApi by lazy {
         retrofit.create(AiApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // 💼 OFFER API
-    // -----------------------------------------------------------
     val offerApi: OfferApi by lazy {
         retrofit.create(OfferApi::class.java)
     }
