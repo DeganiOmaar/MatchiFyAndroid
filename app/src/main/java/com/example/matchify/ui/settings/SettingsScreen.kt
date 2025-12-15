@@ -4,11 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,7 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.matchify.ui.app.LocalAppLanguage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,8 +28,6 @@ fun SettingsScreen(
 ) {
     val isLoggingOut by viewModel.isLoggingOut.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    val languageCode = LocalAppLanguage.current
-    val isFrench = languageCode == "fr"
 
     LaunchedEffect(Unit) {
         viewModel.logoutEvents.collect {
@@ -42,52 +40,111 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(Color(0xFF0F172A))
     ) {
-        // Custom Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(64.dp)
-                .background(Color(0xFF1E293B))
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.Rounded.ArrowBack,
-                    contentDescription = if (isFrench) "Retour" else "Back",
-                    tint = Color(0xFF3B82F6) // Blue accent
-                )
-            }
-            
-            Text(
-                text = if (isFrench) "Paramètres" else "Settings",
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
+        // App Bar
+        com.example.matchify.ui.components.MatchifyTopAppBar(
+            title = "Settings",
+            onBack = onBack
+        )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Account Section Title
+            // Settings Section Title
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = if (isFrench) "Compte" else "Account",
+                    text = "Settings",
                     color = Color.White,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.SemiBold
                 )
                 
                 Text(
-                    text = if (isFrench) 
-                        "Gérez votre session et assurez-vous de sécuriser vos données."
-                    else 
-                        "Manage your session and ensure your data is secure.",
+                    text = "Manage your preferences and account settings.",
+                    color = Color(0xFF9CA3AF),
+                    fontSize = 15.sp
+                )
+            }
+
+            // Settings Menu Items
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                color = Color(0xFF1E293B),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF374151)),
+                shadowElevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(vertical = 8.dp)
+                ) {
+                    SettingsMenuItem(
+                        icon = Icons.Rounded.Person,
+                        title = "Contact Info",
+                        subtitle = "Manage your contact details",
+                        onClick = { /* TODO: Navigate to Contact Info */ }
+                    )
+                    
+                    SettingsDivider()
+                    
+                    SettingsMenuItem(
+                        icon = Icons.Rounded.Group,
+                        title = "My Teams",
+                        subtitle = "Manage your teams",
+                        onClick = { /* TODO: Navigate to My Teams */ }
+                    )
+                    
+                    SettingsDivider()
+                    
+                    SettingsMenuItem(
+                        icon = Icons.Rounded.Lock,
+                        title = "Password & Security",
+                        subtitle = "Secure your account",
+                        onClick = { /* TODO: Navigate to Password & Security */ }
+                    )
+                    
+                    SettingsDivider()
+                    
+                    SettingsMenuItem(
+                        icon = Icons.Rounded.Notifications,
+                        title = "Notifications Settings",
+                        subtitle = "Manage your notifications",
+                        onClick = { /* TODO: Navigate to Notifications Settings */ }
+                    )
+                    
+                    SettingsDivider()
+                    
+                    SettingsMenuItem(
+                        icon = Icons.Rounded.Help,
+                        title = "App Support",
+                        subtitle = "Get help",
+                        onClick = { /* TODO: Navigate to App Support */ }
+                    )
+                    
+                    SettingsDivider()
+                    
+                    SettingsMenuItem(
+                        icon = Icons.Rounded.Feedback,
+                        title = "Feedback",
+                        subtitle = "Share your feedback",
+                        onClick = { /* TODO: Navigate to Feedback */ }
+                    )
+                }
+            }
+
+            // Account Section Title
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Account",
+                    color = Color.White,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                
+                Text(
+                    text = "Manage your session and ensure your data is secure.",
                     color = Color(0xFF9CA3AF),
                     fontSize = 15.sp
                 )
@@ -115,15 +172,15 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .size(56.dp)
                                 .background(
-                                    color = Color(0xFF3B82F6).copy(alpha = 0.12f),
+                                    color = Color(0xFFEF4444).copy(alpha = 0.12f),
                                     shape = CircleShape
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.Lock,
+                                imageVector = Icons.Rounded.Logout,
                                 contentDescription = null,
-                                tint = Color(0xFF3B82F6),
+                                tint = Color(0xFFEF4444),
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -134,14 +191,14 @@ fun SettingsScreen(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = if (isFrench) "Déconnexion" else "Logout",
+                                text = "Logout",
                                 color = Color.White,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                             
                             Text(
-                                text = if (isFrench) "Terminez votre session actuelle." else "End your current session.",
+                                text = "End your current session.",
                                 color = Color(0xFF9CA3AF),
                                 fontSize = 14.sp
                             )
@@ -157,9 +214,9 @@ fun SettingsScreen(
                             .height(50.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF3B82F6),
+                            containerColor = Color(0xFFEF4444),
                             contentColor = Color.White,
-                            disabledContainerColor = Color(0xFF3B82F6).copy(alpha = 0.5f)
+                            disabledContainerColor = Color(0xFFEF4444).copy(alpha = 0.5f)
                         )
                     ) {
                         if (isLoggingOut) {
@@ -170,7 +227,7 @@ fun SettingsScreen(
                             )
                         } else {
                             Text(
-                                text = if (isFrench) "Se déconnecter" else "Logout",
+                                text = "Logout",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -187,10 +244,71 @@ fun SettingsScreen(
                     }
                 }
             }
-            
-            // Language Section (Optional, keeping it simple for now or adding if needed)
-            // For now, focusing on the requested Logout flow redesign.
         }
     }
+}
+
+@Composable
+private fun SettingsMenuItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Icon
+        Icon(
+            imageVector = icon,
+            contentDescription = title,
+            tint = Color(0xFF3B82F6),
+            modifier = Modifier.size(24.dp)
+        )
+        
+        // Text Content
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            )
+            
+            Text(
+                text = subtitle,
+                color = Color(0xFF9CA3AF),
+                fontSize = 13.sp
+            )
+        }
+        
+        // Arrow Icon
+        Icon(
+            imageVector = Icons.Rounded.ChevronRight,
+            contentDescription = null,
+            tint = Color(0xFF64748B),
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+@Composable
+private fun SettingsDivider() {
+    HorizontalDivider(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        color = Color(0xFF374151).copy(alpha = 0.5f),
+        thickness = 1.dp
+    )
 }
 
