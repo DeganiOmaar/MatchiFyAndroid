@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
@@ -108,14 +109,9 @@ fun CreateOfferScreen(
     ) {
         Scaffold(
             topBar = {
-                com.example.matchify.ui.components.CustomAppBar(
+                MatchifyTopAppBar(
                     title = "Create Offer",
-                    profileImageUrl = user?.profileImageUrl,
-                    onProfileClick = {
-                        scope.launch {
-                            drawerState.open()
-                        }
-                    }
+                    onBack = onBack
                 )
             },
             containerColor = Color(0xFF0F172A)
