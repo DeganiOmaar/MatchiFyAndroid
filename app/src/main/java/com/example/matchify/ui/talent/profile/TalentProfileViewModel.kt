@@ -190,13 +190,16 @@ class TalentProfileViewModel(
         
         viewModelScope.launch {
             try {
+                Log.d("TalentProfileViewModel", "Loading skill names for IDs: $skillIds")
                 val skills = skillRepository.getSkillsByIds(skillIds)
                 _skillNames.value = skills.map { it.name }
                 Log.d("TalentProfileViewModel", "Loaded skill names: ${_skillNames.value}")
             } catch (e: Exception) {
                 Log.e("TalentProfileViewModel", "Failed to load skill names: ${e.message}", e)
-                // Fallback: use IDs if loading names fails
-                _skillNames.value = skillIds
+                Log.e("TalentProfileViewModel", "Exception type: ${e.javaClass.simpleName}")
+                Log.e("TalentProfileViewModel", "Stack trace: ${e.stackTraceToString()}")
+                // Don't fall back to IDs - just show nothing if it fails
+                _skillNames.value = emptyList()
             }
         }
     }

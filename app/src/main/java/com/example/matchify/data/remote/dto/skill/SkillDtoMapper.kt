@@ -7,7 +7,7 @@ fun SkillDto.toDomain(): Skill {
         id = id,
         _id = _id,
         name = name,
-        source = source,
+        source = source ?: "USER", // Default to USER if source is missing
         createdBy = createdBy,
         createdAt = createdAt,
         updatedAt = updatedAt
