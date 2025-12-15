@@ -32,6 +32,7 @@ import com.example.matchify.domain.model.Stats
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyStatsScreen(
+    onBack: () -> Unit = {},
     viewModel: MyStatsViewModel = viewModel(factory = MyStatsViewModelFactory())
 ) {
     val stats by viewModel.stats.collectAsState()
@@ -43,67 +44,53 @@ fun MyStatsScreen(
             .fillMaxSize()
             .background(Color(0xFF0F172A))
     ) {
-        // Custom Header
-        StatsHeader()
+        // App Bar
+        com.example.matchify.ui.components.MatchifyTopAppBar(
+            title = "My Stats",
+            onBack = onBack
+        )
 
-        Box(modifier = Modifier.weight(1f)) {
-            if (isLoading && stats == null) {
+        if (isLoading && stats == null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
                     color = Color(0xFF3B82F6)
                 )
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
-                ) {
-                    // Overview Section
-                    OverviewSection(
-                        formattedEarnings = viewModel.formattedEarnings
-                    )
-                    
-                    HorizontalDivider(color = Color(0xFF374151))
-                    
-                    // Job Success Score Section
-                    JobSuccessScoreSection(
-                        scoreText = viewModel.jobSuccessScoreText,
-                        hasScore = viewModel.hasJobSuccessScore
-                    )
-                    
-                    HorizontalDivider(color = Color(0xFF374151))
-                    
-                    // Proposals Section
-                    ProposalsSection(
-                        stats = stats,
-                        selectedTimeframe = selectedTimeframe,
-                        onTimeframeSelected = { viewModel.selectTimeframe(it) },
-                        proposalsSentText = viewModel.proposalsSentText
-                    )
-                }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                // Overview Section
+                OverviewSection(
+                    formattedEarnings = viewModel.formattedEarnings
+                )
+                
+                HorizontalDivider(color = Color(0xFF374151))
+                
+                // Job Success Score Section
+                JobSuccessScoreSection(
+                    scoreText = viewModel.jobSuccessScoreText,
+                    hasScore = viewModel.hasJobSuccessScore
+                )
+                
+                HorizontalDivider(color = Color(0xFF374151))
+                
+                // Proposals Section
+                ProposalsSection(
+                    stats = stats,
+                    selectedTimeframe = selectedTimeframe,
+                    onTimeframeSelected = { viewModel.selectTimeframe(it) },
+                    proposalsSentText = viewModel.proposalsSentText
+                )
             }
         }
-    }
-}
-
-@Composable
-private fun StatsHeader() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp)
-            .background(Color(0xFF1E293B))
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "My stats",
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
     }
 }
 

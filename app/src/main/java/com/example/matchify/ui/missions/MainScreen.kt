@@ -655,7 +655,10 @@ fun MainScreen(
             
             composable("my_stats") {
                 val statsViewModel: MyStatsViewModel = viewModel(factory = MyStatsViewModelFactory())
-                MyStatsScreen(viewModel = statsViewModel)
+                MyStatsScreen(
+                    onBack = { navController.popBackStack() },
+                    viewModel = statsViewModel
+                )
             }
             
             // Settings is now handled by the parent AppNavGraph
