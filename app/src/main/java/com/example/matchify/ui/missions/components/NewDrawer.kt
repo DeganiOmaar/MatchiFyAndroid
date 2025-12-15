@@ -47,8 +47,7 @@ data class DrawerMenuItem(
             DrawerMenuItem("Profile", Icons.Default.Person, DrawerMenuItemType.PROFILE),
             DrawerMenuItem("Browse Offers", Icons.Default.Search, DrawerMenuItemType.BROWSE_OFFERS),
             DrawerMenuItem("Chat Bot", Icons.Default.Message, DrawerMenuItemType.CHAT_BOT),
-            DrawerMenuItem("Settings", Icons.Default.Settings, DrawerMenuItemType.SETTINGS),
-            DrawerMenuItem("Theme", Icons.Default.DarkMode, DrawerMenuItemType.THEME)
+            DrawerMenuItem("Settings", Icons.Default.Settings, DrawerMenuItemType.SETTINGS)
         )
         
         fun talentItems(): List<DrawerMenuItem> = listOf(
@@ -57,8 +56,7 @@ data class DrawerMenuItem(
             DrawerMenuItem("Create Offer", Icons.Default.Add, DrawerMenuItemType.CREATE_OFFER),
             DrawerMenuItem("My Offers", Icons.Default.List, DrawerMenuItemType.MY_OFFERS),
             DrawerMenuItem("Chat Bot", Icons.Default.Message, DrawerMenuItemType.CHAT_BOT),
-            DrawerMenuItem("Settings", Icons.Default.Settings, DrawerMenuItemType.SETTINGS),
-            DrawerMenuItem("Theme", Icons.Default.DarkMode, DrawerMenuItemType.THEME)
+            DrawerMenuItem("Settings", Icons.Default.Settings, DrawerMenuItemType.SETTINGS)
         )
     }
 }
