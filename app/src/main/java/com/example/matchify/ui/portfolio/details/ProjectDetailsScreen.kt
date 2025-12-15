@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -27,10 +28,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -81,219 +84,239 @@ fun ProjectDetailsScreen(
         }
     }
     
+    // Design colors
+    val darkBackground = Color(0xFF0F172A)
+    val cardBackground = Color(0xFF1E293B)
+    val whiteText = Color.White
+    val grayText = Color(0xFF94A3B8)
+    
     Scaffold(
+        containerColor = darkBackground,
         topBar = {
-            TopAppBar(
-                title = {
+            Surface(
+                color = darkBackground,
+                shadowElevation = 0.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = whiteText
+                        )
+                    }
+                    
                     Text(
                         text = "Project Details",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = whiteText
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    if (project != null && isOwner) {
-                        IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete project",
-                                tint = MaterialTheme.colorScheme.error
-                            )
+                    
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (project != null && isOwner) {
+                            IconButton(onClick = { showDeleteDialog = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete project",
+                                    tint = Color(0xFFEF4444)
+                                )
+                            }
+                            TextButton(onClick = { 
+                                project?.let { 
+                                    onEditProject(it) 
+                                } 
+                            }) {
+                                Text(
+                                    text = "Edit",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = whiteText
+                                )
+                            }
+                        } else {
+                            // Empty space to balance layout
+                            Spacer(modifier = Modifier.width(80.dp))
                         }
-                        TextButton(onClick = { 
-                            project?.let { 
-                                onEditProject(it) 
-                            } 
-                        }) {
-                            Text(
-                                text = "Edit",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
+                }
+            }
         }
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
+                .background(darkBackground)
         ) {
             when {
                 isLoading && project == null -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = whiteText
+                    )
                 }
                 errorMessage != null -> {
                     Text(
                         text = errorMessage ?: "Error",
-                        color = MaterialTheme.colorScheme.error,
+                        color = Color(0xFFEF4444),
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
                 project == null -> {
                     Text(
                         text = "Project not found",
+                        color = grayText,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
                 else -> {
-                    // Debug: Log project data
-                    LaunchedEffect(project) {
-                        project?.let {
-                            android.util.Log.d("ProjectDetailsScreen", "Project displayed: title=${it.title}, description=${it.description?.take(50)}, media=${it.media.size}, skills=${it.skills.size}")
-                        }
-                    }
-                    
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
-                            .padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                            .padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
-                        // Media Gallery - Show first if available
+                        // Media Section
                         if (project!!.media.isNotEmpty()) {
-                            MediaGallerySection(project = project!!, context = context)
-                        }
-                        
-                        // Project Info
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(20.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            // Title - Always show
-                            Text(
-                                text = project!!.title,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            
-                            // Role
-                            if (!project!!.role.isNullOrBlank()) {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Text(
-                                    text = project!!.role!!,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.primary
+                                    text = "Media",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = whiteText
                                 )
-                            }
-                            
-                            // Description
-                            if (!project!!.description.isNullOrBlank()) {
-                                Column(
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = "Description",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    
-                                    Text(
-                                        text = project!!.description!!,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            }
-                            
-                            // Skills
-                            if (project!!.skills.isNotEmpty()) {
-                                Column(
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = "Skills",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    
-                                    LazyRow(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        contentPadding = PaddingValues(horizontal = 0.dp)
-                                    ) {
-                                        items(project!!.skills) { skill ->
-                                            Surface(
-                                                shape = RoundedCornerShape(12.dp),
-                                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                                            ) {
-                                                Text(
-                                                    text = skill,
-                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    color = MaterialTheme.colorScheme.primary,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // Project Link
-                            if (!project!!.projectLink.isNullOrBlank()) {
-                                Column(
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = "Project Link",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    
-                                    Surface(
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                
+                                // First media item (large)
+                                val firstMedia = project!!.firstMediaItem
+                                val mediaUrl = firstMedia?.getMediaUrl("http://10.0.2.2:3000")
+                                
+                                if (mediaUrl != null) {
+                                    AsyncImage(
+                                        model = mediaUrl,
+                                        contentDescription = null,
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clickable {
-                                                try {
-                                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(project!!.projectLink))
-                                                    context.startActivity(intent)
-                                                } catch (e: Exception) {
-                                                    // Handle error - invalid URL
-                                                }
-                                            }
-                                    ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(16.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
+                                            .height(240.dp)
+                                            .clip(RoundedCornerShape(16.dp)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Project Title
+                        Text(
+                            text = project!!.title,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = whiteText
+                        )
+                        
+                        // Role
+                        if (!project!!.role.isNullOrBlank()) {
+                            Text(
+                                text = project!!.role!!,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = grayText
+                            )
+                        }
+                        
+                        // Description
+                        if (!project!!.description.isNullOrBlank()) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    text = "Description",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = grayText
+                                )
+                                Text(
+                                    text = project!!.description!!,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    color = whiteText,
+                                    lineHeight = 22.sp
+                                )
+                            }
+                        }
+                        
+                        // Skills
+                        if (project!!.skills.isNotEmpty()) {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text(
+                                    text = "Skills",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = grayText
+                                )
+                                
+                                LazyRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 0.dp)
+                                ) {
+                                    items(project!!.skills) { skill ->
+                                        Surface(
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = cardBackground
                                         ) {
                                             Text(
-                                                text = project!!.projectLink!!,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                maxLines = 1,
-                                                modifier = Modifier.weight(1f)
-                                            )
-                                            
-                                            Icon(
-                                                imageVector = Icons.Default.OpenInNew,
-                                                contentDescription = "Open link",
-                                                tint = MaterialTheme.colorScheme.primary
+                                                text = skill,
+                                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                                fontSize = 14.sp,
+                                                color = whiteText,
+                                                fontWeight = FontWeight.Medium
                                             )
                                         }
                                     }
+                                }
+                            }
+                        }
+                        
+                        // Project Link
+                        if (!project!!.projectLink.isNullOrBlank()) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = cardBackground,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        try {
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(project!!.projectLink))
+                                            context.startActivity(intent)
+                                        } catch (e: Exception) {
+                                            // Handle error
+                                        }
+                                    }
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = project!!.projectLink!!,
+                                        fontSize = 14.sp,
+                                        color = Color(0xFF3B82F6),
+                                        maxLines = 1,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    
+                                    Icon(
+                                        imageVector = Icons.Default.OpenInNew,
+                                        contentDescription = "Open link",
+                                        tint = Color(0xFF3B82F6)
+                                    )
                                 }
                             }
                         }
@@ -306,17 +329,18 @@ fun ProjectDetailsScreen(
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
+                containerColor = cardBackground,
+                titleContentColor = whiteText,
+                textContentColor = grayText,
                 title = {
                     Text(
                         text = "Delete Project",
-                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 text = {
                     Text(
-                        text = "Are you sure you want to delete this project? This action cannot be undone.",
-                        style = MaterialTheme.typography.bodyMedium
+                        text = "Are you sure you want to delete this project? This action cannot be undone."
                     )
                 },
                 confirmButton = {
@@ -326,234 +350,26 @@ fun ProjectDetailsScreen(
                             showDeleteDialog = false
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
+                            containerColor = Color(0xFFEF4444)
                         ),
                         enabled = !isDeleting
                     ) {
                         if (isDeleting) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
-                                color = MaterialTheme.colorScheme.onError
+                                color = whiteText
                             )
                         } else {
-                            Text("Delete")
+                            Text("Delete", color = whiteText)
                         }
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteDialog = false }) {
-                        Text("Cancel")
+                        Text("Cancel", color = grayText)
                     }
                 }
             )
         }
     }
 }
-
-@Composable
-private fun MediaGallerySection(
-    project: Project,
-    context: android.content.Context
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            text = "Media",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        
-        // Images
-        if (project.images.isNotEmpty()) {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(horizontal = 0.dp)
-            ) {
-                items(project.images) { mediaItem ->
-                    val imageUrl = mediaItem.getMediaUrl("http://10.0.2.2:3000")
-                    if (imageUrl != null) {
-                        AsyncImage(
-                            model = imageUrl,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .width(300.dp)
-                                .height(200.dp)
-                                .clip(RoundedCornerShape(12.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-                }
-            }
-        }
-        
-        // Videos
-        if (project.videos.isNotEmpty()) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                project.videos.forEach { mediaItem ->
-                    val videoUrl = mediaItem.getMediaUrl("http://10.0.2.2:3000")
-                    if (videoUrl != null) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    try {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))
-                                        intent.setDataAndType(Uri.parse(videoUrl), "video/*")
-                                        context.startActivity(intent)
-                                    } catch (e: Exception) {
-                                        // Handle error
-                                    }
-                                }
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.VideoLibrary,
-                                    contentDescription = "Video",
-                                    modifier = Modifier.size(48.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = mediaItem.title ?: "Video",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    text = "Tap to open video player",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        // PDFs
-        if (project.pdfs.isNotEmpty()) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                project.pdfs.forEach { mediaItem ->
-                    val pdfUrl = mediaItem.getMediaUrl("http://10.0.2.2:3000")
-                    if (pdfUrl != null) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    try {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(pdfUrl))
-                                        intent.setDataAndType(Uri.parse(pdfUrl), "application/pdf")
-                                        context.startActivity(intent)
-                                    } catch (e: Exception) {
-                                        // Handle error - no PDF viewer app installed
-                                    }
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.PictureAsPdf,
-                                    contentDescription = "PDF",
-                                    modifier = Modifier.size(48.dp),
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = mediaItem.title ?: "PDF Document",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    Text(
-                                        text = "Tap to view PDF",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                Icon(
-                                    imageVector = Icons.Default.OpenInNew,
-                                    contentDescription = "Open PDF",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        // External Links
-        if (project.externalLinks.isNotEmpty()) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                project.externalLinks.forEach { mediaItem ->
-                    if (mediaItem.externalLink != null) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    try {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mediaItem.externalLink))
-                                        context.startActivity(intent)
-                                    } catch (e: Exception) {
-                                        // Handle error - invalid URL
-                                    }
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    if (mediaItem.title != null) {
-                                        Text(
-                                            text = mediaItem.title!!,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    }
-                                    Text(
-                                        text = mediaItem.externalLink!!,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        maxLines = 1
-                                    )
-                                }
-                                
-                                Icon(
-                                    imageVector = Icons.Default.OpenInNew,
-                                    contentDescription = "Open link",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-

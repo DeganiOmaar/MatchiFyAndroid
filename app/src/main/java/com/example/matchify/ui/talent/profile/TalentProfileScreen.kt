@@ -722,8 +722,10 @@ private fun PortfolioItemCard(
         modifier = modifier
             .clickable(onClick = onClick)
     ) {
-        // Portfolio image avec gradient placeholder
-        val imageUrl = project.getFirstMediaUrl("http://10.0.2.2:3000")
+        // Get first media item to determine type
+        val firstMedia = project.firstMediaItem
+        val mediaUrl = project.getFirstMediaUrl("http://10.0.2.2:3000")
+        val isVideo = firstMedia?.isVideo == true
         
         // Générer un gradient unique basé sur l'index du projet
         val gradientColors = remember(project.id) {
@@ -738,9 +740,9 @@ private fun PortfolioItemCard(
             color = Color(0xFF1E293B)
         ) {
             Box {
-                if (imageUrl != null) {
+                if (mediaUrl != null) {
                     AsyncImage(
-                        model = imageUrl,
+                        model = mediaUrl,
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -756,6 +758,34 @@ private fun PortfolioItemCard(
                                 )
                             )
                     )
+                }
+                
+                // Play icon overlay for videos
+                if (isVideo) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.3f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = Color.White.copy(alpha = 0.9f),
+                            modifier = Modifier.size(56.dp)
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = android.R.drawable.ic_media_play),
+                                    contentDescription = "Play video",
+                                    tint = Color(0xFF0F172A),
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
