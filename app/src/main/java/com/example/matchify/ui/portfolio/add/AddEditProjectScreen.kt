@@ -457,24 +457,71 @@ private fun AttachedMediaRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon Box
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(Color(0xFF334155), RoundedCornerShape(8.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = when(media) {
-                    is AttachedMediaItem.ImageMedia -> Icons.Default.Image
-                    is AttachedMediaItem.VideoMedia -> Icons.Default.VideoLibrary
-                    is AttachedMediaItem.PdfMedia -> Icons.Default.PictureAsPdf
-                    is AttachedMediaItem.ExternalLinkMedia -> Icons.Default.Link
-                    is AttachedMediaItem.ExistingMedia -> Icons.Default.AttachFile
-                },
-                contentDescription = null,
-                tint = textColor
-            )
+        // Image Preview or Icon Box
+        when (media) {
+            is AttachedMediaItem.ImageMedia -> {
+                // Show image thumbnail
+                AsyncImage(
+                    model = media.uri,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(80.dp, 60.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            }
+            is AttachedMediaItem.ExistingMedia -> {
+                // Show existing image if it's an image type
+                if (media.mediaItem.isImage) {
+                    AsyncImage(
+                        model = media.mediaItem.getMediaUrl("http://10.0.2.2:3000"),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(80.dp, 60.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                } else {
+                    // Icon for non-image types
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(Color(0xFF334155), RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = when {
+                                media.mediaItem.isVideo -> Icons.Default.VideoLibrary
+                                media.mediaItem.isPdf -> Icons.Default.PictureAsPdf
+                                media.mediaItem.isExternalLink -> Icons.Default.Link
+                                else -> Icons.Default.AttachFile
+                            },
+                            contentDescription = null,
+                            tint = textColor
+                        )
+                    }
+                }
+            }
+            else -> {
+                // Icon for other media types (video, pdf, link)
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(Color(0xFF334155), RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = when(media) {
+                            is AttachedMediaItem.VideoMedia -> Icons.Default.VideoLibrary
+                            is AttachedMediaItem.PdfMedia -> Icons.Default.PictureAsPdf
+                            is AttachedMediaItem.ExternalLinkMedia -> Icons.Default.Link
+                            else -> Icons.Default.AttachFile
+                        },
+                        contentDescription = null,
+                        tint = textColor
+                    )
+                }
+            }
         }
         
         Column(modifier = Modifier.weight(1f)) {
