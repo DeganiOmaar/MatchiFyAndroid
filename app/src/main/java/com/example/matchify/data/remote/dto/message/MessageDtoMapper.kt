@@ -1,5 +1,6 @@
 package com.example.matchify.data.remote.dto.message
 
+import com.example.matchify.data.remote.dto.deliverable.toDomain
 import com.example.matchify.domain.model.Message
 
 object MessageDtoMapper {
@@ -15,6 +16,7 @@ object MessageDtoMapper {
             contractId = dto.contractId,
             pdfUrl = dto.pdfUrl,
             isContractMessage = dto.isContractMessage,
+            deliverable = dto.deliverable?.toDomain(),
             createdAt = dto.createdAt,
             updatedAt = dto.updatedAt
         )

@@ -17,7 +17,8 @@ fun MissionDto.toDomain(): Mission {
         proposalsCount = proposalsCount,
         interviewingCount = interviewingCount,
         hasApplied = hasApplied,
-        isFavorite = isFavorite
+        isFavorite = isFavorite,
+        status = status
     )
 }
 
@@ -37,7 +38,8 @@ object MissionDtoMapper {
             proposalsCount = dto.proposalsCount,
             interviewingCount = dto.interviewingCount,
             hasApplied = dto.hasApplied,
-            isFavorite = dto.isFavorite
+            isFavorite = dto.isFavorite,
+            status = dto.status
         )
     }
 }

@@ -80,7 +80,14 @@ class MissionListViewModel(
 
         viewModelScope.launch {
             try {
-                val allMissions = repository.getAllMissions()
+                // If recruiter, get only their missions. If talent, get all.
+                val allMissions = if (isTalent) {
+                    repository.getAllMissions()
+                } else {
+                    android.util.Log.d("MissionListViewModel", "Loading missions for recruiter")
+                    repository.getMissionsByRecruiter()
+                }
+                
                 _missions.value = allMissions
                 
                 // Update favorite IDs from missions that have isFavorite = true
@@ -100,6 +107,7 @@ class MissionListViewModel(
                     loadBestMatches()
                 }
             } catch (e: Exception) {
+                android.util.Log.e("MissionListViewModel", "Error loading missions", e)
                 _isLoading.value = false
                 _errorMessage.value = ErrorHandler.getErrorMessage(e, ErrorContext.GENERAL)
             }

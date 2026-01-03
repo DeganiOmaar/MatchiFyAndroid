@@ -1,5 +1,6 @@
 package com.example.matchify.data.remote.dto.message
 
+import com.example.matchify.data.remote.dto.deliverable.DeliverableDto
 import com.google.gson.annotations.SerializedName
 
 data class MessageDto(
@@ -13,6 +14,7 @@ data class MessageDto(
     @SerializedName("contractId") val contractId: String? = null,
     @SerializedName("pdfUrl") val pdfUrl: String? = null,
     @SerializedName("isContractMessage") val isContractMessage: Boolean? = null,
+    @SerializedName("deliverableId") val deliverable: DeliverableDto? = null,
     @SerializedName("createdAt") val createdAt: String? = null,
     @SerializedName("updatedAt") val updatedAt: String? = null
 )

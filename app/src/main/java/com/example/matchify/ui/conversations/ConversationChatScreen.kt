@@ -2,6 +2,7 @@ package com.example.matchify.ui.conversations
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,8 +19,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -48,10 +51,30 @@ fun ConversationChatScreen(
     val messageText by viewModel.messageText.collectAsState()
     val isSending by viewModel.isSending.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val shouldShowApproveButton by viewModel.shouldShowApproveButton.collectAsState()
+    val mission by viewModel.mission.collectAsState()
     
     val prefs = remember { AuthPreferencesProvider.getInstance().get() }
     val currentUser by prefs.user.collectAsState(initial = null)
     
+    // Payment Sheet State
+    var showPaymentSheet by remember { androidx.compose.runtime.mutableStateOf(false) }
+    
+    // Deliverable Sheet State
+    var showDeliverableSheet by remember { androidx.compose.runtime.mutableStateOf(false) }
+
+    // Pending Approval State
+    var pendingApprovalDeliverableId by remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+
+    // Payment ViewModel (using first non-null mission ID available)
+    val currentMissionIdForVm = mission?.missionId
+    val paymentViewModel: com.example.matchify.ui.payment.MissionPaymentViewModel? = if (currentMissionIdForVm != null) {
+        androidx.lifecycle.viewmodel.compose.viewModel(
+            key = "payment_$currentMissionIdForVm",
+            factory = com.example.matchify.ui.payment.MissionPaymentViewModelFactory(currentMissionIdForVm)
+        )
+    } else null
+
     // Get avatar URLs
     val currentUserAvatarUrl = currentUser?.profileImageUrl
     val otherUserAvatarUrl = conversation?.getOtherUserProfileImageURL(
@@ -92,6 +115,49 @@ fun ConversationChatScreen(
                 isRecruiter = viewModel.isRecruiter,
                 onBack = onBack
             )
+
+            // Payment Banner (Recruiter Only)
+            if (shouldShowApproveButton) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF2E7D32)) // Green for payment action
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Mission Action",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = "Pay & Complete Mission",
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontSize = 12.sp
+                        )
+                    }
+                    
+                    Button(
+                        onClick = { 
+                            // Launch payment screen
+                            if (mission != null) {
+                                showPaymentSheet = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color(0xFF2E7D32)
+                        ),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Text("Approve & Pay", fontSize = 13.sp)
+                    }
+                }
+            }
             
             // Messages List
             Box(modifier = Modifier.weight(1f)) {
@@ -101,6 +167,7 @@ fun ConversationChatScreen(
                         color = Color.White
                     )
                 } else {
+                    val context = androidx.compose.ui.platform.LocalContext.current
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
@@ -115,26 +182,56 @@ fun ConversationChatScreen(
                         items(messages) { message ->
                             val isContractMessage = message.isContractMessage == true ||
                                                    (message.contractId != null && message.contractId.isNotBlank())
+                            val isDeliverableMessage = message.isDeliverableMessage
                             
-                            if (isContractMessage && message.contractId != null) {
-                                ContractMessageBubble(
-                                    message = message,
-                                    isFromCurrentUser = viewModel.isMessageFromCurrentUser(message),
-                                    onContractClick = {
-                                        message.contractId?.let { contractId ->
-                                            onContractReview(contractId)
-                                        }
-                                    },
-                                    currentUserAvatarUrl = currentUserAvatarUrl,
-                                    otherUserAvatarUrl = otherUserAvatarUrl
-                                )
-                            } else {
-                                TextMessageBubble(
-                                    message = message,
-                                    isFromCurrentUser = viewModel.isMessageFromCurrentUser(message),
-                                    currentUserAvatarUrl = currentUserAvatarUrl,
-                                    otherUserAvatarUrl = otherUserAvatarUrl
-                                )
+                            when {
+                                isContractMessage && message.contractId != null -> {
+                                    ContractMessageBubble(
+                                        message = message,
+                                        isFromCurrentUser = viewModel.isMessageFromCurrentUser(message),
+                                        onContractClick = {
+                                            message.contractId?.let { contractId ->
+                                                onContractReview(contractId)
+                                            }
+                                        },
+                                        currentUserAvatarUrl = currentUserAvatarUrl,
+                                        otherUserAvatarUrl = otherUserAvatarUrl
+                                    )
+                                }
+                                isDeliverableMessage -> {
+                                    DeliverableMessageBubble(
+                                        message = message,
+                                        isFromCurrentUser = viewModel.isMessageFromCurrentUser(message),
+                                        isRecruiter = viewModel.isRecruiter,
+                                        onApprove = { deliverableId ->
+                                            // Store the deliverable ID and show payment sheet
+                                            // Approval will happen on successful payment
+                                            pendingApprovalDeliverableId = deliverableId
+                                            if (mission != null) {
+                                                android.util.Log.d("ConversationChatScreen", "Showing payment sheet for mission: ${mission?.missionId}")
+                                               // android.widget.Toast.makeText(context, "Opening Payment...", android.widget.Toast.LENGTH_SHORT).show()
+                                                showPaymentSheet = true
+                                            } else {
+                                                 android.util.Log.e("ConversationChatScreen", "Mission is null, cannot show payment sheet. Triggering refresh.")
+                                                 android.widget.Toast.makeText(context, "Mission data missing. Refreshing...", android.widget.Toast.LENGTH_SHORT).show()
+                                                 viewModel.refreshMission()
+                                            }
+                                        },
+                                        onRequestChanges = { deliverableId, reason ->
+                                            viewModel.requestChanges(deliverableId, reason)
+                                        },
+                                        currentUserAvatarUrl = currentUserAvatarUrl,
+                                        otherUserAvatarUrl = otherUserAvatarUrl
+                                    )
+                                }
+                                else -> {
+                                    TextMessageBubble(
+                                        message = message,
+                                        isFromCurrentUser = viewModel.isMessageFromCurrentUser(message),
+                                        currentUserAvatarUrl = currentUserAvatarUrl,
+                                        otherUserAvatarUrl = otherUserAvatarUrl
+                                    )
+                                }
                             }
                         }
                     }
@@ -149,8 +246,93 @@ fun ConversationChatScreen(
                 isSending = isSending,
                 enabled = messageText.trim().isNotEmpty() && !isSending,
                 isRecruiter = viewModel.isRecruiter,
-                onContractClick = if (viewModel.isRecruiter) onCreateContractClick else null
+                onContractClick = {
+                    if (viewModel.isRecruiter) {
+                        onCreateContractClick()
+                    } else {
+                        // Talent clicked (+) - show deliverable sheet
+                        showDeliverableSheet = true
+                    }
+                }
             )
+            
+            // Deliverable Input Sheet
+            if (showDeliverableSheet) {
+                val context = androidx.compose.ui.platform.LocalContext.current
+                DeliverableInputSheet(
+                    onDismiss = { showDeliverableSheet = false },
+                    onFileSelected = { uri, fileName, mimeType ->
+                        viewModel.uploadDeliverable(uri, context)
+                        showDeliverableSheet = false
+                    },
+                    onLinkSubmit = { url, title ->
+                        viewModel.submitLink(url, title)
+                        showDeliverableSheet = false
+                    }
+                )
+            }
+            
+            // WebView Payment Screen
+            if (showPaymentSheet && paymentViewModel != null) {
+                val checkoutUrl by paymentViewModel.checkoutUrl.collectAsState()
+                val paymentError by paymentViewModel.errorMessage.collectAsState()
+                val context = androidx.compose.ui.platform.LocalContext.current
+                
+                // Initiate checkout session when shown
+                LaunchedEffect(showPaymentSheet) {
+                    if (showPaymentSheet) {
+                        android.util.Log.d("ConversationChatScreen", "Initiating WebView payment from top-level VM...")
+                        paymentViewModel.initiateWebViewPayment()
+                    }
+                }
+                
+                // Show error if payment initialization failed
+                paymentError?.let { error ->
+                    LaunchedEffect(error) {
+                        android.util.Log.e("ConversationChatScreen", "Payment error: $error")
+                        android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_LONG).show()
+                        showPaymentSheet = false
+                    }
+                }
+                
+                // Show WebView when checkout URL is available
+                checkoutUrl?.let { url ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black)
+                            .zIndex(10f)
+                    ) {
+                        com.example.matchify.ui.payment.PaymentWebViewScreen(
+                            checkoutUrl = url,
+                            onPaymentSuccess = {
+                                android.util.Log.d("ConversationChatScreen", "Payment success callback")
+                                showPaymentSheet = false
+                                android.widget.Toast.makeText(
+                                    context,
+                                    "Payment successful!",
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                                // Reload mission and messages
+                                viewModel.refreshMission()
+                                viewModel.loadMessages()
+                            },
+                            onPaymentCancel = {
+                                android.util.Log.d("ConversationChatScreen", "Payment cancel callback")
+                                showPaymentSheet = false
+                            },
+                            onError = { error ->
+                                android.util.Log.e("ConversationChatScreen", "WebView error: $error")
+                                android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_LONG).show()
+                            },
+                            onBack = {
+                                android.util.Log.d("ConversationChatScreen", "Payment back callback")
+                                showPaymentSheet = false
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -440,8 +622,10 @@ private fun MessageInputBar(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left icon (+ button): Only visible for recruiters
-        if (isRecruiter) {
+        // Left icon (+ button): Visible for recruiters (contracts) and talents (submit work)
+        val showAttachmentButton = isRecruiter || (onContractClick != null) // Reusing callback for generic attachment click
+        
+        if (showAttachmentButton) {
             IconButton(
                 onClick = {
                     if (onContractClick != null) {

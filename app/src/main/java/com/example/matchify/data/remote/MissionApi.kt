@@ -34,6 +34,15 @@ interface MissionApi {
     // Même endpoint que iOS
     @GET("missions/best-match")
     suspend fun getBestMatchMissions(): BestMatchMissionsResponseDto
+
+    @POST("missions/{id}/complete")
+    suspend fun markAsCompleted(@Path("id") id: String): MissionDto
+
+    @POST("missions/{id}/approve-completion")
+    suspend fun approveCompletion(
+        @Path("id") id: String,
+        @Body body: Map<String, String?>
+    ): com.example.matchify.data.remote.dto.mission.ApproveCompletionResponseDto
 }
 
 

@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Work
@@ -139,6 +140,12 @@ fun MissionListScreenNew(
         MissionTab.BEST_MATCHES -> 0
         MissionTab.MOST_RECENT -> 1
         MissionTab.FAVORITES -> 2
+    }
+
+    // Refresh missions when the screen is shown
+    LaunchedEffect(Unit) {
+        android.util.Log.d("MissionListScreenNew", "Refreshing missions on screen entry")
+        viewModel.refreshMissions()
     }
     
     // Navigation Drawer wraps the entire Scaffold
@@ -333,6 +340,21 @@ fun MissionListScreenNew(
                                 }
                             }
                         }
+                    }
+                }
+            },
+            floatingActionButton = {
+                if (isRecruiter) {
+                    FloatingActionButton(
+                        onClick = onAddMission,
+                        containerColor = Color(0xFF3B82F6),
+                        contentColor = Color.White,
+                        shape = CircleShape
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Add Mission"
+                        )
                     }
                 }
             },
@@ -543,8 +565,29 @@ fun EmptyStateViewNew(
                     else -> "You have not created any missions yet."
                 },
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.7f)
+                color = Color.White.copy(alpha = 0.7f),
+                modifier = Modifier.padding(horizontal = 40.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
+            
+            if (!isTalent && onAddMission != null) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Button(
+                    onClick = onAddMission,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF3B82F6),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                ) {
+                    Text(
+                        text = "Create Mission",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp
+                    )
+                }
+            }
         }
     }
 }

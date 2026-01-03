@@ -15,6 +15,7 @@ data class Message(
     @SerializedName("contractId") val contractId: String? = null,
     @SerializedName("pdfUrl") val pdfUrl: String? = null,
     @SerializedName("isContractMessage") val isContractMessage: Boolean? = null,
+    @SerializedName("deliverable") val deliverable: Deliverable? = null,
     @SerializedName("createdAt") val createdAt: String? = null,
     @SerializedName("updatedAt") val updatedAt: String? = null
 ) {
@@ -23,6 +24,9 @@ data class Message(
     
     val content: String
         get() = text ?: contentParam ?: ""
+    
+    val isDeliverableMessage: Boolean
+        get() = deliverable != null
     
     val formattedTime: String
         get() {

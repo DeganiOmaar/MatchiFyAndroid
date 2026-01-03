@@ -64,5 +64,13 @@ class MissionRepository(
     suspend fun getBestMatchMissions(): com.example.matchify.data.remote.dto.mission.BestMatchMissionsResponseDto = withContext(Dispatchers.IO) {
         api.getBestMatchMissions()
     }
-}
 
+    suspend fun markAsCompleted(missionId: String): Mission = withContext(Dispatchers.IO) {
+        api.markAsCompleted(missionId).toDomain()
+    }
+
+    suspend fun approveCompletion(missionId: String, paymentMethodId: String? = null): com.example.matchify.data.remote.dto.mission.ApproveCompletionResponseDto = withContext(Dispatchers.IO) {
+        val body = mapOf("paymentMethodId" to paymentMethodId)
+        api.approveCompletion(missionId, body)
+    }
+}

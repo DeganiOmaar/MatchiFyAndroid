@@ -57,15 +57,25 @@ class MissionAddViewModel(
         }
 
     fun createMission() {
+        android.util.Log.d("MissionAddViewModel", "createMission - Title: ${title.value}, Description length: ${description.value.length}, Skills context: ${skills.value.size}")
+        
         if (!isFormValid) {
-            _errorMessage.value = "Veuillez remplir tous les champs requis."
+            val missingFields = mutableListOf<String>()
+            if (title.value.isEmpty()) missingFields.add("title")
+            if (description.value.isEmpty()) missingFields.add("description")
+            if (duration.value.isEmpty()) missingFields.add("duration")
+            if (budget.value.isEmpty()) missingFields.add("budget")
+            if (skills.value.isEmpty()) missingFields.add("at least one skill")
+            
+            _errorMessage.value = "Please fill in all fields: ${missingFields.joinToString(", ")}"
+            android.util.Log.w("MissionAddViewModel", "Form invalid: ${missingFields.joinToString(", ")}")
             return
         }
 
         val filteredBudget = budget.value.filter { it.isDigit() }
         val budgetValue = filteredBudget.toIntOrNull()
             ?: run {
-                _errorMessage.value = "Le budget doit être un nombre valide."
+                _errorMessage.value = "The budget must be a valid number."
                 return
             }
 

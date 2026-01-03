@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
@@ -133,6 +134,12 @@ fun MainScreen(
                             }
                             DrawerMenuItemType.MY_STATS -> {
                                 navController.navigate("my_stats") {
+                                    popUpTo("missions_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.WALLET -> {
+                                navController.navigate("wallet") {
                                     popUpTo("missions_list") { saveState = true }
                                     launchSingleTop = true
                                 }
@@ -573,6 +580,39 @@ fun MainScreen(
                 com.example.matchify.ui.chatbot.ChatBotScreen(
                     onBack = { navController.popBackStack() }
                 )
+            }
+
+            composable("wallet") {
+                com.example.matchify.ui.wallet.WalletScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onTransactionClick = { transaction ->
+                        navController.navigate("transaction_detail/${transaction.id}")
+                    }
+                )
+            }
+
+            composable("transaction_detail/{transactionId}") { backStackEntry ->
+                val transactionId = backStackEntry.arguments?.getString("transactionId") ?: ""
+                val walletViewModel: com.example.matchify.ui.wallet.WalletViewModel = viewModel(
+                    factory = com.example.matchify.ui.wallet.WalletViewModelFactory()
+                )
+                val transactions by walletViewModel.transactions.collectAsState()
+                val transaction = transactions.find { it.id == transactionId }
+
+                if (transaction != null) {
+                    com.example.matchify.ui.wallet.TransactionDetailScreen(
+                        transaction = transaction,
+                        onBack = { navController.popBackStack() }
+                    )
+                } else {
+                    // Fallback to loading or fetch
+                    LaunchedEffect(transactionId) {
+                        walletViewModel.refresh() // Or implement getTransactionById
+                    }
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
             }
             
             // Contracts

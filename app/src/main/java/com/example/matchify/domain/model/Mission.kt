@@ -62,6 +62,7 @@ data class Mission(
         get() = when (status) {
             "started" -> MissionStatus.STARTED
             "completed" -> MissionStatus.COMPLETED
+            "paid" -> MissionStatus.PAID
             else -> MissionStatus.IN_PROGRESS
         }
 }
@@ -69,7 +70,8 @@ data class Mission(
 enum class MissionStatus(val displayName: String) {
     IN_PROGRESS("En cours"),
     STARTED("Démarrée"),
-    COMPLETED("Terminée")
+    COMPLETED("Terminée"),
+    PAID("Payée")
 }
 
 

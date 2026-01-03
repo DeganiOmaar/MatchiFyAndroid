@@ -154,11 +154,22 @@ class ApiService(private val authPreferences: AuthPreferences) {
         retrofit.create(ContractApi::class.java)
     }
 
-    // -----------------------------------------------------------
-    // 🤖 AI API
-    // -----------------------------------------------------------
     val aiApi: AiApi by lazy {
         retrofit.create(AiApi::class.java)
+    }
+
+    // -----------------------------------------------------------
+    // 💰 WALLET API
+    // -----------------------------------------------------------
+    val walletApi: WalletApi by lazy {
+        retrofit.create(WalletApi::class.java)
+    }
+
+    // -----------------------------------------------------------
+    // 💳 PAYMENT API
+    // -----------------------------------------------------------
+    val paymentApi: PaymentApi by lazy {
+        retrofit.create(PaymentApi::class.java)
     }
 
     companion object {

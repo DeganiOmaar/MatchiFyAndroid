@@ -17,6 +17,30 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        // GLOBAL CRASH HANDLER: Show toast on crash
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            android.util.Log.e("MatchiFyCrash", "Uncaught exception", throwable)
+            
+            // Try to show toast on main thread
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                try {
+                    android.widget.Toast.makeText(
+                        applicationContext,
+                        "CRASH: ${throwable.localizedMessage}",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                } catch (e: Exception) {
+                    // Ignore toast error
+                }
+            }
+            
+            // Wait a bit before letting default handler kill app
+            try { Thread.sleep(2000) } catch (e: InterruptedException) {}
+            
+            defaultHandler?.uncaughtException(thread, throwable)
+        }
+
         // 1. Initialize AuthPreferencesProvider first
         AuthPreferencesProvider.initialize(applicationContext)
 

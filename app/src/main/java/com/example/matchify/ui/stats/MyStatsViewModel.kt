@@ -50,7 +50,7 @@ class MyStatsViewModel(
                 
                 // Update stats model, preserving existing earnings and job success score
                 _stats.value = Stats(
-                    twelveMonthEarnings = _stats.value?.twelveMonthEarnings ?: 0.0,
+                    twelveMonthEarnings = statsResponse.totalEarnings,
                     jobSuccessScore = _stats.value?.jobSuccessScore,
                     proposalsSent = statsResponse.totalProposalsSent,
                     proposalsAccepted = statsResponse.totalProposalsAccepted,

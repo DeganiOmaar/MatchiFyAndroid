@@ -14,6 +14,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Message
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -146,245 +147,247 @@ fun ProposalDetailsScreen(
         },
         containerColor = Color(0xFF0F172A)
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
-                .background(Color(0xFF0F172A))
-    ) {
-        // Custom Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF1E293B))
-                .statusBarsPadding()
-                .padding(horizontal = 8.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.Rounded.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color(0xFF3B82F6)
-                )
-            }
-            Text(
-                text = "Proposal Details",
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-
-        Box(modifier = Modifier.weight(1f)) {
-            if (isLoading && proposal == null) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = Color(0xFF3B82F6)
-                )
-            } else if (proposal != null) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Mission Card
-                    DetailCard(title = "Mission") {
-                        Text(
-                            text = proposal!!.missionTitle ?: "Mission",
-                            color = Color.White,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-
-                    // User Card (Talent or Recruiter)
-                    DetailCard(title = if (viewModel.isRecruiter) "Talent" else "Recruiter") {
-                        if (viewModel.isRecruiter) {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = proposal!!.talentFullName,
-                                            color = Color.White,
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                        if (proposal!!.talent?.email != null) {
-                                            Text(
-                                                text = proposal!!.talent!!.email!!,
-                                                color = Color(0xFF9CA3AF),
-                                                fontSize = 14.sp,
-                                                modifier = Modifier.padding(top = 4.dp)
-                                            )
-                                        }
-                                    }
-                                    TextButton(onClick = { proposal!!.talentId?.let { onTalentProfileClick(it) } }) {
-                                        Text("View Profile", color = Color(0xFF3B82F6))
-                                    }
-                                }
-                            }
-                        } else {
-                            Text(
-                                text = proposal!!.recruiterName ?: "Recruiter",
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-
-                    // Message Card
-                    DetailCard(title = "Message") {
-                        Text(
-                            text = proposal!!.message,
-                            color = Color(0xFFE2E8F0),
-                            fontSize = 15.sp,
-                            lineHeight = 22.sp
-                        )
-                    }
-
-                    // Proposal Content Card (if available)
-                    if (!proposal!!.proposalContent.isNullOrBlank()) {
-                        DetailCard(title = "Proposal") {
-                            Text(
-                                text = proposal!!.proposalContent!!,
-                                color = Color(0xFFE2E8F0),
-                                fontSize = 15.sp,
-                                lineHeight = 22.sp
-                            )
-                        }
-                    }
-
-                    // Status & Date Card
-                    DetailCard(title = "Status & Info") {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            StatusBadge(status = proposal!!.status)
-                            Text(
-                                text = proposal!!.formattedDate,
-                                color = Color(0xFF9CA3AF),
-                                fontSize = 14.sp
-                            )
-                        }
-                        
-                        if (proposal!!.status == ProposalStatus.REFUSED && !proposal!!.rejectionReason.isNullOrBlank()) {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = "Rejection Reason:",
-                                color = Color(0xFFEF4444),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = proposal!!.rejectionReason!!,
-                                color = Color(0xFFEF4444).copy(alpha = 0.9f),
-                                fontSize = 14.sp,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(80.dp)) // Space for bottom bar
-                }
-            }
-        }
-    }
-    
-    // Bottom Action Bar
-    if (viewModel.isRecruiter && (canShowActions || showMessageButton)) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            if (canShowActions) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = paddingValues.calculateBottomPadding())
+                    .background(Color(0xFF0F172A))
+            ) {
+                // Custom Header
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Refuse Button
-                    Button(
-                        onClick = { showRejectDialog = true },
-                        enabled = !isUpdatingStatus,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1E293B),
-                            contentColor = Color(0xFFEF4444),
-                            disabledContainerColor = Color(0xFF1E293B).copy(alpha = 0.6f)
-                        ),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444)),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
-                    ) {
-                        Icon(Icons.Rounded.Close, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Refuse")
-                    }
-                    
-                    // Accept Button
-                    Button(
-                        onClick = { viewModel.acceptProposal() },
-                        enabled = !isUpdatingStatus,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF3B82F6),
-                            contentColor = Color.White,
-                            disabledContainerColor = Color(0xFF3B82F6).copy(alpha = 0.6f)
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
-                    ) {
-                        if (isUpdatingStatus) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Accept")
-                        }
-                    }
-                }
-            } else if (showMessageButton) {
-                Button(
-                    onClick = { viewModel.conversationId?.let { onConversationClick(it) } },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF3B82F6),
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .background(Color(0xFF1E293B))
+                        .statusBarsPadding()
+                        .padding(horizontal = 8.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Rounded.Message, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Message Talent")
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Rounded.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color(0xFF3B82F6)
+                        )
+                    }
+                    Text(
+                        text = "Proposal Details",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+
+                Box(modifier = Modifier.weight(1f)) {
+                    if (isLoading && proposal == null) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = Color(0xFF3B82F6)
+                        )
+                    } else if (proposal != null) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // Mission Card
+                            DetailCard(title = "Mission") {
+                                Text(
+                                    text = proposal!!.missionTitle ?: "Mission",
+                                    color = Color.White,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+
+                            // User Card (Talent or Recruiter)
+                            DetailCard(title = if (viewModel.isRecruiter) "Talent" else "Recruiter") {
+                                if (viewModel.isRecruiter) {
+                                    Column(modifier = Modifier.fillMaxWidth()) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = proposal!!.talentFullName,
+                                                    color = Color.White,
+                                                    fontSize = 16.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                                if (proposal!!.talent?.email != null) {
+                                                    Text(
+                                                        text = proposal!!.talent!!.email!!,
+                                                        color = Color(0xFF9CA3AF),
+                                                        fontSize = 14.sp,
+                                                        modifier = Modifier.padding(top = 4.dp)
+                                                    )
+                                                }
+                                            }
+                                            TextButton(onClick = { proposal!!.talentId?.let { onTalentProfileClick(it) } }) {
+                                                Text("View Profile", color = Color(0xFF3B82F6))
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Text(
+                                        text = proposal!!.recruiterName ?: "Recruiter",
+                                        color = Color.White,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+
+                            // Message Card
+                            DetailCard(title = "Message") {
+                                Text(
+                                    text = proposal!!.message,
+                                    color = Color(0xFFE2E8F0),
+                                    fontSize = 15.sp,
+                                    lineHeight = 22.sp
+                                )
+                            }
+
+                            // Proposal Content Card (if available)
+                            if (!proposal!!.proposalContent.isNullOrBlank()) {
+                                DetailCard(title = "Proposal") {
+                                    Text(
+                                        text = proposal!!.proposalContent!!,
+                                        color = Color(0xFFE2E8F0),
+                                        fontSize = 15.sp,
+                                        lineHeight = 22.sp
+                                    )
+                                }
+                            }
+
+                            // Status & Date Card
+                            DetailCard(title = "Status & Info") {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    StatusBadge(status = proposal!!.status)
+                                    Text(
+                                        text = proposal!!.formattedDate,
+                                        color = Color(0xFF9CA3AF),
+                                        fontSize = 14.sp
+                                    )
+                                }
+                                
+                                if (proposal!!.status == ProposalStatus.REFUSED && !proposal!!.rejectionReason.isNullOrBlank()) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text(
+                                        text = "Rejection Reason:",
+                                        color = Color(0xFFEF4444),
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = proposal!!.rejectionReason!!,
+                                        color = Color(0xFFEF4444).copy(alpha = 0.9f),
+                                        fontSize = 14.sp,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(80.dp)) // Space for bottom bar
+                        }
+                    }
+                }
+            }
+            
+            // Bottom Action Bar (Overlay)
+            if (viewModel.isRecruiter && (canShowActions || showMessageButton)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp, start = 16.dp, end = 16.dp)
+                ) {
+                    if (canShowActions) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Refuse Button
+                            Button(
+                                onClick = { showRejectDialog = true },
+                                enabled = !isUpdatingStatus,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF1E293B),
+                                    contentColor = Color(0xFFEF4444),
+                                    disabledContainerColor = Color(0xFF1E293B).copy(alpha = 0.6f)
+                                ),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444)),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(50.dp)
+                            ) {
+                                Icon(Icons.Rounded.Close, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Refuse")
+                            }
+                            
+                            // Accept Button
+                            Button(
+                                onClick = { viewModel.acceptProposal() },
+                                enabled = !isUpdatingStatus,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF3B82F6),
+                                    contentColor = Color.White,
+                                    disabledContainerColor = Color(0xFF3B82F6).copy(alpha = 0.6f)
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(50.dp)
+                            ) {
+                                if (isUpdatingStatus) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = Color.White,
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Accept")
+                                }
+                            }
+                        }
+                    } else if (showMessageButton) {
+                        Button(
+                            onClick = { viewModel.conversationId?.let { onConversationClick(it) } },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF3B82F6),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                        ) {
+                            Icon(Icons.Rounded.Message, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Message Talent")
+                        }
+                    }
                 }
             }
         }
-            }
-        }
     }
+}
 
 
 @Composable
-private fun DetailCard(
+fun DetailCard(
     title: String,
     content: @Composable () -> Unit
 ) {
@@ -407,7 +410,7 @@ private fun DetailCard(
 }
 
 @Composable
-private fun StatusBadge(status: ProposalStatus) {
+fun StatusBadge(status: ProposalStatus) {
     val (text, color, bgColor) = when (status) {
         ProposalStatus.NOT_VIEWED -> Triple("Not Viewed", Color(0xFFF59E0B), Color(0xFF451A03)) // Amber
         ProposalStatus.VIEWED -> Triple("Viewed", Color(0xFF3B82F6), Color(0xFF172554)) // Blue

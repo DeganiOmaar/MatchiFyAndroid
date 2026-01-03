@@ -16,6 +16,7 @@ data class MissionDto(
     @SerializedName("proposalsCount") val proposalsCount: Int? = null,
     @SerializedName("interviewingCount") val interviewingCount: Int? = null,
     @SerializedName("hasApplied") val hasApplied: Boolean? = null,
-    @SerializedName("isFavorite") val isFavorite: Boolean? = null
+    @SerializedName("isFavorite") val isFavorite: Boolean? = null,
+    @SerializedName("status") val status: String? = null
 )
 

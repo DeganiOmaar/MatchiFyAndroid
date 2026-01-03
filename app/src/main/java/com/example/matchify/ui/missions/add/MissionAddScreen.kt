@@ -155,11 +155,24 @@ fun MissionAddScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = "Skills (max 10)",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Skills (max 10)",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        if (skills.isEmpty()) {
+                            Text(
+                                text = "Add at least one",
+                                fontSize = 12.sp,
+                                color = Color.Red.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -263,7 +276,7 @@ fun MissionAddScreen(
                 shape = RoundedCornerShape(30.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF007AFF),
-                    disabledContainerColor = Color(0xFFBAD7FF)
+                    disabledContainerColor = Color(0xFFE0E0E0) // More obvious disabled state
                 )
             ) {
                 if (isSaving) {

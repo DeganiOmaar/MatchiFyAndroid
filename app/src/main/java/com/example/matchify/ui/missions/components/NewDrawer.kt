@@ -27,6 +27,7 @@ import com.example.matchify.ui.theme.ThemeType
 
 enum class DrawerMenuItemType {
     PROFILE,
+    WALLET,
     MY_STATS,
     CHAT_BOT,
     SETTINGS,
@@ -42,6 +43,7 @@ data class DrawerMenuItem(
     companion object {
         fun recruiterItems(): List<DrawerMenuItem> = listOf(
             DrawerMenuItem("Profile", Icons.Default.Person, DrawerMenuItemType.PROFILE),
+            DrawerMenuItem("Wallet", Icons.Default.Wallet, DrawerMenuItemType.WALLET),
             DrawerMenuItem("Chat Bot", Icons.Default.Message, DrawerMenuItemType.CHAT_BOT),
             DrawerMenuItem("Settings", Icons.Default.Settings, DrawerMenuItemType.SETTINGS),
             DrawerMenuItem("Theme", Icons.Default.DarkMode, DrawerMenuItemType.THEME)
@@ -49,6 +51,7 @@ data class DrawerMenuItem(
         
         fun talentItems(): List<DrawerMenuItem> = listOf(
             DrawerMenuItem("Profile", Icons.Default.Person, DrawerMenuItemType.PROFILE),
+            DrawerMenuItem("Wallet", Icons.Default.Wallet, DrawerMenuItemType.WALLET),
             DrawerMenuItem("My Stats", Icons.Default.Assessment, DrawerMenuItemType.MY_STATS),
             DrawerMenuItem("Chat Bot", Icons.Default.Message, DrawerMenuItemType.CHAT_BOT),
             DrawerMenuItem("Settings", Icons.Default.Settings, DrawerMenuItemType.SETTINGS),
@@ -326,6 +329,7 @@ private fun isItemSelected(
         DrawerMenuItemType.PROFILE -> {
             currentRoute == "recruiter_profile" || currentRoute == "talent_profile"
         }
+        DrawerMenuItemType.WALLET -> currentRoute == "wallet"
         DrawerMenuItemType.MY_STATS -> currentRoute == "my_stats"
         DrawerMenuItemType.CHAT_BOT -> currentRoute == "chatbot"
         DrawerMenuItemType.SETTINGS -> currentRoute == "settings"

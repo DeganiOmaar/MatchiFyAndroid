@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+
 class ProposalDetailsViewModel(
     private val proposalId: String,
     private val proposalRepository: ProposalRepository,
@@ -42,6 +43,12 @@ class ProposalDetailsViewModel(
         get() {
             val prefs = AuthPreferencesProvider.getInstance().get()
             return prefs.currentRole.value == "recruiter"
+        }
+    
+    val isTalent: Boolean
+        get() {
+            val prefs = AuthPreferencesProvider.getInstance().get()
+            return prefs.currentRole.value == "talent"
         }
     
     val canShowActions: StateFlow<Boolean> = MutableStateFlow(false).also { flow ->

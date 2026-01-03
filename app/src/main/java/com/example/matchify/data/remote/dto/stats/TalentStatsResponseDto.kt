@@ -8,6 +8,8 @@ data class TalentStatsResponseDto(
     @SerializedName("totalProposalsAccepted")
     val totalProposalsAccepted: Int,
     @SerializedName("totalProposalsRefused")
-    val totalProposalsRefused: Int
+    val totalProposalsRefused: Int,
+    @SerializedName("totalEarnings")
+    val totalEarnings: Double = 0.0
 )
 
