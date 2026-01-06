@@ -71,7 +71,7 @@ class MissionEditViewModel(
 
     fun addSkill() {
         val trimmed = skillInput.value.trim()
-        if (trimmed.isNotEmpty() && skills.value.size < 10 && !skills.value.contains(trimmed)) {
+        if (trimmed.isNotEmpty() && !skills.value.contains(trimmed)) {
             skills.value = skills.value + trimmed
             skillInput.value = ""
         }
@@ -89,8 +89,7 @@ class MissionEditViewModel(
                     duration.value.isNotEmpty() &&
                     filteredBudget.isNotEmpty() &&
                     skills.value.isNotEmpty() &&
-                    filteredBudget.toIntOrNull() != null &&
-                    skills.value.size <= 10
+                    filteredBudget.toIntOrNull() != null
         }
 
     fun updateMission() {

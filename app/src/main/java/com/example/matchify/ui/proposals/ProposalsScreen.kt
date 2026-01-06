@@ -1,7 +1,5 @@
 package com.example.matchify.ui.proposals
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,11 +36,8 @@ import com.example.matchify.R
 import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.domain.model.Proposal
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
-
-@RequiresApi(Build.VERSION_CODES.O)
+import java.text.SimpleDateFormat
+import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProposalsScreen(
@@ -76,7 +71,8 @@ fun ProposalsScreen(
             onMissionSelected = { viewModel.selectMission(it) },
             onToggleAiSort = { viewModel.toggleAiSort() },
             onProposalClick = onProposalClick,
-            onDrawerItemSelected = onDrawerItemSelected
+            onDrawerItemSelected = onDrawerItemSelected,
+            viewModel = viewModel
         )
     } else {
         // New Talent UI - completely rebuilt
@@ -94,7 +90,6 @@ fun ProposalsScreen(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun TalentProposalsScreen(
     proposals: List<Proposal>,
@@ -318,7 +313,6 @@ private fun ProposalFilterPills(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun ProposalCard(
     proposal: Proposal,
@@ -460,15 +454,18 @@ private fun EmptyProposalsView() {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 private fun formatProposalDate(dateString: String?): String {
     if (dateString == null) return "recently"
     
     return try {
-        val formatter = DateTimeFormatter.ISO_DATE_TIME
-        val date = Instant.from(formatter.parse(dateString))
-        val now = Instant.now()
-        val diff = ChronoUnit.MINUTES.between(date, now)
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+        val date = inputFormat.parse(dateString)
+        
+        if (date == null) return "recently"
+        
+        val now = Date()
+        val diff = (now.time - date.time) / (1000 * 60) // diff in minutes
         
         when {
             diff < 1 -> "just now"
@@ -482,8 +479,8 @@ private fun formatProposalDate(dateString: String?): String {
                 if (days == 1L) "yesterday" else "${days}d ago"
             }
             else -> {
-                val dateTime = date.atZone(java.time.ZoneId.systemDefault())
-                DateTimeFormatter.ofPattern("MMM d, yyyy").format(dateTime)
+                val outputFormat = SimpleDateFormat("MMM d, yyyy", Locale.US)
+                outputFormat.format(date)
             }
         }
     } catch (e: Exception) {
@@ -492,7 +489,6 @@ private fun formatProposalDate(dateString: String?): String {
 }
 
 // Recruiter UI with dark theme
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun RecruiterProposalsScreen(
     proposals: List<Proposal>,
@@ -505,7 +501,8 @@ private fun RecruiterProposalsScreen(
     onMissionSelected: (com.example.matchify.domain.model.Mission?) -> Unit,
     onToggleAiSort: () -> Unit,
     onProposalClick: (String) -> Unit,
-    onDrawerItemSelected: (com.example.matchify.ui.missions.components.DrawerMenuItemType) -> Unit
+    onDrawerItemSelected: (com.example.matchify.ui.missions.components.DrawerMenuItemType) -> Unit,
+    viewModel: ProposalsViewModel
 ) {
     // Get user for avatar
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -705,27 +702,74 @@ private fun RecruiterProposalsScreen(
             
             // AI Sort Toggle (only when mission selected)
             if (selectedMission != null) {
-                Button(
-                    onClick = onToggleAiSort,
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (aiSortEnabled) Color(0xFF3B82F6) else Color(0xFF1E293B),
-                        contentColor = if (aiSortEnabled) Color.White else Color(0xFF3B82F6)
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    border = if (!aiSortEnabled) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF3B82F6)) else null
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.AutoAwesome,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (aiSortEnabled) "AI Sorting Enabled" else "Enable AI Sorting",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Button(
+                        onClick = onToggleAiSort,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (aiSortEnabled) Color(0xFF3B82F6) else Color(0xFF1E293B),
+                            contentColor = if (aiSortEnabled) Color.White else Color(0xFF3B82F6)
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        border = if (!aiSortEnabled) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF3B82F6)) else null
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.AutoAwesome,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (aiSortEnabled) "AI Sorting" else "AI Sort",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    
+                    // Bouton pour analyser et trouver les meilleures propositions
+                    val topProposals by viewModel.topProposals.collectAsState()
+                    val isAnalyzing by viewModel.isAnalyzing.collectAsState()
+                    
+                    Button(
+                        onClick = {
+                            if (topProposals.isEmpty()) {
+                                viewModel.analyzeAndFindTopProposals(topCount = 2)
+                            } else {
+                                viewModel.clearTopProposals()
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (topProposals.isNotEmpty()) Color(0xFF10B981) else Color(0xFF1E293B),
+                            contentColor = if (topProposals.isNotEmpty()) Color.White else Color(0xFF10B981)
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        border = if (topProposals.isEmpty()) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF10B981)) else null,
+                        enabled = !isAnalyzing
+                    ) {
+                        if (isAnalyzing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Filled.AutoAwesome,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (topProposals.isNotEmpty()) "Top ${topProposals.size}" else "Find Top",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
         }
@@ -806,6 +850,15 @@ private fun RecruiterProposalsScreen(
                     }
                 }
                 else -> {
+                    val topProposals by viewModel.topProposals.collectAsState()
+                    val otherProposals = if (topProposals.isNotEmpty()) {
+                        proposals.filter { proposal ->
+                            !topProposals.any { it.proposalId == proposal.proposalId }
+                        }
+                    } else {
+                        proposals
+                    }
+                    
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
@@ -816,7 +869,62 @@ private fun RecruiterProposalsScreen(
                         ),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(proposals) { proposal ->
+                        // Section des meilleures propositions (Top 1-2)
+                        if (topProposals.isNotEmpty()) {
+                            item {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = Color(0xFF10B981),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "Meilleures propositions recommandées",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF10B981)
+                                    )
+                                }
+                            }
+                            
+                            items(topProposals) { proposal ->
+                                TopProposalCard(
+                                    proposal = proposal,
+                                    showAiScore = true,
+                                    onClick = { onProposalClick(proposal.proposalId) }
+                                )
+                            }
+                            
+                            if (otherProposals.isNotEmpty()) {
+                                item {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        color = Color(0xFF374151),
+                                        thickness = 1.dp
+                                    )
+                                }
+                                
+                                item {
+                                    Text(
+                                        text = "Autres propositions",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color(0xFF9CA3AF),
+                                        modifier = Modifier.padding(vertical = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Autres propositions
+                        items(otherProposals) { proposal ->
                             RecruiterProposalCard(
                                 proposal = proposal,
                                 showAiScore = aiSortEnabled,
@@ -831,7 +939,88 @@ private fun RecruiterProposalsScreen(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
+/**
+ * Carte pour les meilleures propositions (mise en évidence avec bordure verte)
+ */
+@Composable
+private fun TopProposalCard(
+    proposal: Proposal,
+    showAiScore: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        color = Color(0xFF1E293B),
+        border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF10B981)) // Bordure verte pour mise en évidence
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Badge "TOP MATCH" en haut
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    color = Color(0xFF10B981).copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.AutoAwesome,
+                            contentDescription = null,
+                            tint = Color(0xFF10B981),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = "TOP MATCH",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF10B981)
+                        )
+                    }
+                }
+                
+                // Score IA si disponible
+                if (showAiScore && proposal.aiScore != null) {
+                    val (scoreText, scoreColor) = when {
+                        proposal.aiScore >= 80 -> "High Match: ${proposal.aiScore}%" to Color(0xFF10B981)
+                        proposal.aiScore >= 60 -> "Good Match: ${proposal.aiScore}%" to Color(0xFF3B82F6)
+                        else -> "Match: ${proposal.aiScore}%" to Color(0xFF6B7280)
+                    }
+                    
+                    Surface(
+                        color = scoreColor.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = scoreText,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = scoreColor
+                        )
+                    }
+                }
+            }
+            
+            // Contenu de la carte (même structure que RecruiterProposalCard)
+            RecruiterProposalCardContent(proposal, showAiScore)
+        }
+    }
+}
+
 @Composable
 private fun RecruiterProposalCard(
     proposal: Proposal,
@@ -852,90 +1041,98 @@ private fun RecruiterProposalCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Top Row: Title and Status
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = proposal.missionTitle ?: "Mission",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-                
-                ProposalStatusBadge(status = proposal.status)
-            }
-            
-            // AI Score Badge (when enabled)
-            if (showAiScore && proposal.aiScore != null) {
-                val (scoreText, scoreColor) = when {
-                    proposal.aiScore >= 80 -> "High Match: ${proposal.aiScore}%" to Color(0xFF10B981)
-                    proposal.aiScore >= 60 -> "Good Match: ${proposal.aiScore}%" to Color(0xFF3B82F6)
-                    else -> "Match: ${proposal.aiScore}%" to Color(0xFF6B7280)
-                }
-                
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .background(scoreColor.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.AutoAwesome,
-                        contentDescription = null,
-                        tint = scoreColor,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Text(
-                        text = scoreText,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = scoreColor
-                    )
-                }
-            }
-            
-            // Talent Name
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Person,
-                    contentDescription = null,
-                    tint = Color(0xFF9CA3AF),
-                    modifier = Modifier.size(14.dp)
-                )
-                Text(
-                    text = proposal.talentFullName,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF9CA3AF)
-                )
-            }
-            
-            // Message Preview
-            Text(
-                text = proposal.message,
-                fontSize = 14.sp,
-                color = Color(0xFF9CA3AF),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                lineHeight = 20.sp
+            RecruiterProposalCardContent(proposal, showAiScore)
+        }
+    }
+}
+
+@Composable
+private fun RecruiterProposalCardContent(
+    proposal: Proposal,
+    showAiScore: Boolean
+) {
+    // Top Row: Title and Status
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = proposal.missionTitle ?: "Mission",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.White,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+        
+        ProposalStatusBadge(status = proposal.status)
+    }
+    
+    // AI Score Badge (when enabled) - seulement si pas déjà affiché dans TopProposalCard
+    if (showAiScore && proposal.aiScore != null) {
+        val (scoreText, scoreColor) = when {
+            proposal.aiScore >= 80 -> "High Match: ${proposal.aiScore}%" to Color(0xFF10B981)
+            proposal.aiScore >= 60 -> "Good Match: ${proposal.aiScore}%" to Color(0xFF3B82F6)
+            else -> "Match: ${proposal.aiScore}%" to Color(0xFF6B7280)
+        }
+        
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .background(scoreColor.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.AutoAwesome,
+                contentDescription = null,
+                tint = scoreColor,
+                modifier = Modifier.size(14.dp)
             )
-            
-            // Date
             Text(
-                text = formatProposalDate(proposal.createdAt),
-                fontSize = 12.sp,
-                color = Color(0xFF6B7280)
+                text = scoreText,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = scoreColor
             )
         }
     }
+    
+    // Talent Name
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Person,
+            contentDescription = null,
+            tint = Color(0xFF9CA3AF),
+            modifier = Modifier.size(14.dp)
+        )
+        Text(
+            text = proposal.talentFullName,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF9CA3AF)
+        )
+    }
+    
+    // Message Preview
+    Text(
+        text = proposal.message,
+        fontSize = 14.sp,
+        color = Color(0xFF9CA3AF),
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+        lineHeight = 20.sp
+    )
+    
+    // Date
+    Text(
+        text = formatProposalDate(proposal.createdAt),
+        fontSize = 12.sp,
+        color = Color(0xFF6B7280)
+    )
 }

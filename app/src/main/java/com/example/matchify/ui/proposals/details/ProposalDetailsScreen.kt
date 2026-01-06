@@ -28,6 +28,7 @@ fun ProposalDetailsScreen(
     onBack: () -> Unit,
     onTalentProfileClick: (String) -> Unit = {},
     onConversationClick: (String) -> Unit = {},
+    onScheduleInterview: (String) -> Unit = {}, // proposalId
     viewModel: ProposalDetailsViewModel = viewModel(
         factory = ProposalDetailsViewModelFactory(proposalId)
     )
@@ -38,12 +39,31 @@ fun ProposalDetailsScreen(
     val canShowActions by viewModel.canShowActions.collectAsState()
     val showMessageButton by viewModel.showMessageButton.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val justRefused by viewModel.justRefused.collectAsState()
     
     val snackbarHostState = remember { SnackbarHostState() }
     
     var showRejectDialog by remember { mutableStateOf(false) }
     var rejectionReason by remember { mutableStateOf("") }
     var rejectionError by remember { mutableStateOf<String?>(null) }
+    
+    // Fermer automatiquement la page seulement si le recruteur vient de refuser
+    LaunchedEffect(proposal?.status, isUpdatingStatus, justRefused) {
+        // Seulement si :
+        // 1. Le recruteur vient de refuser (justRefused = true)
+        // 2. Le statut est REFUSED
+        // 3. On n'est plus en train de mettre à jour
+        // 4. Il y a une raison de refus
+        if (justRefused &&
+            proposal?.status == ProposalStatus.REFUSED && 
+            !isUpdatingStatus && 
+            proposal?.rejectionReason != null) {
+            // Attendre un court instant pour que l'utilisateur voie la confirmation
+            kotlinx.coroutines.delay(800)
+            // Fermer la page et retourner à la liste des proposals
+            onBack()
+        }
+    }
     
     // Show error message in Snackbar
     LaunchedEffect(errorMessage) {
@@ -101,16 +121,27 @@ fun ProposalDetailsScreen(
                         if (rejectionReason.isBlank()) {
                             rejectionError = "Reason is required"
                         } else {
-                            viewModel.refuseProposal(rejectionReason)
+                            // Fermer le dialog d'abord
                             showRejectDialog = false
+                            // Ensuite refuser la proposal (la page se fermera automatiquement après)
+                            viewModel.refuseProposal(rejectionReason.trim())
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFEF4444),
                         contentColor = Color.White
-                    )
+                    ),
+                    enabled = !isUpdatingStatus
                 ) {
-                    Text("Reject")
+                    if (isUpdatingStatus) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Reject")
+                    }
                 }
             },
             dismissButton = {
@@ -223,8 +254,12 @@ fun ProposalDetailsScreen(
                                             )
                                         }
                                     }
-                                    TextButton(onClick = { proposal!!.talentId?.let { onTalentProfileClick(it) } }) {
-                                        Text("View Profile", color = Color(0xFF3B82F6))
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        TextButton(onClick = { proposal!!.talentId?.let { onTalentProfileClick(it) } }) {
+                                            Text("View Profile", color = Color(0xFF3B82F6), fontSize = 12.sp)
+                                        }
                                     }
                                 }
                             }

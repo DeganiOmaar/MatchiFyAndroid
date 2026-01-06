@@ -35,6 +35,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.matchify.R
 import com.example.matchify.domain.model.Project
+import com.example.matchify.ui.ratings.RatingViewModel
+import com.example.matchify.ui.ratings.RatingViewModelFactory
+import com.example.matchify.ui.ratings.components.AverageRatingCard
+import com.example.matchify.ui.ratings.components.RatingCard
+import com.example.matchify.data.local.AuthPreferencesProvider
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.Star
 
 @Composable
 fun TalentProfileByIDScreen(
@@ -149,8 +157,119 @@ fun TalentProfileByIDScreen(
                     }
                 }
                 
+                // Ratings Section (for recruiters viewing talent profile)
+                TalentRatingsSection(
+                    talentId = talentId,
+                    talentName = user?.fullName
+                )
+                
+                // Ratings Section (for recruiters viewing talent profile)
+                TalentRatingsSection(
+                    talentId = talentId,
+                    talentName = user?.fullName
+                )
+                
                 // Bottom spacing
                 Spacer(modifier = Modifier.height(40.dp))
+            }
+        }
+    }
+}
+
+/**
+ * Section pour afficher les ratings d'un talent
+ */
+@Composable
+private fun TalentRatingsSection(
+    talentId: String,
+    talentName: String?
+) {
+    val ratingViewModel: RatingViewModel = viewModel(factory = RatingViewModelFactory())
+    val talentRatingsState by ratingViewModel.talentRatings.collectAsState()
+    val isLoading by ratingViewModel.isLoading.collectAsState()
+    
+    // Vérifier si l'utilisateur est un recruteur
+    val isRecruiter = remember {
+        val prefs = AuthPreferencesProvider.getInstance().get()
+        prefs.currentRole.value == "recruiter"
+    }
+    
+    LaunchedEffect(talentId) {
+        if (isRecruiter) {
+            ratingViewModel.loadTalentRatings(talentId)
+        }
+    }
+    
+    if (!isRecruiter) return
+    
+    val darkBackground = Color(0xFF0F172A)
+    val cardBackground = Color(0xFF1E293B)
+    val textPrimary = Color(0xFFFFFFFF)
+    val textSecondary = Color(0xFF9CA3AF)
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Ratings & Feedback",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = textPrimary,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = Color(0xFF3B82F6),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+            talentRatingsState != null && talentRatingsState!!.count > 0 -> {
+                // Extraire la valeur non-null pour éviter le problème de smart cast
+                val talentRatings = talentRatingsState!!
+                
+                // Average rating card
+                AverageRatingCard(
+                    averageScore = talentRatings.averageScore ?: 0.0,
+                    count = talentRatings.count
+                )
+                
+                // Individual ratings
+                if (talentRatings.ratings.isNotEmpty()) {
+                    Text(
+                        text = "Recent Feedback",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = textSecondary,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                    )
+                    
+                    talentRatings.ratings.take(3).forEach { rating ->
+                        RatingCard(
+                            rating = rating,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+            else -> {
+                Text(
+                    text = "No ratings yet",
+                    fontSize = 14.sp,
+                    color = textSecondary,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
             }
         }
     }

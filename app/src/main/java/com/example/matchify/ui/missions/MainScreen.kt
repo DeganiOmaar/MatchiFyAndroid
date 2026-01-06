@@ -19,7 +19,6 @@ import com.example.matchify.ui.missions.add.MissionAddViewModelFactory
 import com.example.matchify.ui.missions.edit.MissionEditScreen
 import com.example.matchify.ui.missions.edit.MissionEditViewModel
 import com.example.matchify.ui.missions.edit.MissionEditViewModelFactory
-import com.example.matchify.ui.missions.list.MissionListScreen
 import com.example.matchify.ui.missions.list.MissionListScreenNew
 import com.example.matchify.ui.missions.list.MissionListViewModel
 import com.example.matchify.ui.missions.list.MissionListViewModelFactory
@@ -144,6 +143,12 @@ fun MainScreen(
                                     launchSingleTop = true
                                 }
                             }
+                            DrawerMenuItemType.CREATE_MISSION -> {
+                                navController.navigate("mission_add") {
+                                    popUpTo("missions_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
                             DrawerMenuItemType.MY_OFFERS -> {
                                 navController.navigate("my_offers") {
                                     popUpTo("missions_list") { saveState = true }
@@ -152,6 +157,18 @@ fun MainScreen(
                             }
                             DrawerMenuItemType.BROWSE_OFFERS -> {
                                 navController.navigate("browse_offers") {
+                                    popUpTo("missions_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.INTERVIEWS -> {
+                                navController.navigate("interviews_list") {
+                                    popUpTo("missions_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.FAVORITE_TALENTS -> {
+                                navController.navigate("favorite_talents") {
                                     popUpTo("missions_list") { saveState = true }
                                     launchSingleTop = true
                                 }
@@ -196,6 +213,13 @@ fun MainScreen(
                     onMissionClick = { mission ->
                         navController.navigate("mission_details/${mission.missionId}")
                     },
+                    onTalentProfileClick = { talentId ->
+                        if (talentId == "search_all") {
+                            navController.navigate("talent_search")
+                        } else {
+                            navController.navigate("talent_profile_by_id/$talentId")
+                        }
+                    },
                     onDrawerItemSelected = { itemType ->
                         listViewModel.setDrawerNavigationItem(itemType)
                     },
@@ -217,6 +241,8 @@ fun MainScreen(
                 MissionAddScreen(
                     onBack = { navController.popBackStack() },
                     onMissionCreated = {
+                        // La mission sera rechargée automatiquement via le realtime client
+                        // ou lors du retour sur l'écran de liste
                         navController.popBackStack()
                     },
                     viewModel = addViewModel
@@ -255,7 +281,10 @@ fun MainScreen(
                     onEditProfile = {
                         navController.navigate("edit_recruiter_profile")
                     },
-                    onSettings = onOpenSettings
+                    onSettings = onOpenSettings,
+                    onBack = {
+                        navController.popBackStack()
+                    }
                 )
             }
             
@@ -347,12 +376,31 @@ fun MainScreen(
                 )
             }
             
+            // Écran de test pour valider le modèle IA
+            composable("test_talent_filtering") {
+                com.example.matchify.ui.talent.filtering.test.TalentFilteringTestScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            
             composable("proposals_list") {
                 val scope = rememberCoroutineScope()
+                val proposalsViewModel: com.example.matchify.ui.proposals.ProposalsViewModel = viewModel(
+                    factory = com.example.matchify.ui.proposals.ProposalsViewModelFactory()
+                )
+                
+                // Rafraîchir les proposals quand on revient sur cette page
+                LaunchedEffect(currentRoute) {
+                    if (currentRoute == "proposals_list") {
+                        proposalsViewModel.loadProposals()
+                    }
+                }
+                
                 com.example.matchify.ui.proposals.ProposalsScreen(
                     onProposalClick = { proposalId ->
                         navController.navigate("proposal_details/$proposalId")
                     },
+                    viewModel = proposalsViewModel,
                     onDrawerItemSelected = { itemType ->
                         when (itemType) {
                             DrawerMenuItemType.PROFILE -> {
@@ -374,6 +422,12 @@ fun MainScreen(
                                     launchSingleTop = true
                                 }
                             }
+                            DrawerMenuItemType.CREATE_MISSION -> {
+                                navController.navigate("mission_add") {
+                                    popUpTo("proposals_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
                             DrawerMenuItemType.MY_OFFERS -> {
                                 navController.navigate("my_offers") {
                                     popUpTo("proposals_list") { saveState = true }
@@ -382,6 +436,18 @@ fun MainScreen(
                             }
                             DrawerMenuItemType.BROWSE_OFFERS -> {
                                 navController.navigate("browse_offers") {
+                                    popUpTo("proposals_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.INTERVIEWS -> {
+                                navController.navigate("interviews_list") {
+                                    popUpTo("proposals_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.FAVORITE_TALENTS -> {
+                                navController.navigate("favorite_talents") {
                                     popUpTo("proposals_list") { saveState = true }
                                     launchSingleTop = true
                                 }
@@ -442,6 +508,12 @@ fun MainScreen(
                                     launchSingleTop = true
                                 }
                             }
+                            DrawerMenuItemType.CREATE_MISSION -> {
+                                navController.navigate("mission_add") {
+                                    popUpTo("alerts_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
                             DrawerMenuItemType.MY_OFFERS -> {
                                 navController.navigate("my_offers") {
                                     popUpTo("alerts_list") { saveState = true }
@@ -450,6 +522,18 @@ fun MainScreen(
                             }
                             DrawerMenuItemType.BROWSE_OFFERS -> {
                                 navController.navigate("browse_offers") {
+                                    popUpTo("alerts_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.INTERVIEWS -> {
+                                navController.navigate("interviews_list") {
+                                    popUpTo("alerts_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.FAVORITE_TALENTS -> {
+                                navController.navigate("favorite_talents") {
                                     popUpTo("alerts_list") { saveState = true }
                                     launchSingleTop = true
                                 }
@@ -493,7 +577,54 @@ fun MainScreen(
                     },
                     onConversationClick = { conversationId ->
                         navController.navigate("conversation_chat/$conversationId")
+                    },
+                    onScheduleInterview = { proposalId ->
+                        navController.navigate("create_interview/$proposalId")
                     }
+                )
+            }
+            
+            composable("create_interview/{proposalId}") { backStackEntry ->
+                val proposalId = backStackEntry.arguments?.getString("proposalId") ?: ""
+                com.example.matchify.ui.interviews.CreateInterviewScreen(
+                    proposalId = proposalId,
+                    onBack = { navController.popBackStack() },
+                    onSuccess = {
+                        // Optionally navigate to interviews list after creation
+                        // navController.navigate("interviews_list")
+                    }
+                )
+            }
+            
+            composable("interviews_list") {
+                com.example.matchify.ui.interviews.InterviewsListScreen(
+                    onBack = { navController.popBackStack() },
+                    onInterviewClick = { interviewId ->
+                        // Navigate to interview details if needed
+                        // navController.navigate("interview_details/$interviewId")
+                    }
+                )
+            }
+            
+            composable("rating/{talentId}/{talentName}/{missionId}") { backStackEntry ->
+                val talentId = backStackEntry.arguments?.getString("talentId") ?: ""
+                val talentName = backStackEntry.arguments?.getString("talentName") ?: ""
+                val missionId = backStackEntry.arguments?.getString("missionId") ?: ""
+                com.example.matchify.ui.ratings.RatingScreen(
+                    talentId = talentId,
+                    talentName = if (talentName == "null") null else talentName,
+                    missionId = if (missionId == "null") null else missionId,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            
+            composable("rating/{talentId}") { backStackEntry ->
+                val talentId = backStackEntry.arguments?.getString("talentId") ?: ""
+                com.example.matchify.ui.ratings.RatingScreen(
+                    talentId = talentId,
+                    talentName = null,
+                    missionId = null,
+                    onBack = { navController.popBackStack() }
                 )
             }
             
@@ -540,6 +671,12 @@ fun MainScreen(
                                     launchSingleTop = true
                                 }
                             }
+                            DrawerMenuItemType.CREATE_MISSION -> {
+                                navController.navigate("mission_add") {
+                                    popUpTo("messages_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
                             DrawerMenuItemType.MY_OFFERS -> {
                                 navController.navigate("my_offers") {
                                     popUpTo("messages_list") { saveState = true }
@@ -548,6 +685,18 @@ fun MainScreen(
                             }
                             DrawerMenuItemType.BROWSE_OFFERS -> {
                                 navController.navigate("browse_offers") {
+                                    popUpTo("messages_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.INTERVIEWS -> {
+                                navController.navigate("interviews_list") {
+                                    popUpTo("messages_list") { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            DrawerMenuItemType.FAVORITE_TALENTS -> {
+                                navController.navigate("favorite_talents") {
                                     popUpTo("messages_list") { saveState = true }
                                     launchSingleTop = true
                                 }
@@ -624,6 +773,20 @@ fun MainScreen(
                         }
                     },
                     viewModel = conversationViewModel
+                )
+            }
+            
+            composable("talents_filter/{missionId}") { backStackEntry ->
+                val missionId = backStackEntry.arguments?.getString("missionId") ?: ""
+                com.example.matchify.ui.talent.filtering.TalentFilteringScreen(
+                    missionId = missionId,
+                    onTalentClick = { talentId ->
+                        navController.navigate("talent_profile_by_id/$talentId") {
+                            popUpTo("talents_filter/$missionId") { saveState = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onBack = { navController.popBackStack() }
                 )
             }
             
@@ -761,7 +924,30 @@ fun MainScreen(
                 val talentId = backStackEntry.arguments?.getString("talentId") ?: ""
                 com.example.matchify.ui.talent.profilebyid.TalentProfileByIDScreen(
                     talentId = talentId,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onRateClick = { id, name ->
+                        navController.navigate("rating/$id")
+                    }
+                )
+            }
+            
+            composable("talent_profile_by_id/{talentId}") { backStackEntry ->
+                val talentId = backStackEntry.arguments?.getString("talentId") ?: ""
+                com.example.matchify.ui.talent.profilebyid.TalentProfileByIDScreen(
+                    talentId = talentId,
+                    onBack = { navController.popBackStack() },
+                    onRateClick = { id, name ->
+                        navController.navigate("rating/$id")
+                    }
+                )
+            }
+            
+            composable("talent_search") {
+                com.example.matchify.ui.talent.search.TalentSearchScreen(
+                    onBack = { navController.popBackStack() },
+                    onTalentClick = { talentId ->
+                        navController.navigate("talent_profile_by_id/$talentId")
+                    }
                 )
             }
             
@@ -774,6 +960,15 @@ fun MainScreen(
             composable("chatbot") {
                 com.example.matchify.ui.chatbot.ChatBotScreen(
                     onBack = { navController.popBackStack() }
+                )
+            }
+            
+            composable("favorite_talents") {
+                com.example.matchify.ui.talent.favorites.FavoriteTalentsScreen(
+                    onBack = { navController.popBackStack() },
+                    onTalentClick = { talentId ->
+                        navController.navigate("talent_profile_view/$talentId")
+                    }
                 )
             }
             

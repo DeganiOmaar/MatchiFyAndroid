@@ -9,10 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,8 +41,6 @@ fun MissionCardNew(
     onDelete: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    var showMenuSheet by remember { mutableStateOf(false) }
-    
     Box(modifier = modifier) {
         // Card container - #1E293B background, 16px corner radius
         Surface(
@@ -111,9 +107,9 @@ fun MissionCardNew(
                     // Icon based on role and ownership
                     when {
                         isRecruiter && isOwner -> {
-                            // 3-dot menu for recruiter owner - 20-22px, #94A3B8
+                            // 3-dot menu for recruiter owner - clicking opens edit screen
                             IconButton(
-                                onClick = { showMenuSheet = true },
+                                onClick = { onEdit?.invoke() },
                                 modifier = Modifier.size(32.dp),
                                 colors = IconButtonDefaults.iconButtonColors(
                                     contentColor = Color(0xFF94A3B8)
@@ -121,7 +117,7 @@ fun MissionCardNew(
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.MoreVert,
-                                    contentDescription = "Menu",
+                                    contentDescription = "Edit Mission",
                                     modifier = Modifier.size(21.dp) // 20-22px
                                 )
                             }
@@ -249,128 +245,6 @@ fun MissionCardNew(
                                     )
                                 }
                             }
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Bottom Sheet Menu for recruiter owner
-        if (showMenuSheet && isRecruiter && isOwner) {
-            val sheetState = rememberModalBottomSheetState(
-                skipPartiallyExpanded = false
-            )
-            ModalBottomSheet(
-                onDismissRequest = { showMenuSheet = false },
-                sheetState = sheetState,
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                containerColor = MaterialTheme.colorScheme.surface,
-                dragHandle = {
-                    Box(
-                        modifier = Modifier
-                            .width(40.dp)
-                            .height(4.dp)
-                            .padding(vertical = 12.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
-                    )
-                }
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 32.dp)
-                ) {
-                    // Edit Mission
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                showMenuSheet = false
-                                onEdit?.invoke()
-                            }
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        color = Color.Transparent
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                modifier = Modifier.size(48.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                            ) {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Edit,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(24.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-                            
-                            Text(
-                                text = "Edit Mission",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                    
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-                    
-                    // Delete Mission
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                showMenuSheet = false
-                                onDelete?.invoke()
-                            }
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        color = Color.Transparent
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                modifier = Modifier.size(48.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
-                            ) {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Delete,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(24.dp),
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            }
-                            
-                            Text(
-                                text = "Delete Mission",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f)
-                            )
                         }
                     }
                 }

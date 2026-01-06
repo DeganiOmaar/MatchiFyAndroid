@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.matchify.domain.model.Mission
-import com.example.matchify.ui.components.MD3OutlinedTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +54,8 @@ fun MissionEditScreen(
         }
     }
 
+    val darkBackground = Color(0xFF0F172A)
+    
     Scaffold(
         topBar = {
             TopAppBar(
@@ -63,7 +64,7 @@ fun MissionEditScreen(
                         "Edit Mission",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = Color.White
                     ) 
                 },
                 navigationIcon = {
@@ -71,20 +72,21 @@ fun MissionEditScreen(
                         Icon(
                             imageVector = Icons.Rounded.Close,
                             contentDescription = "Back",
-                            tint = Color(0xFF007AFF)
+                            tint = Color.White
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF2F2F2)
+                    containerColor = darkBackground
                 )
             )
-        }
+        },
+        containerColor = darkBackground
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF2F2F2))
+                .background(darkBackground)
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
@@ -92,77 +94,161 @@ fun MissionEditScreen(
         ) {
             Spacer(modifier = Modifier.height(20.dp))
             
-            // Title - MD3 Outlined Text Field
-            MD3OutlinedTextField(
+            // Title - Outlined Text Field
+            OutlinedTextField(
                 value = title,
                 onValueChange = { viewModel.title.value = it },
-                label = "Mission title",
-                placeholder = "Mission title",
-                leadingIcon = Icons.Rounded.Description,
+                label = { Text("Mission title", color = Color(0xFF94A3B8)) },
+                placeholder = { Text("Mission title", color = Color(0xFF94A3B8)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.Description,
+                        contentDescription = null,
+                        tint = Color(0xFF94A3B8)
+                    )
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                 modifier = Modifier.fillMaxWidth(),
-                errorText = null,
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFF1E293B),
+                    unfocusedContainerColor = Color(0xFF1E293B),
+                    focusedBorderColor = Color(0xFF3B82F6),
+                    unfocusedBorderColor = Color(0xFF334155),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedLabelColor = Color(0xFF3B82F6),
+                    unfocusedLabelColor = Color(0xFF94A3B8),
+                    focusedPlaceholderColor = Color(0xFF94A3B8),
+                    unfocusedPlaceholderColor = Color(0xFF94A3B8),
+                    focusedLeadingIconColor = Color(0xFF3B82F6),
+                    unfocusedLeadingIconColor = Color(0xFF94A3B8)
+                ),
+                shape = RoundedCornerShape(12.dp)
             )
 
-            // Description - MD3 Outlined Text Field (multi-line)
-            MD3OutlinedTextField(
+            // Description - Outlined Text Field (multi-line)
+            OutlinedTextField(
                 value = description,
                 onValueChange = { viewModel.description.value = it },
-                label = "Mission description",
-                placeholder = "Mission description",
-                leadingIcon = Icons.Rounded.Description,
+                label = { Text("Mission description", color = Color(0xFF94A3B8)) },
+                placeholder = { Text("Mission description", color = Color(0xFF94A3B8)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.Description,
+                        contentDescription = null,
+                        tint = Color(0xFF94A3B8)
+                    )
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
-                errorText = null,
                 singleLine = false,
-                maxLines = 5
+                maxLines = 5,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFF1E293B),
+                    unfocusedContainerColor = Color(0xFF1E293B),
+                    focusedBorderColor = Color(0xFF3B82F6),
+                    unfocusedBorderColor = Color(0xFF334155),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedLabelColor = Color(0xFF3B82F6),
+                    unfocusedLabelColor = Color(0xFF94A3B8),
+                    focusedPlaceholderColor = Color(0xFF94A3B8),
+                    unfocusedPlaceholderColor = Color(0xFF94A3B8),
+                    focusedLeadingIconColor = Color(0xFF3B82F6),
+                    unfocusedLeadingIconColor = Color(0xFF94A3B8)
+                ),
+                shape = RoundedCornerShape(12.dp)
             )
 
-            // Duration - MD3 Outlined Text Field
-            MD3OutlinedTextField(
+            // Duration - Outlined Text Field
+            OutlinedTextField(
                 value = duration,
                 onValueChange = { viewModel.duration.value = it },
-                label = "Duration",
-                placeholder = "e.g., 6 mois",
-                leadingIcon = Icons.Rounded.Schedule,
+                label = { Text("Duration", color = Color(0xFF94A3B8)) },
+                placeholder = { Text("e.g., 6 mois", color = Color(0xFF94A3B8)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.Schedule,
+                        contentDescription = null,
+                        tint = Color(0xFF94A3B8)
+                    )
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                 modifier = Modifier.fillMaxWidth(),
-                errorText = null,
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFF1E293B),
+                    unfocusedContainerColor = Color(0xFF1E293B),
+                    focusedBorderColor = Color(0xFF3B82F6),
+                    unfocusedBorderColor = Color(0xFF334155),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedLabelColor = Color(0xFF3B82F6),
+                    unfocusedLabelColor = Color(0xFF94A3B8),
+                    focusedPlaceholderColor = Color(0xFF94A3B8),
+                    unfocusedPlaceholderColor = Color(0xFF94A3B8),
+                    focusedLeadingIconColor = Color(0xFF3B82F6),
+                    unfocusedLeadingIconColor = Color(0xFF94A3B8)
+                ),
+                shape = RoundedCornerShape(12.dp)
             )
 
-            // Budget - MD3 Outlined Text Field
-            MD3OutlinedTextField(
+            // Budget - Outlined Text Field
+            OutlinedTextField(
                 value = budget,
                 onValueChange = { 
                     // Filter out non-numeric characters
                     viewModel.budget.value = it.filter { char -> char.isDigit() }
                 },
-                label = "Budget",
-                placeholder = "Budget in euros",
-                leadingIcon = Icons.Rounded.AttachMoney,
+                label = { Text("Budget", color = Color(0xFF94A3B8)) },
+                placeholder = { Text("Budget in euros", color = Color(0xFF94A3B8)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.AttachMoney,
+                        contentDescription = null,
+                        tint = Color(0xFF94A3B8)
+                    )
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
-                errorText = null,
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFF1E293B),
+                    unfocusedContainerColor = Color(0xFF1E293B),
+                    focusedBorderColor = Color(0xFF3B82F6),
+                    unfocusedBorderColor = Color(0xFF334155),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedLabelColor = Color(0xFF3B82F6),
+                    unfocusedLabelColor = Color(0xFF94A3B8),
+                    focusedPlaceholderColor = Color(0xFF94A3B8),
+                    unfocusedPlaceholderColor = Color(0xFF94A3B8),
+                    focusedLeadingIconColor = Color(0xFF3B82F6),
+                    unfocusedLeadingIconColor = Color(0xFF94A3B8)
+                ),
+                shape = RoundedCornerShape(12.dp)
             )
 
             // Skills Section
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF1E293B)
+                )
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Skills (max 10)",
+                        text = "Skills",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
                     )
 
                     Row(
@@ -172,7 +258,12 @@ fun MissionEditScreen(
                         OutlinedTextField(
                             value = skillInput,
                             onValueChange = { viewModel.skillInput.value = it },
-                            placeholder = { Text("Add a skill") },
+                            placeholder = { 
+                                Text(
+                                    "Add a skill",
+                                    color = Color(0xFF94A3B8)
+                                ) 
+                            },
                             modifier = Modifier
                                 .weight(1f)
                                 .height(55.dp),
@@ -181,18 +272,24 @@ fun MissionEditScreen(
                             trailingIcon = {
                                 IconButton(
                                     onClick = { viewModel.addSkill() },
-                                    enabled = skillInput.isNotEmpty() && skills.size < 10
+                                    enabled = skillInput.isNotEmpty()
                                 ) {
                                     Icon(
                                         imageVector = Icons.Rounded.Add,
                                         contentDescription = "Add",
-                                        tint = if (skillInput.isNotEmpty() && skills.size < 10) Color(0xFF007AFF) else Color.Gray
+                                        tint = if (skillInput.isNotEmpty()) Color(0xFF3B82F6) else Color(0xFF64748B)
                                     )
                                 }
                             },
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFCCCCCC),
-                                unfocusedBorderColor = Color(0xFFDDDDDD)
+                                focusedContainerColor = Color(0xFF1E293B),
+                                unfocusedContainerColor = Color(0xFF1E293B),
+                                focusedBorderColor = Color(0xFF3B82F6),
+                                unfocusedBorderColor = Color(0xFF334155),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedPlaceholderColor = Color(0xFF94A3B8),
+                                unfocusedPlaceholderColor = Color(0xFF94A3B8)
                             )
                         )
                     }
@@ -204,7 +301,7 @@ fun MissionEditScreen(
                             items(skills) { skill ->
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
-                                    color = Color.Gray.copy(alpha = 0.15f)
+                                    color = Color(0xFF1E293B)
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(
@@ -217,7 +314,7 @@ fun MissionEditScreen(
                                         Text(
                                             text = skill,
                                             fontSize = 14.sp,
-                                            color = Color.Black
+                                            color = Color.White
                                         )
                                         Icon(
                                             imageVector = Icons.Rounded.Close,
@@ -225,7 +322,7 @@ fun MissionEditScreen(
                                             modifier = Modifier
                                                 .size(16.dp)
                                                 .clickable { viewModel.removeSkill(skill) },
-                                            tint = Color.Gray
+                                            tint = Color(0xFF94A3B8)
                                         )
                                     }
                                 }
@@ -233,13 +330,6 @@ fun MissionEditScreen(
                         }
                     }
 
-                    if (skills.size >= 10) {
-                        Text(
-                            text = "Maximum 10 skills reached",
-                            fontSize = 12.sp,
-                            color = Color(0xFFFF9500)
-                        )
-                    }
                 }
             }
 
@@ -249,7 +339,7 @@ fun MissionEditScreen(
             errorMessage?.let { error ->
                 Text(
                     text = error,
-                    color = Color.Red,
+                    color = Color(0xFFEF4444),
                     fontSize = MaterialTheme.typography.bodySmall.fontSize,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -266,8 +356,8 @@ fun MissionEditScreen(
                     .height(55.dp),
                 shape = RoundedCornerShape(30.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF007AFF),
-                    disabledContainerColor = Color(0xFFBAD7FF)
+                    containerColor = Color(0xFF3B82F6),
+                    disabledContainerColor = Color(0xFF475569)
                 )
             ) {
                 if (isSaving) {

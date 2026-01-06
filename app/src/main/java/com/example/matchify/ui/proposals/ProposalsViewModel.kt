@@ -57,6 +57,23 @@ class ProposalsViewModel(
     private val _isLoadingMissions = MutableStateFlow(false)
     val isLoadingMissions: StateFlow<Boolean> = _isLoadingMissions.asStateFlow()
     
+    // Filtrage IA
+    private val _filterMinScore = MutableStateFlow<Int?>(null)
+    val filterMinScore: StateFlow<Int?> = _filterMinScore.asStateFlow()
+    
+    private val _filterSkills = MutableStateFlow<List<String>>(emptyList())
+    val filterSkills: StateFlow<List<String>> = _filterSkills.asStateFlow()
+    
+    private val _averageScore = MutableStateFlow<Double?>(null)
+    val averageScore: StateFlow<Double?> = _averageScore.asStateFlow()
+    
+    // Meilleures propositions (top 1-2)
+    private val _topProposals = MutableStateFlow<List<Proposal>>(emptyList())
+    val topProposals: StateFlow<List<Proposal>> = _topProposals.asStateFlow()
+    
+    private val _isAnalyzing = MutableStateFlow(false)
+    val isAnalyzing: StateFlow<Boolean> = _isAnalyzing.asStateFlow()
+    
     val isRecruiter: Boolean
         get() {
             val prefs = AuthPreferencesProvider.getInstance().get()
@@ -177,6 +194,151 @@ class ProposalsViewModel(
                 _errorMessage.value = e.message ?: "Erreur lors de la suppression de la proposition"
             }
         }
+    }
+    
+    /**
+     * Filtrer les propositions avec IA et critères avancés
+     */
+    fun filterProposals(
+        missionId: String? = null,
+        minScore: Int? = null,
+        maxScore: Int? = null,
+        status: String? = null,
+        skills: List<String>? = null,
+        talentLocation: String? = null,
+        minBudget: Int? = null,
+        maxBudget: Int? = null,
+        sortBy: String? = "score", // "score", "date", "budget"
+        sortOrder: String? = "desc" // "asc", "desc"
+    ) {
+        if (!isRecruiter) return
+        
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            
+            try {
+                val request = com.example.matchify.data.remote.dto.proposal.ProposalFilterRequestDto(
+                    missionId = missionId ?: _selectedMission.value?.missionId,
+                    minScore = minScore ?: _filterMinScore.value,
+                    maxScore = maxScore,
+                    status = status ?: _selectedStatusFilter.value.apiValue,
+                    skills = skills ?: _filterSkills.value.takeIf { it.isNotEmpty() },
+                    talentLocation = talentLocation,
+                    minBudget = minBudget,
+                    maxBudget = maxBudget,
+                    sortBy = sortBy,
+                    sortOrder = sortOrder
+                )
+                
+                val (proposals, response) = repository.filterProposals(request)
+                _proposals.value = proposals
+                _averageScore.value = response.averageScore
+                _filterMinScore.value = minScore
+                _filterSkills.value = skills ?: emptyList()
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erreur lors du filtrage des propositions"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+    
+    /**
+     * Recalculer les scores IA pour les propositions de la mission sélectionnée
+     */
+    fun recalculateProposalScores() {
+        if (!isRecruiter) return
+        
+        val missionId = _selectedMission.value?.missionId ?: return
+        
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            
+            try {
+                val proposals = repository.recalculateProposalScores(missionId)
+                _proposals.value = proposals
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erreur lors du recalcul des scores"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+    
+    /**
+     * Réinitialiser les filtres
+     */
+    fun resetFilters() {
+        _filterMinScore.value = null
+        _filterSkills.value = emptyList()
+        _averageScore.value = null
+        loadProposals()
+    }
+    
+    /**
+     * Analyser les propositions avec IA et trouver les meilleures (top 1-2)
+     * Utilise l'endpoint existant avec tri AI et filtre côté frontend
+     */
+    fun analyzeAndFindTopProposals(topCount: Int = 2) {
+        if (!isRecruiter) return
+        
+        val missionId = _selectedMission.value?.missionId ?: return
+        
+        viewModelScope.launch {
+            _isAnalyzing.value = true
+            _errorMessage.value = null
+            
+            try {
+                // Utiliser l'endpoint existant avec tri AI activé
+                val (_, allProposals) = repository.getProposalsForMission(
+                    missionId = missionId,
+                    aiSort = true // Activer le tri AI
+                )
+                
+                // Filtrer pour prendre les top N propositions avec score IA
+                // Les propositions sont déjà triées par score décroissant si aiSort = true
+                val topProposalsList = if (allProposals.isNotEmpty()) {
+                    // Prendre les propositions avec les meilleurs scores IA
+                    allProposals
+                        .filter { it.aiScore != null } // Seulement celles avec score IA
+                        .sortedByDescending { it.aiScore } // Trier par score décroissant
+                        .take(topCount) // Prendre les top N
+                } else {
+                    // Si pas de scores IA, prendre les premières
+                    allProposals.take(topCount)
+                }
+                
+                _topProposals.value = topProposalsList
+                
+                // Calculer le score moyen des top propositions
+                if (topProposalsList.isNotEmpty()) {
+                    val scores = topProposalsList.mapNotNull { it.aiScore }
+                    _averageScore.value = if (scores.isNotEmpty()) {
+                        scores.average()
+                    } else {
+                        null
+                    }
+                } else {
+                    _averageScore.value = null
+                }
+                
+            } catch (e: Exception) {
+                android.util.Log.e("ProposalsViewModel", "Error analyzing top proposals: ${e.message}", e)
+                _errorMessage.value = e.message ?: "Erreur lors de l'analyse des propositions"
+                _topProposals.value = emptyList()
+            } finally {
+                _isAnalyzing.value = false
+            }
+        }
+    }
+    
+    /**
+     * Réinitialiser les meilleures propositions
+     */
+    fun clearTopProposals() {
+        _topProposals.value = emptyList()
     }
 }
 

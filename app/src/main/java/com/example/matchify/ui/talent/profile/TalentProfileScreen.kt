@@ -41,6 +41,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
 import android.net.Uri
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.matchify.ui.ratings.RatingViewModel
+import com.example.matchify.ui.ratings.RatingViewModelFactory
+import com.example.matchify.data.remote.UserRepository
+import com.example.matchify.data.remote.ApiService
+import com.example.matchify.data.local.AuthPreferencesProvider
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Nouveau Talent Profile Screen - Design from scratch basé sur la capture d'écran
@@ -160,6 +169,14 @@ fun TalentProfileScreen(
                         }
                     )
                 }
+            }
+            
+            // Ratings Section (pour que le talent voie ses propres ratings)
+            user?.id?.let { talentId ->
+                TalentRatingsSectionForTalent(
+                    talentId = talentId,
+                    talentName = user?.fullName
+                )
             }
 
             // Analyze Profile Button
@@ -1003,6 +1020,254 @@ private fun extractFileNameFromUrl(url: String): String? {
         uri.lastPathSegment ?: "CV.pdf"
     } catch (e: Exception) {
         null
+    }
+}
+
+/**
+ * Section pour afficher les ratings d'un talent (vue par le talent lui-même)
+ */
+@Composable
+private fun TalentRatingsSectionForTalent(
+    talentId: String,
+    talentName: String?
+) {
+    val ratingViewModel: RatingViewModel = viewModel(factory = RatingViewModelFactory())
+    val talentRatingsState by ratingViewModel.talentRatings.collectAsState()
+    val isLoading by ratingViewModel.isLoading.collectAsState()
+    
+    // État pour stocker les noms des recruteurs
+    val recruiterNames = remember { mutableStateMapOf<String, String>() }
+    val context = LocalContext.current
+    val userRepository = remember {
+        val prefs = AuthPreferencesProvider.getInstance().get()
+        val apiService = ApiService.getInstance()
+        UserRepository(apiService.userApi, prefs)
+    }
+    
+    // Recharger les ratings quand le composable devient visible
+    LaunchedEffect(talentId) {
+        ratingViewModel.loadTalentRatings(talentId)
+    }
+    
+    // Charger les noms des recruteurs quand les ratings changent
+    LaunchedEffect(talentRatingsState) {
+        talentRatingsState?.ratings?.forEach { rating ->
+            if (!recruiterNames.containsKey(rating.recruiterId)) {
+                kotlinx.coroutines.launch {
+                    try {
+                        val (user, _) = userRepository.getUserById(rating.recruiterId)
+                        recruiterNames[rating.recruiterId] = user.fullName
+                    } catch (e: Exception) {
+                        android.util.Log.e("TalentRatingsSection", "Error loading recruiter name: ${e.message}", e)
+                        recruiterNames[rating.recruiterId] = "Recruiter"
+                    }
+                }
+            }
+        }
+    }
+    
+    val darkBackground = Color(0xFF0F172A)
+    val cardBackground = Color(0xFF1E293B)
+    val textPrimary = Color(0xFFFFFFFF)
+    val textSecondary = Color(0xFF9CA3AF)
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Reviews and ratings",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = textPrimary
+        )
+        
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = Color(0xFF3B82F6),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+            talentRatingsState != null && talentRatingsState!!.count > 0 -> {
+                val talentRatings = talentRatingsState!!
+                
+                // Score global avec étoiles
+                val displayScore = talentRatings.bayesianScore ?: talentRatings.averageScore
+                
+                if (displayScore != null) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = cardBackground
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Score global avec étoiles
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = String.format("%.1f", displayScore),
+                                    fontSize = 36.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF10B981)
+                                )
+                                Text(
+                                    text = "/ 5",
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = textSecondary
+                                )
+                            }
+                            
+                            // Étoiles visuelles
+                            com.example.matchify.ui.ratings.components.RatingStars(
+                                rating = kotlin.math.round(displayScore).toInt().coerceIn(1, 5),
+                                onRatingChange = {},
+                                enabled = false,
+                                starSize = 28.dp,
+                                starSpacing = 4.dp
+                            )
+                            
+                            // Nombre de ratings
+                            Text(
+                                text = "Based on ${talentRatings.count} ${if (talentRatings.count == 1) "rating" else "ratings"}",
+                                fontSize = 14.sp,
+                                color = textSecondary
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                
+                // Liste des reviews individuelles
+                if (talentRatings.ratings.isNotEmpty()) {
+                    Text(
+                        text = "Reviews ${talentRatings.ratings.size}",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = textPrimary,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 12.dp)
+                    )
+                    
+                    talentRatings.ratings.forEach { rating ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = cardBackground
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // Header avec date
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "Recruiter",
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = textPrimary
+                                        )
+                                        
+                                        rating.createdAt?.let { date ->
+                                            Text(
+                                                text = formatDateForRatingShort(date),
+                                                fontSize = 13.sp,
+                                                color = textSecondary
+                                            )
+                                        }
+                                    }
+                                }
+                                
+                                // Étoiles
+                                com.example.matchify.ui.ratings.components.RatingStars(
+                                    rating = rating.score,
+                                    onRatingChange = {},
+                                    enabled = false,
+                                    starSize = 18.dp,
+                                    starSpacing = 2.dp
+                                )
+                                
+                                // Commentaire
+                                if (!rating.comment.isNullOrEmpty()) {
+                                    Text(
+                                        text = rating.comment ?: "",
+                                        fontSize = 14.sp,
+                                        color = textPrimary,
+                                        lineHeight = 20.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else -> {
+                Text(
+                    text = "No ratings yet",
+                    fontSize = 14.sp,
+                    color = textSecondary,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Formater la date pour l'affichage court (ex: "Jan 11")
+ */
+private fun formatDateForRatingShort(dateString: String): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        val outputFormat = SimpleDateFormat("MMM dd", Locale.US)
+        val date = inputFormat.parse(dateString) ?: return dateString
+        outputFormat.format(date)
+    } catch (e: Exception) {
+        try {
+            val inputFormat2 = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            val outputFormat = SimpleDateFormat("MMM dd", Locale.US)
+            val date = inputFormat2.parse(dateString) ?: return dateString
+            outputFormat.format(date)
+        } catch (e2: Exception) {
+            dateString
+        }
     }
 }
 
