@@ -67,12 +67,9 @@ fun ProposalsScreen(
             missions = missions,
             selectedMission = selectedMission,
             isLoadingMissions = isLoadingMissions,
-            aiSortEnabled = aiSortEnabled,
             onMissionSelected = { viewModel.selectMission(it) },
-            onToggleAiSort = { viewModel.toggleAiSort() },
             onProposalClick = onProposalClick,
-            onDrawerItemSelected = onDrawerItemSelected,
-            viewModel = viewModel
+            onDrawerItemSelected = onDrawerItemSelected
         )
     } else {
         // New Talent UI - completely rebuilt
@@ -147,30 +144,6 @@ private fun TalentProposalsScreen(
                 .background(Color(0xFF0F172A))
                 .padding(paddingValues)
         ) {
-            // Top Tabs (Active / Archive) - directly under header
-            ProposalTabsRow(
-                selectedTab = selectedTab,
-                onTabSelected = onTabSelected,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            
-            // Divider under tabs - #1E293B, 1dp
-            HorizontalDivider(
-                color = Color(0xFF1E293B),
-                thickness = 1.dp
-            )
-            
-            // Filter Pills Row (only for Active tab) - immediately below tabs
-            if (selectedTab == ProposalTab.ACTIVE) {
-                ProposalFilterPills(
-                    selectedFilter = selectedStatusFilter,
-                    onFilterSelected = onFilterSelected,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 12.dp) // 12dp vertical spacing from tabs
-                )
-            }
-            
             // Proposals List
             when {
                 isLoading && proposals.isEmpty() -> {
@@ -202,7 +175,7 @@ private fun TalentProposalsScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
                             start = 16.dp,
-                            top = 14.dp, // 12-16dp top padding after pills
+                            top = 16.dp,
                             end = 16.dp,
                             bottom = 80.dp // Extra bottom padding to avoid overlap with bottom navigation
                         ),
@@ -497,12 +470,9 @@ private fun RecruiterProposalsScreen(
     missions: List<com.example.matchify.domain.model.Mission>,
     selectedMission: com.example.matchify.domain.model.Mission?,
     isLoadingMissions: Boolean,
-    aiSortEnabled: Boolean,
     onMissionSelected: (com.example.matchify.domain.model.Mission?) -> Unit,
-    onToggleAiSort: () -> Unit,
     onProposalClick: (String) -> Unit,
-    onDrawerItemSelected: (com.example.matchify.ui.missions.components.DrawerMenuItemType) -> Unit,
-    viewModel: ProposalsViewModel
+    onDrawerItemSelected: (com.example.matchify.ui.missions.components.DrawerMenuItemType) -> Unit
 ) {
     // Get user for avatar
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -545,12 +515,11 @@ private fun RecruiterProposalsScreen(
                 }
             )
             
-        // Mission Selector & AI Toggle
+        // Mission Selector
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             // Mission Dropdown
             var expanded by remember { mutableStateOf(false) }
@@ -699,79 +668,6 @@ private fun RecruiterProposalsScreen(
                     )
                 }
             }
-            
-            // AI Sort Toggle (only when mission selected)
-            if (selectedMission != null) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = onToggleAiSort,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (aiSortEnabled) Color(0xFF3B82F6) else Color(0xFF1E293B),
-                            contentColor = if (aiSortEnabled) Color.White else Color(0xFF3B82F6)
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        border = if (!aiSortEnabled) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF3B82F6)) else null
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.AutoAwesome,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (aiSortEnabled) "AI Sorting" else "AI Sort",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                    
-                    // Bouton pour analyser et trouver les meilleures propositions
-                    val topProposals by viewModel.topProposals.collectAsState()
-                    val isAnalyzing by viewModel.isAnalyzing.collectAsState()
-                    
-                    Button(
-                        onClick = {
-                            if (topProposals.isEmpty()) {
-                                viewModel.analyzeAndFindTopProposals(topCount = 2)
-                            } else {
-                                viewModel.clearTopProposals()
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (topProposals.isNotEmpty()) Color(0xFF10B981) else Color(0xFF1E293B),
-                            contentColor = if (topProposals.isNotEmpty()) Color.White else Color(0xFF10B981)
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        border = if (topProposals.isEmpty()) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF10B981)) else null,
-                        enabled = !isAnalyzing
-                    ) {
-                        if (isAnalyzing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Filled.AutoAwesome,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (topProposals.isNotEmpty()) "Top ${topProposals.size}" else "Find Top",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-            }
         }
         
         // Content
@@ -850,84 +746,20 @@ private fun RecruiterProposalsScreen(
                     }
                 }
                 else -> {
-                    val topProposals by viewModel.topProposals.collectAsState()
-                    val otherProposals = if (topProposals.isNotEmpty()) {
-                        proposals.filter { proposal ->
-                            !topProposals.any { it.proposalId == proposal.proposalId }
-                        }
-                    } else {
-                        proposals
-                    }
-                    
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
                             start = 16.dp,
-                            top = 8.dp,
+                            top = 16.dp,
                             end = 16.dp,
                             bottom = 80.dp
                         ),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // Section des meilleures propositions (Top 1-2)
-                        if (topProposals.isNotEmpty()) {
-                            item {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.AutoAwesome,
-                                        contentDescription = null,
-                                        tint = Color(0xFF10B981),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Text(
-                                        text = "Meilleures propositions recommandées",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF10B981)
-                                    )
-                                }
-                            }
-                            
-                            items(topProposals) { proposal ->
-                                TopProposalCard(
-                                    proposal = proposal,
-                                    showAiScore = true,
-                                    onClick = { onProposalClick(proposal.proposalId) }
-                                )
-                            }
-                            
-                            if (otherProposals.isNotEmpty()) {
-                                item {
-                                    HorizontalDivider(
-                                        modifier = Modifier.padding(vertical = 8.dp),
-                                        color = Color(0xFF374151),
-                                        thickness = 1.dp
-                                    )
-                                }
-                                
-                                item {
-                                    Text(
-                                        text = "Autres propositions",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color(0xFF9CA3AF),
-                                        modifier = Modifier.padding(vertical = 4.dp)
-                                    )
-                                }
-                            }
-                        }
-                        
-                        // Autres propositions
-                        items(otherProposals) { proposal ->
+                        items(proposals) { proposal ->
                             RecruiterProposalCard(
                                 proposal = proposal,
-                                showAiScore = aiSortEnabled,
+                                showAiScore = false,
                                 onClick = { onProposalClick(proposal.proposalId) }
                             )
                         }

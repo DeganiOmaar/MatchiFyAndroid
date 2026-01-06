@@ -10,7 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MoreVert
@@ -62,7 +62,7 @@ fun RecruiterProfileScreen(
         ) {
             // Header
             ProfileHeader(
-                onBack = { /* Navigate back handled by parent */ },
+                onBack = onBack,
                 onMoreClick = { showMenuSheet = true },
                 backgroundColor = darkBackground
             )
@@ -88,12 +88,9 @@ fun RecruiterProfileScreen(
                 phone = user?.phone,
                 location = user?.location
             )
-
-            // Edit Profile Button
-            EditProfileButton(
-                onClick = onEditProfile,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp)
-            )
+            
+            // Bottom spacing
+            Spacer(modifier = Modifier.height(40.dp))
         }
         
         // Error message overlay
@@ -193,8 +190,18 @@ private fun ProfileHeader(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Back arrow (invisible but takes space for alignment)
-            Box(modifier = Modifier.size(40.dp))
+            // Back arrow
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
 
             // Centered title
             Text(
@@ -408,33 +415,6 @@ private fun ContactInfoRow(
 }
 
 /**
- * Edit Profile Button
- */
-@Composable
-private fun EditProfileButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF2563EB)
-        )
-    ) {
-        Text(
-            text = "Edit Profile",
-            fontSize = 16.sp,
-            fontWeight = FontWeight(600),
-            color = Color.White
-        )
-    }
-}
-
-/**
  * Menu Bottom Sheet Content
  */
 @Composable
@@ -450,17 +430,10 @@ private fun MenuBottomSheetContent(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         MenuItem(
-            icon = Icons.Default.Email,
+            icon = Icons.Default.Description,
             title = "Edit Profile",
             onClick = onEditProfile,
             iconColor = Color.White
-        )
-        
-        MenuItem(
-            icon = Icons.Default.Phone,
-            title = "Settings",
-            onClick = onSettings,
-            iconColor = Color(0xFF9CA3AF)
         )
     }
 }

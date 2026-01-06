@@ -48,7 +48,8 @@ fun Mission.toCreateRequest(): CreateMissionRequest {
         description = description ?: "",
         duration = duration ?: "",
         budget = budget ?: 0,
-        skills = skills ?: emptyList()
+        skills = skills ?: emptyList(),
+        experienceLevel = "ENTRY" // Valeur par défaut si non disponible
     )
 }
 

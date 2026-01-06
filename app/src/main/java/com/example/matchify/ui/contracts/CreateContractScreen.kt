@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType as ComposeKeyboardType
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -46,6 +47,7 @@ fun CreateContractScreen(
     val signatureBitmap by viewModel.signatureBitmap.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val fieldErrors by viewModel.fieldErrors.collectAsState()
     
     var showSignaturePad by remember { mutableStateOf(false) }
     var showStartDatePicker by remember { mutableStateOf(false) }
@@ -76,7 +78,6 @@ fun CreateContractScreen(
                 },
                 isSendEnabled = title.isNotEmpty() && 
                                scope.isNotEmpty() && 
-                               budget.isNotEmpty() && 
                                signatureBitmap != null && 
                                !isLoading
             )
@@ -90,51 +91,85 @@ fun CreateContractScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Title Field
+                val titleError = fieldErrors["title"]
                 DarkTextField(
                     value = title,
                     onValueChange = { viewModel.title.value = it },
                     label = "Contract Title",
-                    singleLine = true
+                    singleLine = true,
+                    error = titleError
                 )
                 
                 // Scope Field (multi-line)
+                val scopeError = fieldErrors["scope"]
                 DarkTextField(
                     value = scope,
                     onValueChange = { viewModel.scope.value = it },
                     label = "Project Scope and Deliverables",
                     singleLine = false,
-                    minLines = 5
+                    minLines = 5,
+                    error = scopeError
                 )
                 
                 // Budget Field
+                val budgetError = fieldErrors["budget"]
                 DarkTextField(
                     value = budget,
-                    onValueChange = { viewModel.budget.value = it },
+                    onValueChange = { 
+                        // Filtrer pour ne garder que les chiffres
+                        viewModel.budget.value = it.filter { char -> char.isDigit() }
+                    },
                     label = "Budget and Payment Terms",
-                    singleLine = true
+                    singleLine = true,
+                    error = budgetError,
+                    keyboardType = ComposeKeyboardType.Number
                 )
                 
                 // Payment Details Field
+                val paymentDetailsError = fieldErrors["paymentDetails"]
                 DarkTextField(
                     value = paymentDetails,
                     onValueChange = { viewModel.paymentDetails.value = it },
                     label = "Payment Details (optional)",
-                    singleLine = true
+                    singleLine = true,
+                    error = paymentDetailsError
                 )
                 
                 // Start Date Field
-                DarkDateField(
-                    value = dateFormatter.format(Date(startDate)),
-                    label = "Start Date",
-                    onClick = { showStartDatePicker = true }
-                )
+                val startDateError = fieldErrors["startDate"]
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DarkDateField(
+                        value = dateFormatter.format(Date(startDate)),
+                        label = "Start Date",
+                        onClick = { showStartDatePicker = true },
+                        error = startDateError != null
+                    )
+                    if (startDateError != null) {
+                        Text(
+                            text = startDateError,
+                            color = Color(0xFFEF4444),
+                            fontSize = 12.sp
+                        )
+                    }
+                }
                 
                 // End Date Field
-                DarkDateField(
-                    value = dateFormatter.format(Date(endDate)),
-                    label = "End Date",
-                    onClick = { showEndDatePicker = true }
-                )
+                val endDateError = fieldErrors["endDate"]
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DarkDateField(
+                        value = dateFormatter.format(Date(endDate)),
+                        label = "End Date",
+                        onClick = { showEndDatePicker = true },
+                        error = endDateError != null
+                    )
+                    if (endDateError != null) {
+                        Text(
+                            text = endDateError,
+                            color = Color(0xFFEF4444),
+                            fontSize = 12.sp
+                        )
+                    }
+                }
                 
                 // Signature Section
                 SignatureSection(
@@ -142,8 +177,8 @@ fun CreateContractScreen(
                     onSignClick = { showSignaturePad = true }
                 )
                 
-                // Error Message
-                if (errorMessage != null) {
+                // Error Message (seulement si pas d'erreurs par champ)
+                if (errorMessage != null && fieldErrors.isEmpty()) {
                     Text(
                         text = errorMessage!!,
                         color = Color(0xFFEF4444),
@@ -251,21 +286,26 @@ private fun DarkTextField(
     onValueChange: (String) -> Unit,
     label: String,
     singleLine: Boolean,
-    minLines: Int = 1
+    minLines: Int = 1,
+    error: String? = null,
+    keyboardType: androidx.compose.ui.text.input.KeyboardType = androidx.compose.ui.text.input.KeyboardType.Text
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = label,
             fontSize = 14.sp,
             fontWeight = FontWeight(500),
-            color = Color(0xFF9CA3AF)
+            color = if (error != null) Color(0xFFEF4444) else Color(0xFF9CA3AF)
         )
         
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = Color(0xFF1E293B),
             shape = RoundedCornerShape(12.dp),
-            border = BorderStroke(1.dp, Color(0xFF374151))
+            border = BorderStroke(
+                width = 1.dp,
+                color = if (error != null) Color(0xFFEF4444) else Color(0xFF374151)
+            )
         ) {
             TextField(
                 value = value,
@@ -283,10 +323,17 @@ private fun DarkTextField(
                     unfocusedIndicatorColor = Color.Transparent,
                     disabledIndicatorColor = Color.Transparent,
                     focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
+                    unfocusedContainerColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                    errorTextColor = Color.White
                 ),
                 singleLine = singleLine,
-                minLines = minLines
+                minLines = minLines,
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = keyboardType),
+                isError = error != null,
+                supportingText = error?.let { 
+                    { Text(text = it, color = Color(0xFFEF4444), fontSize = 12.sp) }
+                }
             )
         }
     }
@@ -297,14 +344,15 @@ private fun DarkTextField(
 private fun DarkDateField(
     value: String,
     label: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    error: Boolean = false
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = label,
             fontSize = 14.sp,
             fontWeight = FontWeight(500),
-            color = Color(0xFF9CA3AF)
+            color = if (error) Color(0xFFEF4444) else Color(0xFF9CA3AF)
         )
         
         Surface(
@@ -313,7 +361,10 @@ private fun DarkDateField(
                 .clickable(onClick = onClick),
             color = Color(0xFF1E293B),
             shape = RoundedCornerShape(12.dp),
-            border = BorderStroke(1.dp, Color(0xFF374151))
+            border = BorderStroke(
+                width = 1.dp,
+                color = if (error) Color(0xFFEF4444) else Color(0xFF374151)
+            )
         ) {
             Row(
                 modifier = Modifier

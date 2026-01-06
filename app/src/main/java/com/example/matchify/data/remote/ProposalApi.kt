@@ -56,6 +56,28 @@ interface ProposalApi {
     suspend fun searchProposalsByMissionTitle(
         @Query("title") title: String
     ): List<MissionProposalsSearchResultDto>
+    
+    /**
+     * Filtrer les propositions avec IA et critères avancés
+     * POST /recruiter/proposals/filter
+     * 
+     * @param request Critères de filtrage (score, skills, status, etc.)
+     */
+    @POST("recruiter/proposals/filter")
+    suspend fun filterProposals(
+        @Body request: com.example.matchify.data.remote.dto.proposal.ProposalFilterRequestDto
+    ): com.example.matchify.data.remote.dto.proposal.ProposalFilterResponseDto
+    
+    /**
+     * Recalculer les scores IA pour les propositions d'une mission
+     * POST /recruiter/proposals/mission/{missionId}/recalculate-scores
+     * 
+     * @param missionId ID de la mission
+     */
+    @POST("recruiter/proposals/mission/{missionId}/recalculate-scores")
+    suspend fun recalculateProposalScores(
+        @Path("missionId") missionId: String
+    ): com.example.matchify.data.remote.dto.proposal.ProposalFilterResponseDto
 }
 
 /**

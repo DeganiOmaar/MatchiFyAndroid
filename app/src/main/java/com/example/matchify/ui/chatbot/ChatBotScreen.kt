@@ -21,13 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatBotScreen(
     onBack: () -> Unit,
-    viewModel: ChatBotViewModel = viewModel(factory = ChatBotViewModelFactory())
+    viewModel: ChatBotViewModel = viewModel(factory = ChatBotViewModelFactory(LocalContext.current))
 ) {
     val messages by viewModel.messages.collectAsState()
     var inputText by remember { mutableStateOf("") }

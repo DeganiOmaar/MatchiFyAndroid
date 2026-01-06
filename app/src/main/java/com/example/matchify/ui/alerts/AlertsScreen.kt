@@ -1,7 +1,5 @@
 package com.example.matchify.ui.alerts
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,11 +29,8 @@ import com.example.matchify.domain.model.Alert
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
-
-@RequiresApi(Build.VERSION_CODES.O)
+import java.text.SimpleDateFormat
+import java.util.*
 @Composable
 fun AlertsScreen(
     onAlertClick: (String) -> Unit = {},
@@ -182,7 +177,6 @@ fun AlertsScreen(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AlertCard(
     alert: Alert,
@@ -309,15 +303,18 @@ fun AlertCard(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun formatTimestamp(dateString: String?): String {
     if (dateString == null) return ""
     
     return try {
-        val formatter = DateTimeFormatter.ISO_DATE_TIME
-        val date = Instant.from(formatter.parse(dateString))
-        val now = Instant.now()
-        val diffMinutes = ChronoUnit.MINUTES.between(date, now)
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+        val date = inputFormat.parse(dateString)
+        
+        if (date == null) return ""
+        
+        val now = Date()
+        val diffMinutes = (now.time - date.time) / (1000 * 60) // diff in minutes
         
         when {
             diffMinutes < 1 -> "Just now"
@@ -328,8 +325,8 @@ fun formatTimestamp(dateString: String?): String {
             }
             diffMinutes < 2880 -> "Yesterday"
             else -> {
-                val dateTime = date.atZone(java.time.ZoneId.systemDefault())
-                DateTimeFormatter.ofPattern("MM/dd/yy").format(dateTime)
+                val outputFormat = SimpleDateFormat("MM/dd/yy", Locale.US)
+                outputFormat.format(date)
             }
         }
     } catch (e: Exception) {

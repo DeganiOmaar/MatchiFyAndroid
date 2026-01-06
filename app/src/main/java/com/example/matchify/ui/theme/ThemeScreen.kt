@@ -18,13 +18,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeScreen(
     onBack: () -> Unit,
     viewModel: ThemeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        factory = ThemeViewModelFactory()
+        factory = ThemeViewModelFactory(LocalContext.current)
     )
 ) {
     val currentTheme by viewModel.currentTheme.collectAsState()

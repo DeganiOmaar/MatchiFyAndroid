@@ -1,7 +1,5 @@
 package com.example.matchify.ui.missions.components
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -9,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.*
+import com.example.matchify.ui.missions.components.MissionMenuBottomSheetContent
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,11 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.matchify.domain.model.Mission
-import java.time.Instant
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
+import java.text.SimpleDateFormat
+import java.util.*
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MissionRow(
@@ -156,15 +153,18 @@ fun MissionRow(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 private fun formatDate(dateString: String?): String {
     if (dateString == null) return ""
     
     return try {
-        val formatter = DateTimeFormatter.ISO_DATE_TIME
-        val date = Instant.from(formatter.parse(dateString))
-        val now = Instant.now()
-        val diff = ChronoUnit.MINUTES.between(date, now)
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+        val date = inputFormat.parse(dateString)
+        
+        if (date == null) return ""
+        
+        val now = Date()
+        val diff = (now.time - date.time) / (1000 * 60) // diff in minutes
         
         when {
             diff < 1 -> "Just now"
@@ -178,8 +178,8 @@ private fun formatDate(dateString: String?): String {
                 if (days == 1L) "Yesterday" else "$days days ago"
             }
             else -> {
-                val dateTime = date.atZone(java.time.ZoneId.systemDefault())
-                DateTimeFormatter.ofPattern("MMM d, yyyy").format(dateTime)
+                val outputFormat = SimpleDateFormat("MMM d, yyyy", Locale.US)
+                outputFormat.format(date)
             }
         }
     } catch (e: Exception) {

@@ -169,5 +169,24 @@ class ProposalRepository(
         
         android.util.Log.d("ProposalRepository", " [STREAMING] SSE loop ended, total events: $eventCount")
     }
+    
+    /**
+     * Filtrer les propositions avec IA et critères avancés
+     */
+    suspend fun filterProposals(
+        request: com.example.matchify.data.remote.dto.proposal.ProposalFilterRequestDto
+    ): Pair<List<Proposal>, com.example.matchify.data.remote.dto.proposal.ProposalFilterResponseDto> {
+        val response = apiService.proposalApi.filterProposals(request)
+        val proposals = response.proposals.map { ProposalDtoMapper.toDomain(it) }
+        return Pair(proposals, response)
+    }
+    
+    /**
+     * Recalculer les scores IA pour les propositions d'une mission
+     */
+    suspend fun recalculateProposalScores(missionId: String): List<Proposal> {
+        val response = apiService.proposalApi.recalculateProposalScores(missionId)
+        return response.proposals.map { ProposalDtoMapper.toDomain(it) }
+    }
 }
 

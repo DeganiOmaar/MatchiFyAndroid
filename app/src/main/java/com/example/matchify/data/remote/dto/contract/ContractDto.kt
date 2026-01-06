@@ -37,10 +37,10 @@ data class ContractDto(
     val content: String,
     
     @SerializedName("scope")
-    val scope: String,
+    val scope: String? = null, // Peut être null si le backend ne le renvoie pas
     
     @SerializedName("budget")
-    val budget: String,
+    val budget: String? = null, // Peut être null si le backend ne le renvoie pas
     
     @SerializedName("paymentDetails")
     val paymentDetails: String? = null,
@@ -81,8 +81,8 @@ fun ContractDto.toDomain(): Contract {
         talentId = talentId,
         title = title,
         content = content,
-        scope = scope,
-        budget = budget,
+        scope = scope ?: content, // Utiliser content comme fallback si scope est null
+        budget = budget ?: "", // Utiliser une chaîne vide si budget est null
         paymentDetails = paymentDetails,
         startDate = startDate,
         endDate = endDate,

@@ -12,11 +12,8 @@ data class CreateContractRequest(
     @SerializedName("title")
     val title: String,
     
-    @SerializedName("scope")
-    val scope: String,
-    
-    @SerializedName("budget")
-    val budget: String,
+    @SerializedName("content")
+    val content: String, // Le backend attend "content" pour le scope du projet
     
     @SerializedName("startDate")
     val startDate: String,

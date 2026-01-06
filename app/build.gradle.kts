@@ -36,7 +36,8 @@ android {
     kotlinOptions {
         jvmTarget = "11"
         freeCompilerArgs += listOf(
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api"
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.material.ExperimentalMaterialApi"
         )
     }
     buildFeatures {
@@ -91,6 +92,9 @@ dependencies {
     
     // Material Icons Extended (compatible with Compose BOM)
     implementation("androidx.compose.material:material-icons-extended")
+    
+    // Material (for SwipeToDismiss)
+    implementation("androidx.compose.material:material")
     
     // Compose Foundation (for HorizontalPager)
     implementation("androidx.compose.foundation:foundation")

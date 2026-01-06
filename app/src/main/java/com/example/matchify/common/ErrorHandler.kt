@@ -75,6 +75,91 @@ object ErrorHandler {
     }
     
     /**
+     * Extrait les erreurs de validation (fieldErrors) depuis une HttpException
+     * Retourne null si pas d'erreurs de validation structurées
+     */
+    fun extractValidationErrors(exception: HttpException): ValidationErrorResponse? {
+        val code = exception.code()
+        if (code != 400 && code != 422) {
+            return null
+        }
+        
+        val errorBody = exception.response()?.errorBody()?.string() ?: return null
+        
+        // Logger le body pour déboguer
+        Log.d(TAG, "Validation error body (code $code): $errorBody")
+        
+        return try {
+            val errorJson = Gson().fromJson(errorBody, com.google.gson.JsonObject::class.java)
+            
+            // Vérifier si c'est le format attendu avec fieldErrors
+            val message = errorJson.get("message")?.asString
+            val fieldErrorsJson = errorJson.get("fieldErrors")?.asJsonObject
+            
+            if (fieldErrorsJson != null) {
+                // Convertir JsonObject en Map<String, String>
+                val fieldErrorsMap = mutableMapOf<String, String>()
+                fieldErrorsJson.entrySet().forEach { entry ->
+                    val value = entry.value
+                    fieldErrorsMap[entry.key] = when {
+                        value.isJsonPrimitive -> value.asString
+                        value.isJsonArray -> value.asJsonArray.joinToString(", ") { it.asString }
+                        else -> value.toString()
+                    }
+                }
+                
+                Log.d(TAG, "Extracted fieldErrors: $fieldErrorsMap")
+                
+                ValidationErrorResponse(
+                    message = message ?: "Validation failed",
+                    missingFields = errorJson.get("missingFields")?.asJsonArray?.map { it.asString },
+                    fieldErrors = fieldErrorsMap
+                )
+            } else {
+                // Si pas de fieldErrors, essayer de parser directement
+                Gson().fromJson(errorBody, ValidationErrorResponse::class.java)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Could not parse validation error: $errorBody", e)
+            null
+        }
+    }
+    
+    /**
+     * Extrait le message d'erreur HTTP avec gestion spécifique pour 401/403/404
+     * Utile pour les endpoints de talents où on veut des messages spécifiques
+     */
+    fun getHttpErrorMessage(exception: HttpException, context: ErrorContext = ErrorContext.GENERAL): String {
+        val code = exception.code()
+        
+        // Messages spécifiques pour les erreurs HTTP
+        return when (code) {
+            401 -> {
+                if (context == ErrorContext.TALENT_MATCHING) {
+                    "Votre session a expiré. Veuillez vous reconnecter."
+                } else {
+                    getUnauthorizedMessage(context)
+                }
+            }
+            403 -> {
+                if (context == ErrorContext.TALENT_MATCHING) {
+                    "Cette fonctionnalité est réservée aux recruteurs."
+                } else {
+                    "Vous n'avez pas la permission d'effectuer cette action."
+                }
+            }
+            404 -> {
+                if (context == ErrorContext.TALENT_MATCHING) {
+                    "Mission inexistante ou non accessible."
+                } else {
+                    getNotFoundMessage(context)
+                }
+            }
+            else -> getErrorMessage(exception, context)
+        }
+    }
+    
+    /**
      * Maps technical error messages to user-friendly ones
      */
     private fun mapTechnicalMessage(message: String, context: ErrorContext): String {
@@ -141,6 +226,8 @@ object ErrorHandler {
             ErrorContext.MISSION_UPDATE -> "Les informations de la mission ne sont pas valides."
             ErrorContext.MISSION_DELETE -> "Impossible de supprimer la mission."
             ErrorContext.PASSWORD_RESET -> "Les informations fournies ne sont pas valides."
+            ErrorContext.TALENT_MATCHING -> "Erreur lors du filtrage des talents."
+            ErrorContext.CONTRACT_CREATE -> "Veuillez remplir tous les champs du contrat."
             else -> "Les données fournies ne sont pas valides."
         }
     }
@@ -190,6 +277,8 @@ enum class ErrorContext {
     MISSION_DELETE,
     PASSWORD_RESET,
     FORGOT_PASSWORD,
-    VERIFY_CODE
+    VERIFY_CODE,
+    TALENT_MATCHING,
+    CONTRACT_CREATE
 }
 
