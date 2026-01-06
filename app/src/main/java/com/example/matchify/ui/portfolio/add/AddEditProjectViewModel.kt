@@ -204,20 +204,3 @@ class AddEditProjectViewModel(
     }
 }
 
-class AddEditProjectViewModelFactory(
-    private val project: Project? = null,
-    private val context: android.content.Context
-) : androidx.lifecycle.ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(AddEditProjectViewModel::class.java)) {
-            val apiService = ApiService.getInstance()
-            val authPreferences = AuthPreferencesProvider.getInstance().get()
-            val portfolioRepository = PortfolioRepository(apiService.portfolioApi, authPreferences, context.contentResolver)
-            val skillRepository = SkillRepository(apiService.skillApi)
-            @Suppress("UNCHECKED_CAST")
-            return AddEditProjectViewModel(portfolioRepository, skillRepository, context.contentResolver, project) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
-

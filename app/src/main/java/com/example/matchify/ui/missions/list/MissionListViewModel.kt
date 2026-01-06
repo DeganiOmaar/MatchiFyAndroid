@@ -85,7 +85,13 @@ class MissionListViewModel(
 
         viewModelScope.launch {
             try {
-                val allMissions = repository.getAllMissions()
+                // Pour les recruteurs, charger leurs propres missions
+                // Pour les talents, charger toutes les missions
+                val allMissions = if (isTalent) {
+                    repository.getAllMissions()
+                } else {
+                    repository.getMissionsByRecruiter()
+                }
                 _missions.value = allMissions
                 
                 // Update favorite IDs from missions that have isFavorite = true
@@ -390,7 +396,7 @@ class MissionListViewModel(
             }
             
             // Sort based on tab
-            when (tab) {
+            filtered = when (tab) {
                 MissionTab.BEST_MATCHES -> {
                     // Sort by matchScore descending
                     filtered.sortedByDescending { mission ->
@@ -426,6 +432,8 @@ class MissionListViewModel(
                     }
                 }
             }
+            
+            filtered
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

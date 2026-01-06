@@ -29,17 +29,17 @@ fun MissionListScreen(
     val missions by viewModel.missions.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    
+
     // Get user role
     val context = LocalContext.current
     val prefs = remember { AuthPreferencesProvider.getInstance().get() }
     val userRole by prefs.role.collectAsState(initial = "recruiter")
     val isRecruiter = userRole == "recruiter"
-    
+
     LaunchedEffect(Unit) {
         viewModel.loadMissions()
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -83,7 +83,7 @@ fun MissionListScreen(
                     ) {
                         items(missions) { mission ->
                             val isOwner = viewModel.isMissionOwner(mission)
-                            
+
                             MissionRow(
                                 mission = mission,
                                 isOwner = isOwner && isRecruiter,

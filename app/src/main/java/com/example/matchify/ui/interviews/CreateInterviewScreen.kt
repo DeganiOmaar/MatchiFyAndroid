@@ -1,16 +1,15 @@
 package com.example.matchify.ui.interviews
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,330 +17,389 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.matchify.ui.components.MatchifyTopAppBar
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import com.example.matchify.ui.talent.edit.DarkTextField
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateInterviewScreen(
     proposalId: String,
     onBack: () -> Unit,
-    onSuccess: () -> Unit = {},
+    onSuccess: () -> Unit,
     viewModel: CreateInterviewViewModel = viewModel(
         factory = CreateInterviewViewModelFactory(proposalId)
     )
 ) {
-    val isLoading by viewModel.isLoading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
-    val success by viewModel.success.collectAsState()
-    
-    val selectedDate by viewModel.selectedDate.collectAsState()
-    val selectedTime by viewModel.selectedTime.collectAsState()
-    val duration by viewModel.duration.collectAsState()
-    val type by viewModel.type.collectAsState()
-    val notes by viewModel.notes.collectAsState()
-    
-    // Dialog states
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
-    
     val context = LocalContext.current
+    val scheduledDate = viewModel.scheduledDate.collectAsState().value
+    val notes = viewModel.notes.collectAsState().value
+    val meetLink = viewModel.meetLink.collectAsState().value
+    val useAutoGenerate = viewModel.useAutoGenerate.collectAsState().value
+    val isLoading = viewModel.isLoading.collectAsState().value
+    val errorMessage = viewModel.errorMessage.collectAsState().value
     
-    // Handle success
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.FRENCH)
+    val timeFormat = SimpleDateFormat("HH:mm", Locale.FRENCH)
+    
+    val success = viewModel.success.collectAsState().value
+    val coroutineScope = rememberCoroutineScope()
+    
     LaunchedEffect(success) {
         if (success) {
-            onSuccess()
-            onBack()
-        }
-    }
-    
-    // Date Picker
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = System.currentTimeMillis()
-        )
-        
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        val date = java.time.Instant.ofEpochMilli(millis)
-                            .atZone(java.time.ZoneId.systemDefault())
-                            .toLocalDate()
-                        viewModel.updateDate(date)
-                    }
-                    showDatePicker = false
-                }) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel")
-                }
+            // Afficher un message de succès selon le mode utilisé
+            val message = if (useAutoGenerate) {
+                "✓ Interview planifiée ! Le lien Zoom/Meet a été généré automatiquement et envoyé au talent par email."
+            } else {
+                "✓ Interview planifiée ! Le lien de réunion a été envoyé au talent par email."
             }
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
-    
-    // Time Picker
-    if (showTimePicker) {
-        val timePickerState = rememberTimePickerState(
-            initialHour = 10,
-            initialMinute = 0
-        )
-        
-        AlertDialog(
-            onDismissRequest = { showTimePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    val time = LocalTime.of(timePickerState.hour, timePickerState.minute)
-                    viewModel.updateTime(time)
-                    showTimePicker = false
-                }) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) {
-                    Text("Cancel")
-                }
-            },
-            text = {
-                TimePicker(state = timePickerState)
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    duration = SnackbarDuration.Long
+                )
+                // Attendre un peu pour que l'utilisateur voie le message
+                kotlinx.coroutines.delay(2500)
+                onSuccess()
+                onBack()
             }
-        )
+        }
     }
     
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                snackbar = { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        containerColor = Color(0xFF10B981),
+                        contentColor = Color.White
+                    )
+                }
+            )
+        },
         topBar = {
             MatchifyTopAppBar(
-                title = "Créer une interview",
+                title = "Planifier une interview",
                 onBack = onBack
             )
         },
         containerColor = Color(0xFF0F172A)
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color(0xFF0F172A))
                 .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+            // Date & Time Selection
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFF1E293B)
             ) {
-                // Header
-                Text(
-                    text = "Planifier un entretien",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                // Error Message
-                errorMessage?.let { msg ->
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFEF4444).copy(alpha = 0.1f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = msg,
-                            color = Color(0xFFEF4444),
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-                
-                // Date Selection
-                InputSection(title = "Date") {
-                    OutlinedTextField(
-                        value = selectedDate?.format(DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.FRENCH)) ?: "",
-                        onValueChange = { },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showDatePicker = true },
-                        enabled = false,
-                        readOnly = true,
-                        placeholder = { Text("Sélectionner une date", color = Color.Gray) },
-                        trailingIcon = {
-                            IconButton(onClick = { showDatePicker = true }) {
-                                Icon(Icons.Default.CalendarToday, contentDescription = "Date", tint = Color(0xFF3B82F6))
-                            }
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = Color.White,
-                            disabledBorderColor = Color(0xFF334155),
-                            disabledPlaceholderColor = Color.Gray,
-                            disabledContainerColor = Color(0xFF1E293B)
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
-                
-                // Time Selection
-                InputSection(title = "Heure") {
-                    OutlinedTextField(
-                        value = selectedTime?.format(DateTimeFormatter.ofPattern("HH:mm")) ?: "",
-                        onValueChange = { },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showTimePicker = true },
-                        enabled = false,
-                        readOnly = true,
-                        placeholder = { Text("Sélectionner l'heure", color = Color.Gray) },
-                        trailingIcon = {
-                            IconButton(onClick = { showTimePicker = true }) {
-                                Icon(Icons.Default.Schedule, contentDescription = "Time", tint = Color(0xFF3B82F6))
-                            }
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = Color.White,
-                            disabledBorderColor = Color(0xFF334155),
-                            disabledPlaceholderColor = Color.Gray,
-                            disabledContainerColor = Color(0xFF1E293B)
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
-                
-                // Duration Selection
-                InputSection(title = "Durée") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val durations = listOf(15, 30, 45, 60)
-                        durations.forEach { d ->
-                            val isSelected = duration == d
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { viewModel.updateDuration(d) },
-                                label = { Text("${d} min") },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = Color(0xFF3B82F6),
-                                    selectedLabelColor = Color.White,
-                                    containerColor = Color(0xFF1E293B),
-                                    labelColor = Color.Gray
-                                ),
-                                border = FilterChipDefaults.filterChipBorder(
-                                    enabled = true,
-                                    selected = isSelected,
-                                    borderColor = if (isSelected) Color(0xFF3B82F6) else Color(0xFF334155)
-                                )
-                            )
-                        }
-                    }
-                }
-                
-                // Type Selection
-                InputSection(title = "Type d'entretien") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val types = listOf("VIDEO" to "Vidéo", "VOICE" to "Audio", "CHAT" to "Chat")
-                        types.forEach { (typeKey, label) ->
-                            val isSelected = type == typeKey
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { viewModel.updateType(typeKey) },
-                                label = { Text(label) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = Color(0xFF3B82F6),
-                                    selectedLabelColor = Color.White,
-                                    containerColor = Color(0xFF1E293B),
-                                    labelColor = Color.Gray
-                                ),
-                                border = FilterChipDefaults.filterChipBorder(
-                                    enabled = true,
-                                    selected = isSelected,
-                                    borderColor = if (isSelected) Color(0xFF3B82F6) else Color(0xFF334155)
-                                )
-                            )
-                        }
-                    }
-                }
-                
-                // Notes
-                InputSection(title = "Message / Notes (Optionnel)") {
-                    OutlinedTextField(
-                        value = notes,
-                        onValueChange = { viewModel.updateNotes(it) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp),
-                        placeholder = { Text("Ajouter un message pour le talent...", color = Color.Gray) },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedContainerColor = Color(0xFF1E293B),
-                            unfocusedContainerColor = Color(0xFF1E293B),
-                            focusedBorderColor = Color(0xFF3B82F6),
-                            unfocusedBorderColor = Color(0xFF334155)
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                // Submit Button
-                Button(
-                    onClick = { viewModel.createInterview() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF3B82F6),
-                        disabledContainerColor = Color(0xFF3B82F6).copy(alpha = 0.5f)
-                    ),
-                    enabled = !isLoading
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(color = Color.White)
+                    Text(
+                        text = "Date et heure *",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF9CA3AF)
+                    )
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Date Button
+                        Button(
+                            onClick = {
+                                val calendar = Calendar.getInstance()
+                                scheduledDate?.let {
+                                    calendar.time = it
+                                }
+                                DatePickerDialog(
+                                    context,
+                                    { _, year, month, dayOfMonth ->
+                                        val selectedDate = Calendar.getInstance().apply {
+                                            set(year, month, dayOfMonth)
+                                            // Si on a déjà une heure sélectionnée, la conserver
+                                            scheduledDate?.let { existingDate ->
+                                                val existingCal = Calendar.getInstance()
+                                                existingCal.time = existingDate
+                                                set(Calendar.HOUR_OF_DAY, existingCal.get(Calendar.HOUR_OF_DAY))
+                                                set(Calendar.MINUTE, existingCal.get(Calendar.MINUTE))
+                                            } ?: run {
+                                                // Sinon, utiliser l'heure actuelle
+                                                val now = Calendar.getInstance()
+                                                set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY))
+                                                set(Calendar.MINUTE, now.get(Calendar.MINUTE))
+                                            }
+                                        }
+                                        viewModel.setScheduledDate(selectedDate.time)
+                                    },
+                                    calendar.get(Calendar.YEAR),
+                                    calendar.get(Calendar.MONTH),
+                                    calendar.get(Calendar.DAY_OF_MONTH)
+                                ).show()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (scheduledDate != null) Color(0xFF3B82F6) else Color(0xFF111827),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Rounded.Schedule, null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = scheduledDate?.let { dateFormat.format(it) } ?: "Sélectionner date",
+                                fontSize = 14.sp
+                            )
+                        }
+                        
+                        // Time Button
+                        Button(
+                            onClick = {
+                                val calendar = Calendar.getInstance()
+                                scheduledDate?.let {
+                                    calendar.time = it
+                                } ?: run {
+                                    // Si aucune date n'est sélectionnée, utiliser la date d'aujourd'hui
+                                    calendar.set(Calendar.YEAR, Calendar.getInstance().get(Calendar.YEAR))
+                                    calendar.set(Calendar.MONTH, Calendar.getInstance().get(Calendar.MONTH))
+                                    calendar.set(Calendar.DAY_OF_MONTH, Calendar.getInstance().get(Calendar.DAY_OF_MONTH))
+                                }
+                                android.app.TimePickerDialog(
+                                    context,
+                                    { _, hourOfDay, minute ->
+                                        val selectedDate = scheduledDate?.let {
+                                            val cal = Calendar.getInstance()
+                                            cal.time = it
+                                            cal.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                            cal.set(Calendar.MINUTE, minute)
+                                            cal.time
+                                        } ?: Calendar.getInstance().apply {
+                                            set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                            set(Calendar.MINUTE, minute)
+                                        }.time
+                                        viewModel.setScheduledDate(selectedDate)
+                                    },
+                                    calendar.get(Calendar.HOUR_OF_DAY),
+                                    calendar.get(Calendar.MINUTE),
+                                    true
+                                ).show()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (scheduledDate != null) Color(0xFF3B82F6) else Color(0xFF111827),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = scheduledDate?.let { timeFormat.format(it) } ?: "Heure",
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                    
+                    // Affichage de la date/heure sélectionnée
+                    if (scheduledDate != null) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFF3B82F6).copy(alpha = 0.1f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF3B82F6).copy(alpha = 0.3f))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Rounded.Schedule,
+                                    contentDescription = null,
+                                    tint = Color(0xFF3B82F6),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = "Sélectionné: ${dateFormat.format(scheduledDate)} à ${timeFormat.format(scheduledDate)}",
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF3B82F6),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Lien de réunion - Toggle pour choisir entre automatique et manuel
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFF1E293B)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Lien de réunion",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF9CA3AF)
+                            )
+                            Text(
+                                text = if (useAutoGenerate) {
+                                    "Génération automatique"
+                                } else {
+                                    "Lien manuel"
+                                },
+                                fontSize = 12.sp,
+                                color = Color(0xFF9CA3AF).copy(alpha = 0.7f),
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
+                        Switch(
+                            checked = useAutoGenerate,
+                            onCheckedChange = { viewModel.setUseAutoGenerate(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color(0xFF10B981),
+                                checkedTrackColor = Color(0xFF10B981).copy(alpha = 0.5f),
+                                uncheckedThumbColor = Color(0xFF9CA3AF),
+                                uncheckedTrackColor = Color(0xFF475569)
+                            )
+                        )
+                    }
+                    
+                    if (useAutoGenerate) {
+                        // Information sur la génération automatique
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFF10B981).copy(alpha = 0.1f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.3f))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Rounded.Schedule,
+                                    contentDescription = null,
+                                    tint = Color(0xFF10B981),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = "Le lien Zoom/Meet sera généré automatiquement et envoyé au talent par email",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF10B981),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
                     } else {
+                        // Champ pour saisir le lien manuellement
+                        DarkTextField(
+                            value = meetLink,
+                            onValueChange = { viewModel.setMeetLink(it) },
+                            placeholder = "https://zoom.us/j/... ou https://meet.google.com/...",
+                            singleLine = true
+                        )
                         Text(
-                            text = "Envoyer l'invitation",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                            text = "Le lien saisi sera envoyé au talent par email",
+                            fontSize = 11.sp,
+                            color = Color(0xFF9CA3AF).copy(alpha = 0.7f),
+                            modifier = Modifier.padding(top = 4.dp)
                         )
                     }
                 }
-                
-                Spacer(modifier = Modifier.height(32.dp))
             }
+            
+            // Notes (Optional)
+            DarkTextField(
+                value = notes,
+                onValueChange = { viewModel.setNotes(it) },
+                placeholder = "Notes (optionnel)",
+                minLines = 4
+            )
+            
+            // Error Message
+            errorMessage?.let { error ->
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFEF4444).copy(alpha = 0.1f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.3f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = error,
+                            color = Color(0xFFEF4444),
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Create Button
+            Button(
+                onClick = { viewModel.createInterview() },
+                enabled = !isLoading && scheduledDate != null && (useAutoGenerate || meetLink.isNotBlank()),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF3B82F6),
+                    disabledContainerColor = Color(0xFF1E293B)
+                )
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text(
+                        "Planifier l'interview",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
 
-@Composable
-fun InputSection(
-    title: String,
-    content: @Composable () -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = title,
-            color = Color.White,
-            fontWeight = FontWeight.Medium,
-            fontSize = 16.sp,
-            modifier = Modifier.padding(start = 4.dp)
-        )
-        content()
-    }
-}

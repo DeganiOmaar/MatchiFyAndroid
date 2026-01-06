@@ -8,8 +8,13 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface InterviewApi {
-    @GET("interviews/my-interviews")
-    suspend fun getMyInterviews(
+    @GET("interviews/recruiter")
+    suspend fun getRecruiterInterviews(
+        @Header("Authorization") token: String
+    ): List<InterviewDto>
+
+    @GET("interviews/talent")
+    suspend fun getTalentInterviews(
         @Header("Authorization") token: String
     ): List<InterviewDto>
     
@@ -22,6 +27,12 @@ interface InterviewApi {
     @POST("interviews")
     suspend fun createInterview(
         @Body request: com.example.matchify.data.remote.dto.interview.CreateInterviewRequestDto,
+        @Header("Authorization") token: String
+    ): InterviewDto
+    
+    @retrofit2.http.PATCH("interviews/{id}/cancel")
+    suspend fun cancelInterview(
+        @Path("id") interviewId: String,
         @Header("Authorization") token: String
     ): InterviewDto
 }

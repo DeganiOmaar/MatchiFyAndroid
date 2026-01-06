@@ -22,6 +22,7 @@ import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +49,7 @@ import com.example.matchify.data.remote.UserRepository
 import com.example.matchify.data.remote.ApiService
 import com.example.matchify.data.local.AuthPreferencesProvider
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -1049,11 +1051,14 @@ private fun TalentRatingsSectionForTalent(
         ratingViewModel.loadTalentRatings(talentId)
     }
     
+    // Scope de coroutine pour charger les noms des recruteurs
+    val coroutineScope = rememberCoroutineScope()
+    
     // Charger les noms des recruteurs quand les ratings changent
     LaunchedEffect(talentRatingsState) {
         talentRatingsState?.ratings?.forEach { rating ->
             if (!recruiterNames.containsKey(rating.recruiterId)) {
-                launch {
+                coroutineScope.launch {
                     try {
                         val (user, _) = userRepository.getUserById(rating.recruiterId)
                         recruiterNames[rating.recruiterId] = user.fullName
@@ -1197,7 +1202,7 @@ private fun TalentRatingsSectionForTalent(
                                         verticalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
                                         Text(
-                                            text = "Recruiter",
+                                            text = recruiterNames[rating.recruiterId] ?: "Recruiter",
                                             fontSize = 15.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             color = textPrimary

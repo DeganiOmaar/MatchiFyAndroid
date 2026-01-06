@@ -98,11 +98,10 @@ class CreateContractViewModel(
                     missionId = missionId,
                     talentId = talentId,
                     title = title.value.trim(),
-                    scope = scope.value.trim(),
-                    budget = budget.value.trim(),
+                    content = scope.value.trim(), // Map scope to content
                     startDate = startDateStr,
                     endDate = endDateStr,
-                    paymentDetails = if (paymentDetails.value.isNotEmpty()) paymentDetails.value.trim() else null,
+                    paymentDetails = "Budget: ${budget.value.trim()}\n${if (paymentDetails.value.isNotEmpty()) paymentDetails.value.trim() else ""}".trim(),
                     recruiterSignature = "data:image/png;base64,$signatureBase64"
                 )
                 

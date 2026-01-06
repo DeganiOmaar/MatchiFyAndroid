@@ -62,7 +62,7 @@ fun MissionAddScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { 
                     Text(
                         "Create Mission",
@@ -80,7 +80,7 @@ fun MissionAddScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color(0xFF0F172A)
                 )
             )
@@ -124,9 +124,9 @@ fun MissionAddScreen(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White
                         ),
-                        supportingText = if (titleError != null) {
-                            { Text(text = titleError, color = Color(0xFFEF4444)) }
-                        } else null
+                        supportingText = titleError?.let { 
+                            { Text(text = it, color = Color(0xFFEF4444)) }
+                        }
                     )
                 }
 
@@ -158,9 +158,9 @@ fun MissionAddScreen(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White
                         ),
-                        supportingText = if (descriptionError != null) {
-                            { Text(text = descriptionError, color = Color(0xFFEF4444)) }
-                        } else null
+                        supportingText = descriptionError?.let { 
+                            { Text(text = it, color = Color(0xFFEF4444)) }
+                        }
                     )
                 }
 
@@ -185,16 +185,20 @@ fun MissionAddScreen(
                             shape = RoundedCornerShape(12.dp),
                             isError = durationError != null || (duration.isEmpty() && errorMessage != null),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = Color(0xFF1E293B),
+                                unfocusedContainerColor = Color(0xFF1E293B),
+                                focusedBorderColor = Color(0xFF3B82F6),
                                 unfocusedBorderColor = if (durationError != null || (duration.isEmpty() && errorMessage != null)) {
-                                    MaterialTheme.colorScheme.error
+                                    Color(0xFFEF4444)
                                 } else {
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                }
+                                    Color(0xFF334155)
+                                },
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
                             ),
-                            supportingText = if (durationError != null) {
-                                { Text(text = durationError, color = MaterialTheme.colorScheme.error) }
-                            } else null
+                            supportingText = durationError?.let { 
+                                { Text(text = it, color = Color(0xFFEF4444)) }
+                            }
                         )
                     }
 
@@ -217,16 +221,20 @@ fun MissionAddScreen(
                             shape = RoundedCornerShape(12.dp),
                             isError = budgetError != null || (budget.isEmpty() && errorMessage != null),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = Color(0xFF1E293B),
+                                unfocusedContainerColor = Color(0xFF1E293B),
+                                focusedBorderColor = Color(0xFF3B82F6),
                                 unfocusedBorderColor = if (budgetError != null || (budget.isEmpty() && errorMessage != null)) {
-                                    MaterialTheme.colorScheme.error
+                                    Color(0xFFEF4444)
                                 } else {
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                }
+                                    Color(0xFF334155)
+                                },
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
                             ),
-                            supportingText = if (budgetError != null) {
-                                { Text(text = budgetError, color = MaterialTheme.colorScheme.error) }
-                            } else null
+                            supportingText = budgetError?.let { 
+                                { Text(text = it, color = Color(0xFFEF4444)) }
+                            }
                         )
                     }
                 }
@@ -267,9 +275,9 @@ fun MissionAddScreen(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White
                             ),
-                            supportingText = if (experienceLevelError != null) {
-                                { Text(text = experienceLevelError, color = Color(0xFFEF4444)) }
-                            } else null,
+                            supportingText = experienceLevelError?.let { 
+                                { Text(text = it, color = Color(0xFFEF4444)) }
+                            },
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                             }

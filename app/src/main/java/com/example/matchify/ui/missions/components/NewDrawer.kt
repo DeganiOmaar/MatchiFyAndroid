@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.matchify.data.local.AuthPreferencesProvider
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.matchify.ui.theme.ThemeViewModel
 import com.example.matchify.ui.theme.ThemeViewModelFactory
@@ -29,14 +30,14 @@ enum class DrawerMenuItemType {
     PROFILE,
     MY_STATS,
     CREATE_OFFER,
+    CREATE_MISSION,
     MY_OFFERS,
     BROWSE_OFFERS,
-    CREATE_MISSION,
     INTERVIEWS,
-    FAVORITE_TALENTS,
     CHAT_BOT,
     SETTINGS,
     THEME,
+    FAVORITE_TALENTS,
     LOG_OUT
 }
 
@@ -48,7 +49,10 @@ data class DrawerMenuItem(
     companion object {
         fun recruiterItems(): List<DrawerMenuItem> = listOf(
             DrawerMenuItem("Profile", Icons.Default.Person, DrawerMenuItemType.PROFILE),
+            DrawerMenuItem("Add Mission", Icons.Default.Add, DrawerMenuItemType.CREATE_MISSION),
             DrawerMenuItem("Browse Offers", Icons.Default.Search, DrawerMenuItemType.BROWSE_OFFERS),
+            DrawerMenuItem("Favorite Talents", Icons.Default.Star, DrawerMenuItemType.FAVORITE_TALENTS),
+            DrawerMenuItem("Interviews", Icons.Default.VideoCall, DrawerMenuItemType.INTERVIEWS),
             DrawerMenuItem("Chat Bot", Icons.Default.Message, DrawerMenuItemType.CHAT_BOT),
             DrawerMenuItem("Settings", Icons.Default.Settings, DrawerMenuItemType.SETTINGS)
         )
@@ -293,7 +297,8 @@ private fun ThemeMenuItemContent(
     textColor: Color,
     modifier: Modifier = Modifier
 ) {
-    val themeViewModel: ThemeViewModel = viewModel(factory = ThemeViewModelFactory())
+    val context = LocalContext.current
+    val themeViewModel: ThemeViewModel = viewModel(factory = ThemeViewModelFactory(context))
     val currentTheme by themeViewModel.currentTheme.collectAsState()
     
     Row(
@@ -335,14 +340,14 @@ private fun isItemSelected(
         }
         DrawerMenuItemType.MY_STATS -> currentRoute == "my_stats"
         DrawerMenuItemType.CREATE_OFFER -> currentRoute == "category_selection" || currentRoute?.startsWith("create_offer") == true
+        DrawerMenuItemType.CREATE_MISSION -> currentRoute == "mission_add"
         DrawerMenuItemType.MY_OFFERS -> currentRoute == "my_offers"
         DrawerMenuItemType.BROWSE_OFFERS -> currentRoute == "browse_offers"
-        DrawerMenuItemType.CREATE_MISSION -> currentRoute == "create_mission" || currentRoute?.startsWith("create_mission") == true
-        DrawerMenuItemType.INTERVIEWS -> currentRoute == "interviews" || currentRoute?.startsWith("interview") == true
-        DrawerMenuItemType.FAVORITE_TALENTS -> currentRoute == "favorite_talents" || currentRoute == "favorites"
+        DrawerMenuItemType.INTERVIEWS -> currentRoute == "interviews_list"
         DrawerMenuItemType.CHAT_BOT -> currentRoute == "chatbot"
         DrawerMenuItemType.SETTINGS -> currentRoute == "settings"
         DrawerMenuItemType.THEME -> currentRoute == "theme"
+        DrawerMenuItemType.FAVORITE_TALENTS -> currentRoute == "favorite_talents"
         DrawerMenuItemType.LOG_OUT -> false // Log out is never selected
     }
 }

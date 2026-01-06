@@ -40,7 +40,7 @@ interface TalentApi {
     ): TalentProfileResponseDto
 
     // Récupérer tous les talents
-    @GET("talent/all")
+    @GET("users/talents")
     suspend fun getAllTalents(): List<com.example.matchify.data.remote.dto.profile.TalentUserDto>
 }
 

@@ -64,16 +64,16 @@ fun EditRecruiterProfileScreen(
         }
     }
 
-    // Couleur de fond douce (gris-vert très clair, reposant pour les yeux)
-    val calmBackground = Color(0xFFF2F6F5)
+    // Couleur de fond sombre (identique aux autres écrans)
+    val darkBackground = Color(0xFF0F172A)
+    val cardBackground = Color(0xFF1E293B)
 
     Scaffold(
-        containerColor = calmBackground,
+        containerColor = darkBackground,
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                // Même couleur que le background pour un appbar fondu
-                color = calmBackground,
+                color = darkBackground,
                 shadowElevation = 0.dp
             ) {
                 Row(
@@ -94,14 +94,14 @@ fun EditRecruiterProfileScreen(
                             Icon(
                                 imageVector = Icons.Rounded.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color(0xFF1A1A1A)
+                                tint = Color.White
                             )
                         }
                         Text(
                             text = "Edit Profile",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1A1A1A)
+                            color = Color.White
                         )
                     }
                 }
@@ -111,7 +111,7 @@ fun EditRecruiterProfileScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(calmBackground)
+                .background(darkBackground)
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
@@ -201,16 +201,16 @@ fun EditRecruiterProfileScreen(
                 text = "Personal Info",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1A1A1A),
+                color = Color.White,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Carte contenant les champs, avec fond blanc et ombre légère
+            // Carte contenant les champs, avec fond sombre
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                color = Color(0xFFF2F2F2),
-                shadowElevation = 6.dp
+                color = cardBackground,
+                shadowElevation = 2.dp
             ) {
                 Column(
                     modifier = Modifier
@@ -225,17 +225,19 @@ fun EditRecruiterProfileScreen(
                         leadingIcon = {
                             LeadingIconCircle(icon = Icons.Filled.Person)
                         },
-                        placeholder = { Text("Full Name") },
+                        placeholder = { Text("Full Name", color = Color(0xFF94A3B8)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
                         singleLine = true,
                         shape = RoundedCornerShape(30.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF4A6BFF),
-                            unfocusedBorderColor = Color(0xFFE0E3EB),
-                            focusedLeadingIconColor = Color(0xFF4A6BFF),
-                            unfocusedLeadingIconColor = Color(0xFF8C8FA5)
+                            focusedContainerColor = cardBackground,
+                            unfocusedContainerColor = cardBackground,
+                            focusedBorderColor = Color(0xFF3B82F6),
+                            unfocusedBorderColor = Color(0xFF334155),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
                         )
                     )
 
@@ -246,7 +248,7 @@ fun EditRecruiterProfileScreen(
                         leadingIcon = {
                             LeadingIconCircle(icon = Icons.Filled.Email)
                         },
-                        placeholder = { Text("Email") },
+                        placeholder = { Text("Email", color = Color(0xFF94A3B8)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
@@ -255,12 +257,14 @@ fun EditRecruiterProfileScreen(
                             keyboardType = KeyboardType.Email
                         ),
                         shape = RoundedCornerShape(30.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF4A6BFF),
-                            unfocusedBorderColor = Color(0xFFE0E3EB),
-                            focusedLeadingIconColor = Color(0xFF4A6BFF),
-                            unfocusedLeadingIconColor = Color(0xFF8C8FA5)
-                        )
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = cardBackground,
+                                unfocusedContainerColor = cardBackground,
+                                focusedBorderColor = Color(0xFF3B82F6),
+                                unfocusedBorderColor = Color(0xFF334155),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            )
                     )
 
                     // Phone
@@ -275,7 +279,7 @@ fun EditRecruiterProfileScreen(
                         leadingIcon = {
                             LeadingIconCircle(icon = Icons.Filled.Phone)
                         },
-                        placeholder = { Text("Phone") },
+                        placeholder = { Text("Phone", color = Color(0xFF94A3B8)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
@@ -284,12 +288,14 @@ fun EditRecruiterProfileScreen(
                             keyboardType = KeyboardType.Phone
                         ),
                         shape = RoundedCornerShape(30.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF4A6BFF),
-                            unfocusedBorderColor = Color(0xFFE0E3EB),
-                            focusedLeadingIconColor = Color(0xFF4A6BFF),
-                            unfocusedLeadingIconColor = Color(0xFF8C8FA5)
-                        )
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = cardBackground,
+                                unfocusedContainerColor = cardBackground,
+                                focusedBorderColor = Color(0xFF3B82F6),
+                                unfocusedBorderColor = Color(0xFF334155),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            )
                     )
 
                     // Location (sélecteur intelligent de villes de Tunisie)
@@ -354,7 +360,7 @@ fun EditRecruiterProfileScreen(
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = locationMenuExpanded)
                             },
-                            placeholder = { Text("Choisissez votre ville (Tunisie)") },
+                            placeholder = { Text("Choisissez votre ville (Tunisie)", color = Color(0xFF94A3B8)) },
                             modifier = Modifier
                                 .menuAnchor()
                                 .fillMaxWidth()
@@ -362,20 +368,23 @@ fun EditRecruiterProfileScreen(
                             singleLine = true,
                             shape = RoundedCornerShape(30.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF4A6BFF),
-                                unfocusedBorderColor = Color(0xFFE0E3EB),
-                                focusedLeadingIconColor = Color(0xFF4A6BFF),
-                                unfocusedLeadingIconColor = Color(0xFF8C8FA5)
+                                focusedContainerColor = cardBackground,
+                                unfocusedContainerColor = cardBackground,
+                                focusedBorderColor = Color(0xFF3B82F6),
+                                unfocusedBorderColor = Color(0xFF334155),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
                             )
                         )
 
                         ExposedDropdownMenu(
                             expanded = locationMenuExpanded,
-                            onDismissRequest = { locationMenuExpanded = false }
+                            onDismissRequest = { locationMenuExpanded = false },
+                            modifier = Modifier.background(cardBackground)
                         ) {
                             filteredCities.forEach { city ->
                                 DropdownMenuItem(
-                                    text = { Text(city) },
+                                    text = { Text(city, color = Color.White) },
                                     onClick = {
                                         locationQuery = city
                                         viewModel.location.value = city
@@ -386,7 +395,7 @@ fun EditRecruiterProfileScreen(
 
                             if (filteredCities.isEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text("Aucune ville trouvée") },
+                                    text = { Text("Aucune ville trouvée", color = Color(0xFF94A3B8)) },
                                     onClick = { }
                                 )
                             }
@@ -400,9 +409,9 @@ fun EditRecruiterProfileScreen(
                 value = viewModel.description.collectAsState().value,
                 onValueChange = { viewModel.description.value = it },
                 leadingIcon = {
-                    Icon(Icons.Rounded.Description, contentDescription = null, tint = Color.Gray)
+                    Icon(Icons.Rounded.Description, contentDescription = null, tint = Color(0xFF94A3B8))
                 },
-                placeholder = { Text("Description") },
+                placeholder = { Text("Description", color = Color(0xFF94A3B8)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 120.dp),
@@ -410,8 +419,12 @@ fun EditRecruiterProfileScreen(
                 minLines = 3,
                 shape = RoundedCornerShape(20.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFCCCCCC),
-                    unfocusedBorderColor = Color(0xFFDDDDDD)
+                    focusedContainerColor = cardBackground,
+                    unfocusedContainerColor = cardBackground,
+                    focusedBorderColor = Color(0xFF3B82F6),
+                    unfocusedBorderColor = Color(0xFF334155),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
                 )
             )
 
@@ -438,19 +451,19 @@ fun EditRecruiterProfileScreen(
                     .height(55.dp),
                 shape = RoundedCornerShape(30.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF007AFF),
-                    disabledContainerColor = Color(0xFFBAD7FF)
+                    containerColor = Color(0xFF3B82F6),
+                    disabledContainerColor = Color(0xFF1E293B)
                 )
             ) {
                 if (isSaving) {
                     CircularProgressIndicator(
-                        color = Color(0xFFF2F2F2),
+                        color = Color.White,
                         strokeWidth = 2.dp
                     )
                 } else {
                     Text(
                         text = "Save Changes",
-                        color = Color(0xFFF2F2F2),
+                        color = Color.White,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -466,13 +479,13 @@ private fun LeadingIconCircle(icon: ImageVector) {
     Surface(
         modifier = Modifier.size(32.dp),
         shape = CircleShape,
-        color = Color(0xFFF0F2FA)
+        color = Color(0xFF334155)
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color(0xFF4A6BFF),
+                tint = Color(0xFF3B82F6),
                 modifier = Modifier.size(18.dp)
             )
         }

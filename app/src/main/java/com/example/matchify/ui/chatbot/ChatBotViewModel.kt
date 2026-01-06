@@ -2,13 +2,16 @@ package com.example.matchify.ui.chatbot
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.matchify.data.local.AuthPreferences
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class ChatBotViewModel : ViewModel() {
+class ChatBotViewModel(
+    private val prefs: AuthPreferences? = null
+) : ViewModel() {
     
     private val _messages = MutableStateFlow<List<ChatMessage>>(
         listOf(
@@ -54,16 +57,6 @@ class ChatBotViewModel : ViewModel() {
                 "Thank you for your message. For more specific help, please contact our support team at support@matchify.com"
             }
         }
-    }
-}
-
-class ChatBotViewModelFactory : androidx.lifecycle.ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ChatBotViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return ChatBotViewModel() as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 

@@ -25,6 +25,11 @@ class InterviewsViewModel(
         loadInterviews()
     }
     
+
+    
+    val isRecruiter: Boolean
+        get() = repository.isRecruiter
+
     fun loadInterviews() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -39,5 +44,39 @@ class InterviewsViewModel(
                 _isLoading.value = false
             }
         }
+    }
+    
+    fun cancelInterview(
+        interviewId: String,
+        cancellationReason: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // Note: cancellationReason is effectively unused if backend doesn't support it yet
+                repository.cancelInterview(interviewId)
+                loadInterviews() // Reload list
+                onSuccess()
+            } catch (e: Exception) {
+                onError(e.message ?: "Failed to cancel interview")
+                _errorMessage.value = e.message
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+}
+
+class InterviewsViewModelFactory(
+    private val repository: InterviewRepository
+) : androidx.lifecycle.ViewModelProvider.Factory {
+    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(InterviewsViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return InterviewsViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

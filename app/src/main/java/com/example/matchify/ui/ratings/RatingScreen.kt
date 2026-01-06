@@ -23,8 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.matchify.domain.model.Rating
-import com.example.matchify.ui.ratings.components.RatingCard
-import com.example.matchify.ui.ratings.components.AverageRatingCard
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -34,6 +32,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -42,6 +41,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Écran pour créer/modifier un rating et voir les feedbacks d'autres recruteurs
@@ -56,7 +57,6 @@ fun RatingScreen(
     viewModel: RatingViewModel = viewModel(factory = RatingViewModelFactory())
 ) {
     val myRating by viewModel.myRating.collectAsState()
-    val talentRatings by viewModel.talentRatings.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val saveSuccess by viewModel.saveSuccess.collectAsState()
@@ -69,7 +69,6 @@ fun RatingScreen(
     // Charger les données au démarrage
     LaunchedEffect(talentId, missionId) {
         viewModel.loadMyRating(talentId, missionId)
-        viewModel.loadTalentRatings(talentId)
     }
     
     // Mettre à jour le formulaire quand myRating change
@@ -349,6 +348,38 @@ fun RatingScreen(
                         )
                     }
                     
+                    // Recommander le talent
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { recommended = !recommended }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Recommander ce talent",
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "Ce talent apparaîtra dans les recommandations",
+                                color = Color(0xFF94A3B8),
+                                fontSize = 12.sp
+                            )
+                        }
+                        Switch(
+                            checked = recommended,
+                            onCheckedChange = { recommended = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color(0xFF3B82F6),
+                                uncheckedThumbColor = Color(0xFF94A3B8),
+                                uncheckedTrackColor = Color(0xFF334155)
+                            )
+                        )
+                    }                    
                     // Bouton de sauvegarde avec gradient
                     Button(
                         onClick = {
@@ -358,7 +389,6 @@ fun RatingScreen(
                                 score = selectedScore,
                                 recommended = recommended,
                                 comment = comment.takeIf { it.isNotEmpty() },
-                                tags = null
                             )
                         },
                         modifier = Modifier
@@ -432,124 +462,203 @@ fun RatingScreen(
                                         fontWeight = FontWeight.Medium
                                     )
                                 }
-                                if (recommended) {
-                                    Text(
-                                        text = "✓ Ce talent a été recommandé",
-                                        color = Color(0xFF10B981).copy(alpha = 0.9f),
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
                             }
                         }
                     }
                     
-                    // Message d'erreur avec animation
+                    // Message d'erreur avec animation (masquer "Problème de connexion" générique)
                     AnimatedVisibility(
-                        visible = errorMessage != null,
+                        visible = errorMessage != null && !errorMessage!!.contains("Problème de connexion"),
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically()
                     ) {
                         errorMessage?.let { error ->
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFFEF4444).copy(alpha = 0.15f),
-                                border = BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.3f))
-                            ) {
-                                Text(
-                                    text = error,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp),
-                                    color = Color(0xFFEF4444),
-                                    fontSize = 13.sp
-                                )
+                            // Ne pas afficher l'erreur générique "Problème de connexion"
+                            if (!error.contains("Problème de connexion")) {
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = Color(0xFFEF4444).copy(alpha = 0.15f),
+                                    border = BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.3f))
+                                ) {
+                                    Text(
+                                        text = error,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(12.dp),
+                                        color = Color(0xFFEF4444),
+                                        fontSize = 13.sp
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
             
-            // Section: Avis des autres recruteurs
-            talentRatings?.let { ratings ->
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+            // Section: Mon évaluation actuelle
+            myRating?.let { rating ->
+                var showDeleteDialog by remember { mutableStateOf(false) }
+                
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFF1E293B)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
-                    // Carte de note moyenne
-                    if (ratings.averageScore != null) {
-                        AverageRatingCard(
-                            averageScore = ratings.averageScore,
-                            count = ratings.count,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    } else {
-                        Card(
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFF1E293B)
-                            )
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Box(
+                            Text(
+                                text = "Mon évaluation",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            
+                            // Bouton de suppression
+                            IconButton(
+                                onClick = { showDeleteDialog = true },
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(24.dp),
-                                contentAlignment = Alignment.Center
+                                    .size(40.dp)
+                                    .background(
+                                        Color(0xFFEF4444).copy(alpha = 0.2f),
+                                        CircleShape
+                                    )
                             ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Delete,
+                                    contentDescription = "Supprimer",
+                                    tint = Color(0xFFEF4444),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                        
+                        // Affichage du rating
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Badge avec score
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = getScoreColorForRating(rating.score).copy(alpha = 0.2f),
+                                border = BorderStroke(1.dp, getScoreColorForRating(rating.score).copy(alpha = 0.3f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Star,
+                                        contentDescription = null,
+                                        tint = getScoreColorForRating(rating.score),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "${rating.score}/5",
+                                        color = Color.White,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                            
+                            // Étoiles visuelles
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                repeat(5) { index ->
+                                    Icon(
+                                        imageVector = if (index < rating.score) Icons.Filled.Star else Icons.Outlined.Star,
+                                        contentDescription = null,
+                                        tint = if (index < rating.score) {
+                                            getScoreColorForRating(rating.score)
+                                        } else {
+                                            Color(0xFF64748B)
+                                        },
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.weight(1f))
+                            
+                            // Date
+                            rating.createdAt?.let { dateStr ->
                                 Text(
-                                    text = "Aucun avis pour le moment",
-                                    fontSize = 14.sp,
+                                    text = formatDateForRating(dateStr),
+                                    fontSize = 12.sp,
                                     color = Color(0xFF94A3B8)
                                 )
                             }
                         }
-                    }
-                    
-                    // Liste des ratings
-                    if (ratings.ratings.isNotEmpty()) {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFF1E293B)
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = "Tous les avis",
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
-                                    Text(
-                                        text = "${ratings.count} ${if (ratings.count == 1) "avis" else "avis"}",
-                                        fontSize = 13.sp,
-                                        color = Color(0xFF94A3B8),
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                                
-                                Column(
-                                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    ratings.ratings.forEach { rating ->
-                                        RatingCard(rating = rating)
-                                    }
-                                }
-                            }
+                        
+                        // Commentaire si présent
+                        rating.comment?.takeIf { it.isNotBlank() }?.let { commentText ->
+                            Text(
+                                text = commentText,
+                                fontSize = 14.sp,
+                                color = Color(0xFFE2E8F0),
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
                         }
                     }
+                }
+                
+                // Dialog de confirmation de suppression
+                if (showDeleteDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showDeleteDialog = false },
+                        title = {
+                            Text(
+                                text = "Supprimer l'évaluation",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = "Êtes-vous sûr de vouloir supprimer votre évaluation ? Cette action est irréversible.",
+                                color = Color(0xFFE2E8F0)
+                            )
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    viewModel.deleteRating(rating.id, talentId)
+                                    showDeleteDialog = false
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFEF4444)
+                                )
+                            ) {
+                                Text("Supprimer", color = Color.White)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = { showDeleteDialog = false },
+                                colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF9CA3AF))
+                            ) {
+                                Text("Annuler")
+                            }
+                        },
+                        containerColor = Color(0xFF1E293B),
+                        shape = RoundedCornerShape(16.dp)
+                    )
                 }
             }
         }
@@ -783,6 +892,19 @@ private fun getScoreColorForRating(score: Int): Color {
         2 -> Color(0xFFEF4444) // Rouge
         1 -> Color(0xFFDC2626) // Rouge foncé
         else -> Color(0xFF6B7280) // Gris
+    }
+}
+
+private fun formatDateForRating(dateString: String): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+        val date = inputFormat.parse(dateString)
+        
+        val outputFormat = SimpleDateFormat("dd MMM yyyy", Locale.FRENCH)
+        date?.let { outputFormat.format(it) } ?: dateString
+    } catch (e: Exception) {
+        dateString
     }
 }
 

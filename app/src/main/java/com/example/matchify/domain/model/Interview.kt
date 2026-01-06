@@ -60,10 +60,10 @@ enum class InterviewStatus {
     CANCELLED
 }
 
-enum class InterviewSource {
-    ZOOM,
-    GOOGLE,
-    MANUAL
+enum class InterviewSource(val displayName: String) {
+    ZOOM("Zoom"),
+    GOOGLE("Google Meet"),
+    MANUAL("Manuel")
 }
 
 

@@ -59,6 +59,7 @@ class ApiService(private val authPreferences: AuthPreferences) {
             .addConverterFactory(GsonConverterFactory.create(
                 com.google.gson.GsonBuilder()
                     .setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.IDENTITY)
+                    .serializeNulls()
                     .create()
             ))
             .build()
@@ -121,8 +122,7 @@ class ApiService(private val authPreferences: AuthPreferences) {
     val contractApi: ContractApi by lazy {
         retrofit.create(ContractApi::class.java)
     }
-
-
+    
     val aiApi: AiApi by lazy {
         retrofit.create(AiApi::class.java)
     }
@@ -135,10 +135,21 @@ class ApiService(private val authPreferences: AuthPreferences) {
         retrofit.create(com.example.matchify.data.remote.api.InterviewApi::class.java)
     }
 
-    val ratingApi: com.example.matchify.data.remote.api.RatingApi by lazy {
-        retrofit.create(com.example.matchify.data.remote.api.RatingApi::class.java)
+    val ratingApi: RatingApi by lazy {
+        retrofit.create(RatingApi::class.java)
+    }
+    
+    val talentMatchingApi: TalentMatchingApi by lazy {
+        retrofit.create(TalentMatchingApi::class.java)
     }
 
+    val zoomApi: ZoomApi by lazy {
+        retrofit.create(ZoomApi::class.java)
+    }
+
+    val talentFavoriteApi: TalentFavoriteApi by lazy {
+        retrofit.create(TalentFavoriteApi::class.java)
+    }
 
     companion object {
         @Volatile

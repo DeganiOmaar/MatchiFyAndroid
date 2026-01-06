@@ -35,6 +35,10 @@ class ProposalDetailsViewModel(
     private val _isUpdatingStatus = MutableStateFlow(false)
     val isUpdatingStatus: StateFlow<Boolean> = _isUpdatingStatus.asStateFlow()
     
+    // Flag pour indiquer qu'on vient de refuser (pour fermeture automatique)
+    private val _justRefused = MutableStateFlow(false)
+    val justRefused: StateFlow<Boolean> = _justRefused.asStateFlow()
+    
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
     
@@ -107,11 +111,11 @@ class ProposalDetailsViewModel(
     }
     
     fun refuseProposal(reason: String) {
+        // Marquer qu'on vient de refuser (pour fermeture automatique)
+        _justRefused.value = true
         updateStatus(ProposalStatus.REFUSED.name, reason)
     }
     
-    private val _justRefused = MutableStateFlow(false)
-    val justRefused: StateFlow<Boolean> = _justRefused.asStateFlow()
 
     // ...
 
@@ -137,6 +141,8 @@ class ProposalDetailsViewModel(
             } catch (e: Exception) {
                 android.util.Log.e("ProposalDetailsVM", "Error updating proposal status", e)
                 _errorMessage.value = "Failed to update proposal: ${e.message}"
+                // En cas d'erreur, réinitialiser le flag
+                _justRefused.value = false
                 e.printStackTrace()
             } finally {
                 _isUpdatingStatus.value = false

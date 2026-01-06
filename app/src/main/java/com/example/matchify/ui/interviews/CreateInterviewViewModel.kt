@@ -27,45 +27,48 @@ class CreateInterviewViewModel(
     private val _success = MutableStateFlow(false)
     val success: StateFlow<Boolean> = _success.asStateFlow()
     
-    // Form State
-    private val _selectedDate = MutableStateFlow<LocalDate?>(null)
-    val selectedDate: StateFlow<LocalDate?> = _selectedDate.asStateFlow()
+    // Form State matching Screen expectations
+    private val _scheduledDate = MutableStateFlow<java.util.Date?>(null)
+    val scheduledDate: StateFlow<java.util.Date?> = _scheduledDate.asStateFlow()
     
-    private val _selectedTime = MutableStateFlow<LocalTime?>(null)
-    val selectedTime: StateFlow<LocalTime?> = _selectedTime.asStateFlow()
+    private val _useAutoGenerate = MutableStateFlow(false)
+    val useAutoGenerate: StateFlow<Boolean> = _useAutoGenerate.asStateFlow()
     
-    private val _duration = MutableStateFlow(30) // Default 30 min
-    val duration: StateFlow<Int> = _duration.asStateFlow()
-    
-    private val _type = MutableStateFlow("VIDEO") // Default VIDEO
-    val type: StateFlow<String> = _type.asStateFlow()
+    private val _meetLink = MutableStateFlow("")
+    val meetLink: StateFlow<String> = _meetLink.asStateFlow()
     
     private val _notes = MutableStateFlow("")
     val notes: StateFlow<String> = _notes.asStateFlow()
 
-    fun updateDate(date: LocalDate) { _selectedDate.value = date }
-    fun updateTime(time: LocalTime) { _selectedTime.value = time }
-    fun updateDuration(duration: Int) { _duration.value = duration }
-    fun updateType(type: String) { _type.value = type }
-    fun updateNotes(notes: String) { _notes.value = notes }
+    fun setScheduledDate(date: java.util.Date) { _scheduledDate.value = date }
+    fun setUseAutoGenerate(enabled: Boolean) { _useAutoGenerate.value = enabled }
+    fun setMeetLink(link: String) { _meetLink.value = link }
+    fun setNotes(notes: String) { _notes.value = notes }
 
     fun createInterview() {
-        if (_selectedDate.value == null || _selectedTime.value == null) {
-            _errorMessage.value = "Date and time are required"
+        val date = _scheduledDate.value
+        if (date == null) {
+            _errorMessage.value = "Date is required"
             return
         }
+        
+        // Validation logic if needed (e.g. check link if manual)
 
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
             try {
+                // Format date to ISO string
+                val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
+                inputFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
+                val scheduledAt = inputFormat.format(date)
+
                 interviewRepository.createInterview(
                     proposalId = proposalId,
-                    date = _selectedDate.value!!.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                    time = _selectedTime.value!!.format(DateTimeFormatter.ofPattern("HH:mm")),
-                    duration = _duration.value,
-                    type = _type.value,
-                    notes = _notes.value
+                    scheduledAt = scheduledAt,
+                    notes = _notes.value,
+                    autoGenerateMeetLink = _useAutoGenerate.value,
+                    meetLink = if (_useAutoGenerate.value) null else _meetLink.value
                 )
                 _success.value = true
             } catch (e: Exception) {

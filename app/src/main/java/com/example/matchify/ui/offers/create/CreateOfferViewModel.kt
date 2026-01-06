@@ -7,6 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.matchify.common.ErrorContext
+import com.example.matchify.common.ErrorHandler
 import com.example.matchify.data.remote.OfferRepository
 import com.example.matchify.domain.model.OfferCategory
 import kotlinx.coroutines.launch
@@ -125,7 +127,7 @@ class CreateOfferViewModel(
                 isLoading = false
             } catch (e: Exception) {
                 Log.e("CreateOfferViewModel", "Error creating offer", e)
-                error = e.message ?: "Failed to create offer"
+                error = ErrorHandler.getErrorMessage(e, ErrorContext.GENERAL)
                 isLoading = false
             }
         }

@@ -10,7 +10,12 @@ class InterviewRepository(
 ) {
     suspend fun getMyInterviews(): List<Interview> {
         val token = authPreferences.getTokenValue() ?: throw Exception("No auth token")
-        return interviewApi.getMyInterviews("Bearer $token").map { it.toDomain() }
+        val isRecruiter = authPreferences.currentRole.value == "recruiter"
+        return if (isRecruiter) {
+            interviewApi.getRecruiterInterviews("Bearer $token").map { it.toDomain() }
+        } else {
+            interviewApi.getTalentInterviews("Bearer $token").map { it.toDomain() }
+        }
     }
     
     suspend fun getInterviewById(interviewId: String): Interview {
@@ -20,25 +25,28 @@ class InterviewRepository(
     
     suspend fun createInterview(
         proposalId: String,
-        date: String,
-        time: String,
-        duration: Int,
-        type: String,
-        notes: String?
+        scheduledAt: String,
+        notes: String?,
+        autoGenerateMeetLink: Boolean,
+        meetLink: String? = null
     ): Interview {
         val token = authPreferences.getTokenValue() ?: throw Exception("No auth token")
-        
-        // Combine date and time to ISO 8601
-        // date is yyyy-MM-dd, time is HH:mm
-        val scheduledAt = "${date}T${time}:00.000Z" // Simple concatenation for now, assuming local time is roughly UTC or backend handles it.
-        // Ideally use proper OffsetDateTime
         
         val request = com.example.matchify.data.remote.dto.interview.CreateInterviewRequestDto(
             proposalId = proposalId,
             scheduledAt = scheduledAt,
             notes = notes,
-            autoGenerateMeetLink = true
+            autoGenerateMeetLink = autoGenerateMeetLink,
+            meetLink = meetLink
         )
         return interviewApi.createInterview(request, "Bearer $token").toDomain()
     }
+    
+    suspend fun cancelInterview(interviewId: String): Interview {
+        val token = authPreferences.getTokenValue() ?: throw Exception("No auth token")
+        return interviewApi.cancelInterview(interviewId, "Bearer $token").toDomain()
+    }
+    
+    val isRecruiter: Boolean
+        get() = authPreferences.currentRole.value == "recruiter"
 }
