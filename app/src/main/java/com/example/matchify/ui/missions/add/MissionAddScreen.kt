@@ -124,9 +124,9 @@ fun MissionAddScreen(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White
                         ),
-                        supportingText = titleError?.let { 
-                            { Text(text = it, color = Color(0xFFEF4444)) }
-                        }
+                        supportingText = if (titleError != null) {
+                            { Text(text = titleError, color = Color(0xFFEF4444)) }
+                        } else null
                     )
                 }
 
@@ -158,9 +158,9 @@ fun MissionAddScreen(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White
                         ),
-                        supportingText = descriptionError?.let { 
-                            { Text(text = it, color = Color(0xFFEF4444)) }
-                        }
+                        supportingText = if (descriptionError != null) {
+                            { Text(text = descriptionError, color = Color(0xFFEF4444)) }
+                        } else null
                     )
                 }
 
@@ -192,9 +192,9 @@ fun MissionAddScreen(
                                     MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                                 }
                             ),
-                            supportingText = durationError?.let { 
-                                { Text(text = it, color = MaterialTheme.colorScheme.error) }
-                            }
+                            supportingText = if (durationError != null) {
+                                { Text(text = durationError, color = MaterialTheme.colorScheme.error) }
+                            } else null
                         )
                     }
 
@@ -224,9 +224,9 @@ fun MissionAddScreen(
                                     MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                                 }
                             ),
-                            supportingText = budgetError?.let { 
-                                { Text(text = it, color = MaterialTheme.colorScheme.error) }
-                            }
+                            supportingText = if (budgetError != null) {
+                                { Text(text = budgetError, color = MaterialTheme.colorScheme.error) }
+                            } else null
                         )
                     }
                 }
@@ -267,9 +267,9 @@ fun MissionAddScreen(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White
                             ),
-                            supportingText = experienceLevelError?.let { 
-                                { Text(text = it, color = Color(0xFFEF4444)) }
-                            },
+                            supportingText = if (experienceLevelError != null) {
+                                { Text(text = experienceLevelError, color = Color(0xFFEF4444)) }
+                            } else null,
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                             }

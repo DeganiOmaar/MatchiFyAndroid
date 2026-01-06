@@ -1053,7 +1053,7 @@ private fun TalentRatingsSectionForTalent(
     LaunchedEffect(talentRatingsState) {
         talentRatingsState?.ratings?.forEach { rating ->
             if (!recruiterNames.containsKey(rating.recruiterId)) {
-                kotlinx.coroutines.launch {
+                launch {
                     try {
                         val (user, _) = userRepository.getUserById(rating.recruiterId)
                         recruiterNames[rating.recruiterId] = user.fullName

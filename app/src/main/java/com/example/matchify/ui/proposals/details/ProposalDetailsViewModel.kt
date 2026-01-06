@@ -68,6 +68,17 @@ class ProposalDetailsViewModel(
         }
     }
     
+    val canScheduleInterview: StateFlow<Boolean> = MutableStateFlow(false).also { flow ->
+        viewModelScope.launch {
+            _proposal.collect { proposal ->
+                val canShow = isRecruiter && proposal != null &&
+                        (proposal.status == ProposalStatus.NOT_VIEWED ||
+                         proposal.status == ProposalStatus.VIEWED)
+                flow.value = canShow
+            }
+        }
+    }
+    
     init {
         loadProposal()
     }
@@ -99,6 +110,11 @@ class ProposalDetailsViewModel(
         updateStatus(ProposalStatus.REFUSED.name, reason)
     }
     
+    private val _justRefused = MutableStateFlow(false)
+    val justRefused: StateFlow<Boolean> = _justRefused.asStateFlow()
+
+    // ...
+
     private fun updateStatus(status: String, rejectionReason: String? = null) {
         viewModelScope.launch {
             _isUpdatingStatus.value = true
@@ -109,6 +125,11 @@ class ProposalDetailsViewModel(
                 _proposal.value = updatedProposal
                 android.util.Log.d("ProposalDetailsVM", "Proposal updated successfully: ${updatedProposal.status}")
                 
+                // If refused, set flag
+                if (status == ProposalStatus.REFUSED.name) {
+                    _justRefused.value = true
+                }
+
                 // If accepted, create conversation
                 if (status == ProposalStatus.ACCEPTED.name) {
                     loadConversation()

@@ -62,7 +62,7 @@ class CreateContractViewModel(
         talentId: String,
         onSuccess: () -> Unit
     ) {
-        // Validation des champs requis (budget n'est plus requis car le backend ne l'accepte pas)
+        // Validation des champs requis
         when {
             title.value.trim().isEmpty() -> {
                 _errorMessage.value = "Le titre du contrat est requis"
@@ -70,6 +70,10 @@ class CreateContractViewModel(
             }
             scope.value.trim().isEmpty() -> {
                 _errorMessage.value = "Le contenu du projet (scope) est requis"
+                return
+            }
+            budget.value.trim().isEmpty() -> {
+                _errorMessage.value = "Le budget est requis"
                 return
             }
             signatureBitmap.value == null -> {
@@ -94,7 +98,8 @@ class CreateContractViewModel(
                     missionId = missionId,
                     talentId = talentId,
                     title = title.value.trim(),
-                    content = scope.value.trim(), // Le backend attend "content" pour le scope du projet
+                    scope = scope.value.trim(),
+                    budget = budget.value.trim(),
                     startDate = startDateStr,
                     endDate = endDateStr,
                     paymentDetails = if (paymentDetails.value.isNotEmpty()) paymentDetails.value.trim() else null,

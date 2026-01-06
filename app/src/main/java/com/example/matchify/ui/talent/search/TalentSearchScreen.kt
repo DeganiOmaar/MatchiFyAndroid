@@ -1,6 +1,5 @@
 package com.example.matchify.ui.talent.search
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,9 +26,12 @@ import coil.compose.AsyncImage
 import com.example.matchify.R
 import com.example.matchify.data.local.AuthPreferencesProvider
 import com.example.matchify.data.remote.ApiService
-import com.example.matchify.data.remote.UserRepository
-import com.example.matchify.domain.model.UserModel
+import com.example.matchify.data.remote.TalentRepository
+import com.example.matchify.domain.model.Talent
 import kotlinx.coroutines.launch
+
+
+import com.example.matchify.ui.talent.search.components.TalentSearchCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,13 +40,13 @@ fun TalentSearchScreen(
     onTalentClick: (String) -> Unit
 ) {
     val prefs = remember { AuthPreferencesProvider.getInstance().get() }
-    val userRepository = remember {
+    val talentRepository = remember {
         val apiService = ApiService.getInstance()
-        UserRepository(apiService.userApi, prefs)
+        TalentRepository(apiService.talentApi, prefs)
     }
     
     var searchQuery by remember { mutableStateOf("") }
-    var filteredTalents by remember { mutableStateOf<List<UserModel>>(emptyList()) }
+    var filteredTalents by remember { mutableStateOf<List<Talent>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     
@@ -56,7 +58,8 @@ fun TalentSearchScreen(
             isLoading = true
             scope.launch {
                 try {
-                    val allTalents = userRepository.getAllTalents(limit = 100, page = 1)
+                    // Note: arguments limit/page removed as they are not supported by the stubbed repository yet
+                    val allTalents = talentRepository.getAllTalents()
                     filteredTalents = allTalents.filter { talent ->
                         talent.fullName?.contains(searchQuery, ignoreCase = true) == true ||
                         talent.email?.contains(searchQuery, ignoreCase = true) == true ||
@@ -181,12 +184,10 @@ fun TalentSearchScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(filteredTalents) { talent ->
-                        talent.id?.let { talentId ->
-                            TalentSearchCard(
-                                talent = talent,
-                                onClick = { onTalentClick(talentId) }
-                            )
-                        }
+                        TalentSearchCard(
+                            talent = talent,
+                            onClick = { onTalentClick(talent.talentId) }
+                        )
                     }
                     
                     if (filteredTalents.isEmpty()) {
@@ -209,71 +210,5 @@ fun TalentSearchScreen(
     }
 }
 
-@Composable
-private fun TalentSearchCard(
-    talent: UserModel,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        color = Color(0xFF1E293B),
-        tonalElevation = 0.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Photo de profil
-            AsyncImage(
-                model = talent.profileImageUrl,
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop,
-                error = painterResource(id = R.drawable.avatar),
-                placeholder = painterResource(id = R.drawable.avatar)
-            )
-            
-            // Informations
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = talent.fullName ?: "Talent",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                
-                Text(
-                    text = talent.location ?: "Non spécifiée",
-                    fontSize = 12.sp,
-                    color = Color(0xFF94A3B8),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                
-                if (!talent.description.isNullOrBlank()) {
-                    Text(
-                        text = talent.description?.take(80) ?: "",
-                        fontSize = 12.sp,
-                        color = Color(0xFF64748B),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
-    }
-}
+
 

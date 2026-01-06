@@ -13,6 +13,8 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Message
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +42,7 @@ fun ProposalDetailsScreen(
     val showMessageButton by viewModel.showMessageButton.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val justRefused by viewModel.justRefused.collectAsState()
+    val canScheduleInterview by viewModel.canScheduleInterview.collectAsState()
     
     val snackbarHostState = remember { SnackbarHostState() }
     
@@ -342,54 +345,81 @@ fun ProposalDetailsScreen(
             contentAlignment = Alignment.BottomCenter
         ) {
             if (canShowActions) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Refuse Button
-                    Button(
-                        onClick = { showRejectDialog = true },
-                        enabled = !isUpdatingStatus,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1E293B),
-                            contentColor = Color(0xFFEF4444),
-                            disabledContainerColor = Color(0xFF1E293B).copy(alpha = 0.6f)
-                        ),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444)),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
-                    ) {
-                        Icon(Icons.Rounded.Close, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Refuse")
+                    // Schedule Interview Button
+                    if (canScheduleInterview) {
+                        Button(
+                            onClick = { proposal?.proposalId?.let { onScheduleInterview(it) } },
+                            enabled = !isUpdatingStatus,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF1E293B),
+                                contentColor = Color(0xFF3B82F6),
+                                disabledContainerColor = Color(0xFF1E293B).copy(alpha = 0.6f)
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF3B82F6)),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                        ) {
+                            // Icon video or calendar
+                            // Using Message icon as placeholder or finding a better one if available
+                            // Icon(Icons.Rounded.VideoCall, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Text("Schedule Interview")
+                        }
                     }
-                    
-                    // Accept Button
-                    Button(
-                        onClick = { viewModel.acceptProposal() },
-                        enabled = !isUpdatingStatus,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF3B82F6),
-                            contentColor = Color.White,
-                            disabledContainerColor = Color(0xFF3B82F6).copy(alpha = 0.6f)
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        if (isUpdatingStatus) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                        // Refuse Button
+                        Button(
+                            onClick = { showRejectDialog = true },
+                            enabled = !isUpdatingStatus,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF1E293B),
+                                contentColor = Color(0xFFEF4444),
+                                disabledContainerColor = Color(0xFF1E293B).copy(alpha = 0.6f)
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444)),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp)
+                        ) {
+                            Icon(Icons.Rounded.Close, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Accept")
+                            Text("Refuse")
+                        }
+                        
+                        // Accept Button
+                        Button(
+                            onClick = { viewModel.acceptProposal() },
+                            enabled = !isUpdatingStatus,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF3B82F6),
+                                contentColor = Color.White,
+                                disabledContainerColor = Color(0xFF3B82F6).copy(alpha = 0.6f)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp)
+                        ) {
+                            if (isUpdatingStatus) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Accept")
+                            }
                         }
                     }
                 }

@@ -21,7 +21,9 @@ class MissionListViewModelFactory : ViewModelProvider.Factory {
             val realtimeManager = RealtimeManager.initialize(authPreferences)
             val realtimeClient = realtimeManager.missionClient
 
-            return MissionListViewModel(missionRepository, favoriteRepository, realtimeClient, authPreferences) as T
+            val talentRepository = com.example.matchify.data.remote.TalentRepository(apiService.talentApi, authPreferences)
+
+            return MissionListViewModel(missionRepository, favoriteRepository, realtimeClient, authPreferences, talentRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

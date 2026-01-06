@@ -64,6 +64,7 @@ fun RatingScreen(
     // État local pour le formulaire
     var selectedScore by remember { mutableStateOf(myRating?.score ?: 0) }
     var comment by remember { mutableStateOf(myRating?.comment ?: "") }
+    var recommended by remember { mutableStateOf(myRating?.recommended ?: false) }
     
     // Charger les données au démarrage
     LaunchedEffect(talentId, missionId) {
@@ -76,6 +77,7 @@ fun RatingScreen(
         myRating?.let { rating ->
             selectedScore = rating.score
             comment = rating.comment ?: ""
+            recommended = rating.recommended
         }
     }
     

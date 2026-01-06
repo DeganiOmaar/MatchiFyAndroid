@@ -99,6 +99,20 @@ class ProposalRepository(
             Pair(mission, proposals)
         }
     }
+
+    suspend fun filterProposals(
+        request: com.example.matchify.data.remote.dto.proposal.ProposalFilterRequestDto
+    ): Pair<List<Proposal>, com.example.matchify.data.remote.dto.proposal.ProposalFilterResponseDto> {
+        val response = apiService.proposalApi.filterProposals(request)
+        val proposals = response.proposals.map { ProposalDtoMapper.toDomain(it) }
+        return Pair(proposals, response)
+    }
+
+    suspend fun recalculateProposalScores(missionId: String): List<Proposal> {
+        val dtos = apiService.proposalApi.recalculateProposalScores(missionId)
+        return dtos.map { ProposalDtoMapper.toDomain(it) }
+    }
+
     suspend fun generateProposalWithAI(missionId: String): String {
         val aiRepository = com.example.matchify.data.remote.AiRepository(apiService.aiApi)
         val response = aiRepository.generateProposal(missionId)

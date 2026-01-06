@@ -17,11 +17,6 @@ import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.*
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.SwipeToDismiss
-import androidx.compose.material.DismissValue
-import androidx.compose.material.DismissDirection
-import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,10 +40,9 @@ import com.example.matchify.ui.missions.components.NewDrawerContent
 import com.example.matchify.ui.missions.components.DrawerMenuItemType
 import com.example.matchify.ui.components.CustomAppBar
 import com.example.matchify.data.remote.ApiService
-import com.example.matchify.data.remote.RatingRepository
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MissionListScreenNew(
     onAddMission: () -> Unit,
@@ -374,7 +368,6 @@ fun MissionListScreenNew(
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MissionTabContent(
     missions: List<Mission>,
@@ -432,92 +425,35 @@ fun MissionTabContent(
                         val isRecruiter = !isTalent
                         val isFavorite = viewModel.isFavorite(mission)
 
-                        // SwipeToDismiss pour supprimer (uniquement pour les recruteurs propriétaires)
-                        if (isRecruiter && isOwner) {
-                            val dismissState = rememberDismissState()
-                            
-                            // Observer les changements d'état pour déclencher la confirmation
-                            LaunchedEffect(dismissState.currentValue) {
-                                if (dismissState.currentValue == DismissValue.DismissedToStart) {
-                                    missionToDelete = mission
-                                    dismissState.snapTo(DismissValue.Default)
-                                }
-                            }
-                            
-                            SwipeToDismiss(
-                                state = dismissState,
-                                directions = setOf(DismissDirection.EndToStart),
-                                background = {
-                                    // Fond rouge pour indiquer la suppression
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(MaterialTheme.colorScheme.error)
-                                            .padding(horizontal = 20.dp),
-                                        contentAlignment = Alignment.CenterEnd
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.Delete,
-                                            contentDescription = "Supprimer",
-                                            tint = MaterialTheme.colorScheme.onError,
-                                            modifier = Modifier.size(24.dp)
-                                        )
+                        // Simplified without SwipeToDismiss - just show the card
+                        Column {
+                            MissionCardNew(
+                                mission = mission,
+                                isFavorite = isFavorite,
+                                onFavoriteToggle = { viewModel.toggleFavorite(mission) },
+                                onClick = { onMissionClick(mission) },
+                                isOwner = isOwner && isRecruiter,
+                                isRecruiter = isRecruiter,
+                                onEdit = {
+                                    if (isRecruiter && isOwner && onEditMission != null) {
+                                        onEditMission(mission)
                                     }
                                 },
-                                dismissContent = {
-                                    Column {
-                                        MissionCardNew(
-                                            mission = mission,
-                                            isFavorite = isFavorite,
-                                            onFavoriteToggle = { viewModel.toggleFavorite(mission) },
-                                            onClick = { onMissionClick(mission) },
-                                            isOwner = isOwner && isRecruiter,
-                                            isRecruiter = isRecruiter,
-                                            onEdit = {
-                                                if (isRecruiter && isOwner && onEditMission != null) {
-                                                    onEditMission(mission)
-                                                }
-                                            },
-                                            onDelete = {
-                                                missionToDelete = mission
-                                            }
-                                        )
-
-                                        // Divider between cards - #1E293B, 1px, spacing 12-16px
-                                        if (index < missions.size - 1) {
-                                            Spacer(modifier = Modifier.height(14.dp))
-                                            HorizontalDivider(
-                                                color = Color(0xFF1E293B),
-                                                thickness = 1.dp
-                                            )
-                                        }
-                                    }
+                                onDelete = {
+                                    missionToDelete = mission
                                 }
                             )
-                        } else {
-                            Column {
-                                MissionCardNew(
-                                    mission = mission,
-                                    isFavorite = isFavorite,
-                                    onFavoriteToggle = { viewModel.toggleFavorite(mission) },
-                                    onClick = { onMissionClick(mission) },
-                                    isOwner = isOwner && isRecruiter,
-                                    isRecruiter = isRecruiter,
-                                    onEdit = {
-                                        if (isRecruiter && isOwner && onEditMission != null) {
-                                            onEditMission(mission)
-                                        }
-                                    },
-                                    onDelete = {
-                                        missionToDelete = mission
-                                    }
-                                )
 
-                                // Divider between cards - Simplified
-                                if (index < missions.size - 1) {
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                }
+                            // Divider between cards
+                            if (index < missions.size - 1) {
+                                Spacer(modifier = Modifier.height(14.dp))
+                                HorizontalDivider(
+                                    color = Color(0xFF1E293B),
+                                    thickness = 1.dp
+                                )
                             }
+                        }
+
                         }
                     }
                 }
@@ -572,8 +508,6 @@ fun MissionTabContent(
             }
         }
     }
-}
-
 @Composable
 fun EmptyStateViewNew(
     onAddMission: (() -> Unit)?,
@@ -732,7 +666,7 @@ private fun TalentProfileCard(
 /**
  * Vue divisée pour les recruteurs : Missions en haut, Talents recommandés en bas
  */
-@OptIn(ExperimentalMaterialApi::class)
+
 @Composable
 private fun RecruiterSplitView(
     missions: List<Mission>,
@@ -795,52 +729,34 @@ private fun RecruiterSplitView(
                         val isOwner = viewModel.isMissionOwner(mission)
                         val isFavorite = viewModel.isFavorite(mission)
                         
-                        // SwipeToDismiss pour supprimer
-                        val dismissState = rememberDismissState()
-                        
-                        LaunchedEffect(dismissState.currentValue) {
-                            if (dismissState.currentValue == DismissValue.DismissedToStart) {
-                                missionToDelete = mission
-                                dismissState.snapTo(DismissValue.Default)
+                        // Simplified without SwipeToDismiss
+                        Column {
+                            MissionCardNew(
+                                mission = mission,
+                                isFavorite = isFavorite,
+                                onFavoriteToggle = { viewModel.toggleFavorite(mission) },
+                                onClick = { onMissionClick(mission) },
+                                isOwner = isOwner,
+                                isRecruiter = true,
+                                onEdit = {
+                                    if (isOwner && onEditMission != null) {
+                                        onEditMission(mission)
+                                    }
+                                },
+                                onDelete = {
+                                    missionToDelete = mission
+                                }
+                            )
+                            
+                            // Divider between cards
+                            if (index < missions.size - 1) {
+                                Spacer(modifier = Modifier.height(14.dp))
+                                HorizontalDivider(
+                                    color = Color(0xFF1E293B),
+                                    thickness = 1.dp
+                                )
                             }
                         }
-                        
-                            SwipeToDismiss(
-                                state = dismissState,
-                                directions = setOf(DismissDirection.EndToStart),
-                                background = {
-                                    // Pas de background visible - swipe seulement
-                                },
-                            dismissContent = {
-                                Column {
-                                    MissionCardNew(
-                                        mission = mission,
-                                        isFavorite = isFavorite,
-                                        onFavoriteToggle = { viewModel.toggleFavorite(mission) },
-                                        onClick = { onMissionClick(mission) },
-                                        isOwner = isOwner,
-                                        isRecruiter = true,
-                                        onEdit = {
-                                            if (isOwner && onEditMission != null) {
-                                                onEditMission(mission)
-                                            }
-                                        },
-                                        onDelete = {
-                                            missionToDelete = mission
-                                        }
-                                    )
-                                    
-                                    // Divider between cards
-                                    if (index < missions.size - 1) {
-                                        Spacer(modifier = Modifier.height(14.dp))
-                                        HorizontalDivider(
-                                            color = Color(0xFF1E293B),
-                                            thickness = 1.dp
-                                        )
-                                    }
-                                }
-                            }
-                        )
                     }
                     
                     // Section Talents intégrée dans le scroll des missions - seulement si pas de recherche
@@ -893,492 +809,65 @@ private fun RecruiterSplitView(
 private fun RecommendedTalentsSectionIntegrated(
     onTalentProfileClick: (String) -> Unit
 ) {
-    val allTalentsState = remember { mutableStateListOf<com.example.matchify.domain.model.UserModel>() }
-    val isLoadingAny = remember { mutableStateOf(false) }
-    
-    // Charger tous les talents enregistrés
-    val context = LocalContext.current
-    val userRepository = remember {
-        val prefs = AuthPreferencesProvider.getInstance().get()
-        val apiService = com.example.matchify.data.remote.ApiService.getInstance()
-        com.example.matchify.data.remote.UserRepository(apiService.userApi, prefs)
-    }
-    
-    val errorMessage = remember { mutableStateOf<String?>(null) }
-    
-    LaunchedEffect(Unit) {
-        isLoadingAny.value = true
-        errorMessage.value = null
-        try {
-            // Appel de l'API avec limit et page
-            val talents = userRepository.getAllTalents(limit = 20, page = 1)
-            allTalentsState.clear()
-            allTalentsState.addAll(talents)
-            android.util.Log.d("RecommendedTalents", "✅ Loaded ${talents.size} talents successfully")
-            
-            // Log pour vérifier les données reçues
-            if (talents.isNotEmpty()) {
-                android.util.Log.d("RecommendedTalents", "First talent: ${talents.first().fullName} (${talents.first().id})")
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("RecommendedTalents", "❌ Error loading talents: ${e.message}", e)
-            
-            // Gestion spécifique des erreurs HTTP
-            when (e) {
-                is retrofit2.HttpException -> {
-                    val httpCode = e.code()
-                    val errorBody = e.response()?.errorBody()?.string()
-                    
-                    android.util.Log.e("RecommendedTalents", "HTTP $httpCode Error: $errorBody")
-                    
-                    when (httpCode) {
-                        401 -> {
-                            // Token invalide ou expiré
-                            errorMessage.value = "Session expirée. Veuillez vous reconnecter."
-                            android.util.Log.e("RecommendedTalents", "⚠️ 401 Unauthorized - Token invalide ou expiré")
-                        }
-                        403 -> {
-                            errorMessage.value = "Accès refusé. Vous n'avez pas les permissions nécessaires."
-                        }
-                        404 -> {
-                            errorMessage.value = "Endpoint non trouvé. Vérifiez que GET /users/talents existe côté backend."
-                        }
-                        500 -> {
-                            errorMessage.value = "Erreur serveur. Veuillez réessayer plus tard."
-                        }
-                        else -> {
-                            errorMessage.value = "Erreur HTTP $httpCode: ${e.message()}"
-                        }
-                    }
-                }
-                is java.net.SocketTimeoutException -> {
-                    errorMessage.value = "Timeout de connexion. Vérifiez votre connexion internet."
-                }
-                is java.net.UnknownHostException -> {
-                    errorMessage.value = "Impossible de se connecter au serveur. Vérifiez votre connexion."
-                }
-                else -> {
-                    errorMessage.value = "Erreur: ${e.message ?: e.javaClass.simpleName}"
-                }
-            }
-        } finally {
-            isLoadingAny.value = false
-        }
-    }
+    val viewModel: MissionListViewModel = viewModel(factory = MissionListViewModelFactory())
+    val recommendedTalents by viewModel.recommendedTalents.collectAsState()
     
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
     ) {
-        // Header avec titre et lien "Voir plus"
+        // Header
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Review your project's goals with an expert, one-on-one",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White,
-                modifier = Modifier.weight(1f)
+                text = "Talents recommandés",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
             )
             
-            // Lien "Voir plus" avec flèche - toujours visible pour aller à l'écran de recherche
             TextButton(
-                onClick = { onTalentProfileClick("search_all") },
-                contentPadding = PaddingValues(0.dp)
+                onClick = { onTalentProfileClick("search_all") }
             ) {
                 Text(
-                    text = "Voir plus",
+                    text = "Voir tout",
                     color = Color(0xFF3B82F6),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Icon(
-                    imageVector = Icons.Rounded.ArrowForward,
-                    contentDescription = "Voir plus",
-                    tint = Color(0xFF3B82F6),
-                    modifier = Modifier.size(18.dp)
+                    fontSize = 14.sp
                 )
             }
         }
         
-        // Liste horizontale des talents - Simplifié
-        when {
-            isLoadingAny.value -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color(0xFF3B82F6))
-                }
-            }
-            allTalentsState.isEmpty() -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Aucun talent disponible",
-                        color = Color(0xFF94A3B8)
-                    )
-                }
-            }
-            else -> {
-                val ratingRepository = remember { RatingRepository(ApiService.getInstance().ratingApi) }
-                val talentRatings = remember { mutableStateMapOf<String, Double?>() }
-                val scope = rememberCoroutineScope()
-                
-                // Limiter à 2 profils maximum
-                val displayedTalents = allTalentsState.take(2)
-                
-                // Charger les ratings pour chaque talent affiché
-                LaunchedEffect(displayedTalents) {
-                    displayedTalents.forEach { talent ->
-                        talent.id?.let { talentId ->
-                            if (!talentRatings.containsKey(talentId)) {
-                                scope.launch {
-                                    try {
-                                        val ratingsResponse = ratingRepository.getTalentRatings(talentId)
-                                        val rating = ratingsResponse.bayesianScore ?: ratingsResponse.averageScore
-                                        // Convertir le score sur 5 en pourcentage (multiplier par 20)
-                                        talentRatings[talentId] = rating?.let { it * 20.0 }
-                                    } catch (e: Exception) {
-                                        android.util.Log.e("ExpertReviewSection", "Error loading rating for $talentId: ${e.message}", e)
-                                        talentRatings[talentId] = null
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(displayedTalents) { talent ->
-                        talent.id?.let { talentId ->
-                            UpworkStyleTalentCard(
-                                talent = talent,
-                                onClick = { onTalentProfileClick(talentId) },
-                                ratingPercentage = talentRatings[talentId]
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * Carte de talent style Upwork avec toutes les informations
- */
-@Composable
-private fun UpworkStyleTalentCard(
-    talent: com.example.matchify.domain.model.UserModel,
-    onClick: () -> Unit,
-    ratingPercentage: Double? = null
-) {
-    Surface(
-        modifier = Modifier
-            .width(280.dp)
-            .height(100.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        color = Color(0xFFFFFFFF),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            Color(0xFFE5E7EB)
-        ),
-        shadowElevation = 2.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        // List
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Photo de profil à gauche
-            AsyncImage(
-                model = talent.profileImageUrl,
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop,
-                error = painterResource(id = R.drawable.avatar),
-                placeholder = painterResource(id = R.drawable.avatar)
-            )
-            
-            Spacer(modifier = Modifier.width(10.dp))
-            
-            // Nom, ville et bio au centre
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.Start
-            ) {
-                // Nom
-                Text(
-                    text = talent.fullName,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF111827),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                
-                Spacer(modifier = Modifier.height(2.dp))
-                
-                // Ville/Location
-                Text(
-                    text = talent.location ?: "Non spécifiée",
-                    fontSize = 12.sp,
-                    color = Color(0xFF6B7280),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                
-                Spacer(modifier = Modifier.height(3.dp))
-                
-                // Bio/Description
-                Text(
-                    text = talent.description?.take(45) ?: "Aucune description disponible",
-                    fontSize = 11.sp,
-                    color = Color(0xFF374151),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 14.sp
-                )
-            }
-            
-            // Badge de rating (pourcentage) à droite
-            ratingPercentage?.let { rating ->
-                Surface(
-                    color = Color(0xFF10B981).copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = "Note",
-                            fontSize = 10.sp,
-                            color = Color(0xFF6B7280),
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = "${rating.toInt()}%",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF10B981)
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-/**
- * Section inférieure pour afficher tous les talents enregistrés (scroll horizontal)
- */
-@Composable
-fun RecommendedTalentsBottomSection(
-    missions: List<Mission>,
-    onTalentProfileClick: (String) -> Unit
-) {
-    val allTalentsState =
-        remember { mutableStateListOf<com.example.matchify.domain.model.UserModel>() }
-    val isLoadingAny = remember { mutableStateOf(false) }
-
-    // Charger tous les talents enregistrés
-    val context = LocalContext.current
-    val userRepository = remember {
-        val prefs = AuthPreferencesProvider.getInstance().get()
-        val apiService = com.example.matchify.data.remote.ApiService.getInstance()
-        com.example.matchify.data.remote.UserRepository(apiService.userApi, prefs)
-    }
-
-    val errorMessage = remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(Unit) {
-        isLoadingAny.value = true
-        errorMessage.value = null
-        try {
-            // Appel de l'API avec limit et page
-            val talents = userRepository.getAllTalents(limit = 20, page = 1)
-            allTalentsState.clear()
-            allTalentsState.addAll(talents)
-            android.util.Log.d(
-                "RecommendedTalents",
-                "✅ Loaded ${talents.size} talents successfully"
-            )
-
-            // Log pour vérifier les données reçues
-            if (talents.isNotEmpty()) {
-                android.util.Log.d(
-                    "RecommendedTalents",
-                    "First talent: ${talents.first().fullName} (${talents.first().id})"
-                )
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("RecommendedTalents", "❌ Error loading talents: ${e.message}", e)
-
-            // Gestion spécifique des erreurs HTTP
-            when (e) {
-                is retrofit2.HttpException -> {
-                    val httpCode = e.code()
-                    val errorBody = e.response()?.errorBody()?.string()
-
-                    android.util.Log.e("RecommendedTalents", "HTTP $httpCode Error: $errorBody")
-
-                    when (httpCode) {
-                        401 -> {
-                            // Token invalide ou expiré
-                            errorMessage.value = "Session expirée. Veuillez vous reconnecter."
-                            android.util.Log.e(
-                                "RecommendedTalents",
-                                "⚠️ 401 Unauthorized - Token invalide ou expiré"
-                            )
-                            // TODO: Rediriger vers l'écran de login ou rafraîchir le token
-                            // Navigation vers login devrait être gérée par le système d'authentification global
-                        }
-
-                        403 -> {
-                            errorMessage.value =
-                                "Accès refusé. Vous n'avez pas les permissions nécessaires."
-                        }
-
-                        404 -> {
-                            errorMessage.value =
-                                "Endpoint non trouvé. Vérifiez que GET /users/talents existe côté backend."
-                        }
-
-                        500 -> {
-                            errorMessage.value = "Erreur serveur. Veuillez réessayer plus tard."
-                        }
-
-                        else -> {
-                            errorMessage.value = "Erreur HTTP $httpCode: ${e.message()}"
-                        }
-                    }
-                }
-
-                is java.net.SocketTimeoutException -> {
-                    errorMessage.value = "Timeout de connexion. Vérifiez votre connexion internet."
-                }
-
-                is java.net.UnknownHostException -> {
-                    errorMessage.value =
-                        "Impossible de se connecter au serveur. Vérifiez votre connexion."
-                }
-
-                else -> {
-                    errorMessage.value = "Erreur: ${e.message ?: e.javaClass.simpleName}"
-                }
-            }
-        } finally {
-            isLoadingAny.value = false
-        }
-    }
-
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        // Header simplifié
-        Text(
-            text = "Review your project's goals with an expert, one-on-one",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color.White,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        )
-
-        // Liste horizontale des talents - Simplifié
-        when {
-            isLoadingAny.value -> {
-                Box(
+            if (recommendedTalents.isEmpty()) {
+                // Loading or empty state
+                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp),
+                        .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = Color(0xFF3B82F6))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color(0xFF3B82F6)
+                    )
                 }
-            }
-            allTalentsState.isEmpty() -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Aucun talent disponible",
-                        color = Color(0xFF94A3B8)
+            } else {
+                recommendedTalents.forEach { talent ->
+                    com.example.matchify.ui.talent.search.components.TalentSearchCard(
+                        talent = talent,
+                        onClick = { onTalentProfileClick(talent.talentId) }
                     )
                 }
             }
-            else -> {
-                val ratingRepository = remember { RatingRepository(ApiService.getInstance().ratingApi) }
-                val talentRatings = remember { mutableStateMapOf<String, Double?>() }
-                val scope = rememberCoroutineScope()
-                
-                // Charger les ratings pour chaque talent
-                LaunchedEffect(allTalentsState) {
-                    allTalentsState.forEach { talent ->
-                        talent.id?.let { talentId ->
-                            if (!talentRatings.containsKey(talentId)) {
-                                scope.launch {
-                                    try {
-                                        val ratingsResponse = ratingRepository.getTalentRatings(talentId)
-                                        val rating = ratingsResponse.bayesianScore ?: ratingsResponse.averageScore
-                                        // Convertir le score sur 5 en pourcentage (multiplier par 20)
-                                        talentRatings[talentId] = rating?.let { it * 20.0 }
-                                    } catch (e: Exception) {
-                                        android.util.Log.e("RecommendedTalentsBottomSection", "Error loading rating for $talentId: ${e.message}", e)
-                                        talentRatings[talentId] = null
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(allTalentsState) { talent ->
-                        talent.id?.let { talentId ->
-                            UpworkStyleTalentCard(
-                                talent = talent,
-                                onClick = { onTalentProfileClick(talentId) },
-                                ratingPercentage = talentRatings[talentId]
-                            )
-                        }
-                    }
-                }
-            }
         }
     }
-}
 }

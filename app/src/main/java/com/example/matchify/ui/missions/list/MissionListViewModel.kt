@@ -27,7 +27,8 @@ class MissionListViewModel(
     private val repository: MissionRepository,
     private val favoriteRepository: FavoriteRepository,
     private val realtimeClient: MissionRealtimeClient,
-    private val authPreferences: com.example.matchify.data.local.AuthPreferences
+    private val authPreferences: com.example.matchify.data.local.AuthPreferences,
+    private val talentRepository: com.example.matchify.data.remote.TalentRepository
 ) : ViewModel() {
 
     private val _missions = MutableStateFlow<List<Mission>>(emptyList())
@@ -38,6 +39,9 @@ class MissionListViewModel(
     
     private val _bestMatchMissions = MutableStateFlow<List<Mission>>(emptyList())
     val bestMatchMissions: StateFlow<List<Mission>> = _bestMatchMissions
+    
+    private val _recommendedTalents = MutableStateFlow<List<com.example.matchify.domain.model.Talent>>(emptyList())
+    val recommendedTalents: StateFlow<List<com.example.matchify.domain.model.Talent>> = _recommendedTalents
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -71,6 +75,7 @@ class MissionListViewModel(
     
     init {
         loadMissions()
+        loadRecommendedTalents()
         observeRealtimeUpdates()
     }
 
@@ -195,6 +200,23 @@ class MissionListViewModel(
                 android.util.Log.e("MissionListViewModel", "loadBestMatches: Error loading best matches", e)
                 _isLoadingBestMatches.value = false
                 _errorMessage.value = "Failed to load best matches: ${e.message}"
+            }
+        }
+    }
+    
+    fun loadRecommendedTalents() {
+        // Only load for recruiters
+        if (isTalent) return
+        
+        viewModelScope.launch {
+            try {
+                // Fetch all talents and take the top 2
+                // Ideally this would be a "getRecommendedTalents" API call
+                val allTalents = talentRepository.getAllTalents()
+                _recommendedTalents.value = allTalents.take(2)
+            } catch (e: Exception) {
+                // Silent fail for recommendations
+                android.util.Log.e("MissionListViewModel", "Error loading recommended talents", e)
             }
         }
     }

@@ -154,7 +154,7 @@ fun InterviewsListScreen(
                                     color = Color(0xFF9CA3AF),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(vertical = 8.dp, top = 16.dp)
+                                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                                 )
                             }
                             items(pastInterviews) { interview ->

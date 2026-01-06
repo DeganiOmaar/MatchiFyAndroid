@@ -12,6 +12,14 @@ import java.net.UnknownHostException
  * Centralized error handler that converts technical backend errors
  * into user-friendly messages
  */
+/**
+ * Response structure for validation errors from backend
+ */
+data class ValidationErrorResponse(
+    val message: String?,
+    val fieldErrors: Map<String, String>?
+)
+
 object ErrorHandler {
     
     private const val TAG = "ErrorHandler"
@@ -35,6 +43,30 @@ object ErrorHandler {
                 val message = exception.message ?: ""
                 mapTechnicalMessage(message, context)
             }
+        }
+    }
+    
+    /**
+     * Extracts validation errors from HTTP exception
+     */
+    fun extractValidationErrors(exception: HttpException): ValidationErrorResponse? {
+        return try {
+            val errorBody = exception.response()?.errorBody()?.string()
+            errorBody?.let {
+                val errorJson = Gson().fromJson(it, JsonObject::class.java)
+                val message = errorJson.get("message")?.asString
+                val fieldErrors = mutableMapOf<String, String>()
+                
+                // Try to extract fieldErrors if present
+                errorJson.get("fieldErrors")?.asJsonObject?.entrySet()?.forEach { entry ->
+                    fieldErrors[entry.key] = entry.value.asString
+                }
+                
+                ValidationErrorResponse(message, fieldErrors.ifEmpty { null })
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error extracting validation errors", e)
+            null
         }
     }
     
@@ -190,6 +222,7 @@ enum class ErrorContext {
     MISSION_DELETE,
     PASSWORD_RESET,
     FORGOT_PASSWORD,
-    VERIFY_CODE
+    VERIFY_CODE,
+    CONTRACT_CREATE
 }
 

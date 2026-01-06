@@ -131,6 +131,15 @@ class ApiService(private val authPreferences: AuthPreferences) {
         retrofit.create(OfferApi::class.java)
     }
 
+    val interviewApi: com.example.matchify.data.remote.api.InterviewApi by lazy {
+        retrofit.create(com.example.matchify.data.remote.api.InterviewApi::class.java)
+    }
+
+    val ratingApi: com.example.matchify.data.remote.api.RatingApi by lazy {
+        retrofit.create(com.example.matchify.data.remote.api.RatingApi::class.java)
+    }
+
+
     companion object {
         @Volatile
         private var INSTANCE: ApiService? = null

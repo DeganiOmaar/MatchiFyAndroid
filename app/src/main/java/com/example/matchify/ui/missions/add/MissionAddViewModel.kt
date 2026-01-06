@@ -22,12 +22,16 @@ class MissionAddViewModel(
     val budget = MutableStateFlow("")
     val skillInput = MutableStateFlow("")
     val skills = MutableStateFlow<List<String>>(emptyList())
+    val experienceLevel = MutableStateFlow<String?>(null)
 
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
+    
+    private val _fieldErrors = MutableStateFlow<Map<String, String>>(emptyMap())
+    val fieldErrors: StateFlow<Map<String, String>> = _fieldErrors
 
     private val _saveSuccess = MutableStateFlow(false)
     val saveSuccess: StateFlow<Boolean> = _saveSuccess
@@ -52,6 +56,7 @@ class MissionAddViewModel(
                     duration.value.isNotEmpty() &&
                     filteredBudget.isNotEmpty() &&
                     skills.value.isNotEmpty() &&
+                    experienceLevel.value != null &&
                     filteredBudget.toIntOrNull() != null &&
                     skills.value.size <= 10
         }
@@ -102,6 +107,7 @@ class MissionAddViewModel(
         budget.value = ""
         skillInput.value = ""
         skills.value = emptyList()
+        experienceLevel.value = null
     }
 
     fun onSaveSuccessHandled() {

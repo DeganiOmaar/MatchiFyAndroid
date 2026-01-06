@@ -48,6 +48,7 @@ import androidx.compose.material.icons.filled.Star
 fun TalentProfileByIDScreen(
     talentId: String,
     onBack: () -> Unit,
+    onRateClick: (String, String?) -> Unit = { _, _ -> },
     viewModel: TalentProfileByIDViewModel = viewModel(
         factory = TalentProfileByIDViewModelFactory(talentId)
     )

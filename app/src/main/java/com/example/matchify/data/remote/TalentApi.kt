@@ -38,5 +38,9 @@ interface TalentApi {
     suspend fun uploadCV(
         @Part file: MultipartBody.Part
     ): TalentProfileResponseDto
+
+    // Récupérer tous les talents
+    @GET("talent/all")
+    suspend fun getAllTalents(): List<com.example.matchify.data.remote.dto.profile.TalentUserDto>
 }
 

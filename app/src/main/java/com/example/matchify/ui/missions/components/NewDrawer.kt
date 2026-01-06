@@ -31,6 +31,9 @@ enum class DrawerMenuItemType {
     CREATE_OFFER,
     MY_OFFERS,
     BROWSE_OFFERS,
+    CREATE_MISSION,
+    INTERVIEWS,
+    FAVORITE_TALENTS,
     CHAT_BOT,
     SETTINGS,
     THEME,
@@ -334,6 +337,9 @@ private fun isItemSelected(
         DrawerMenuItemType.CREATE_OFFER -> currentRoute == "category_selection" || currentRoute?.startsWith("create_offer") == true
         DrawerMenuItemType.MY_OFFERS -> currentRoute == "my_offers"
         DrawerMenuItemType.BROWSE_OFFERS -> currentRoute == "browse_offers"
+        DrawerMenuItemType.CREATE_MISSION -> currentRoute == "create_mission" || currentRoute?.startsWith("create_mission") == true
+        DrawerMenuItemType.INTERVIEWS -> currentRoute == "interviews" || currentRoute?.startsWith("interview") == true
+        DrawerMenuItemType.FAVORITE_TALENTS -> currentRoute == "favorite_talents" || currentRoute == "favorites"
         DrawerMenuItemType.CHAT_BOT -> currentRoute == "chatbot"
         DrawerMenuItemType.SETTINGS -> currentRoute == "settings"
         DrawerMenuItemType.THEME -> currentRoute == "theme"

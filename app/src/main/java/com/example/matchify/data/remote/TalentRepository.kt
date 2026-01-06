@@ -100,5 +100,31 @@ class TalentRepository(
         
         api.uploadCV(filePart)
     }
+
+    suspend fun getAllTalents(): List<com.example.matchify.domain.model.Talent> = withContext(Dispatchers.IO) {
+        try {
+            val dtos = api.getAllTalents()
+            dtos.map { dto ->
+                val profileUrl = if (!dto.profileImage.isNullOrBlank()) {
+                    val path = dto.profileImage.trim()
+                    val normalized = if (path.startsWith("/")) path else "/$path"
+                    "http://10.0.2.2:3000$normalized"
+                } else null
+
+                com.example.matchify.domain.model.Talent(
+                    talentId = dto.id ?: "",
+                    fullName = dto.fullName,
+                    email = dto.email,
+                    profileImageUrl = profileUrl,
+                    skills = dto.skills,
+                    description = dto.description,
+                    experienceYears = null, // Not in DTO
+                    availability = null // Not in DTO
+                )
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 }
 
