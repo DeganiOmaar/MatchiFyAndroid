@@ -192,7 +192,23 @@ class TalentProfileViewModel(
             try {
                 Log.d("TalentProfileViewModel", "Loading skill names for IDs: $skillIds")
                 val skills = skillRepository.getSkillsByIds(skillIds)
-                _skillNames.value = skills.map { it.name }
+                
+                // Filter out skills where name looks like a MongoDB ID (24-character hex string)
+                val validSkills = skills.filter { skill ->
+                    val name = skill.name
+                    // MongoDB IDs are 24-character hex strings
+                    val isMongoId = name.length == 24 && name.all { 
+                        it.isDigit() || it in 'a'..'f' || it in 'A'..'F' 
+                    }
+                    !isMongoId
+                }
+                
+                _skillNames.value = validSkills.map { it.name }
+                
+                if (validSkills.size < skills.size) {
+                    Log.w("TalentProfileViewModel", "⚠️ Filtered out ${skills.size - validSkills.size} skills with invalid names (IDs)")
+                }
+                
                 Log.d("TalentProfileViewModel", "Loaded skill names: ${_skillNames.value}")
             } catch (e: Exception) {
                 Log.e("TalentProfileViewModel", "Failed to load skill names: ${e.message}", e)

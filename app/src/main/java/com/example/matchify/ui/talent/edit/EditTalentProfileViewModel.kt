@@ -73,7 +73,23 @@ class EditTalentProfileViewModel(
         viewModelScope.launch {
             try {
                 val skillsList = skillRepository.getSkillsByIds(skillIdsList)
-                skills.value = skillsList
+                
+                // Filter out skills where name looks like a MongoDB ID (24-character hex string)
+                val validSkills = skillsList.filter { skill ->
+                    val name = skill.name
+                    // MongoDB IDs are 24-character hex strings
+                    val isMongoId = name.length == 24 && name.all { 
+                        it.isDigit() || it in 'a'..'f' || it in 'A'..'F' 
+                    }
+                    !isMongoId
+                }
+                
+                skills.value = validSkills
+                
+                if (validSkills.size < skillsList.size) {
+                    Log.w("EditTalentProfileViewModel", "⚠️ Filtered out ${skillsList.size - validSkills.size} skills with invalid names (IDs)")
+                }
+                
                 Log.d("EditTalentProfileViewModel", "Loaded skills: ${skills.value.map { it.name }}")
             } catch (e: Exception) {
                 Log.e("EditTalentProfileViewModel", "Failed to load skills: ${e.message}", e)
@@ -140,35 +156,12 @@ class EditTalentProfileViewModel(
                 // Convert URI to File if image is selected
                 val imageFile = selectedImageUri.value?.let { uriToFile(it) }
 
-                // Extract skill IDs or Names? 
-                // Creating new skills if they don't have IDs is handled by backend usually if we pass names?
-                // Or we pass a mix. 
-                // The repository.updateTalentProfile expects 'skills' as List<String>? which are IDs usually.
-                // But if user creates a new skill, it has no ID yet.
-                // The current API might expect IDs. 
-                // If SkillPicker creates a new Skill "USER" source with null ID.
-                // We might need to create them first OR backend handles it.
-                // Assuming backend handles ID list. If custom skill, we might just pass the name if API supports it, 
-                // OR we have to create it.
-                // Based on SkillPickerView logic: `customSkill` has null ID.
-                
-                // Let's assume for now we map mapNotNull { it.id } but that drops new skills.
-                // If the user added a custom skill, likely we need to create it or pass it.
-                // Let's look at `AddEditProjectViewModel` to see how it handled it.
-                // Wait, `AddEditProjectViewModel` wasn't shown fully for submit logic.
-                // BUT, `SkillRepository` likely has `createSkill` or similar.
-                // Or specific endpoint for profile update handles it.
-                // For safety, let's collect IDs. If ID is null (custom skill), we might need to create it.
-                // However, without `createSkill` in this scope, I'll assume we pass names? 
-                // No, existing code used `skillIds` (List<String>) which implies IDs.
-                
-                // Let's try to pass IDs. If custom skill has no ID, we might have an issue.
-                // But let's follow the pattern. 
-                
                 val currentSkills = skills.value
-                val skillIdsToSend = currentSkills.mapNotNull { it.uniqueId ?: it.id } 
-                // If a skill has no ID, we effectively drop it here unless we create it.
-                // But let's proceed with IDs for now.
+                val skillIdsToSend = currentSkills.mapNotNull { it.uniqueId ?: it.id }
+                
+                Log.d("EditTalentProfileViewModel", "=== SUBMITTING PROFILE ===")
+                Log.d("EditTalentProfileViewModel", "Current skills in UI: ${currentSkills.map { "${it.name} (ID: ${it.uniqueId ?: it.id})" }}")
+                Log.d("EditTalentProfileViewModel", "Skill IDs to send to backend: $skillIdsToSend")
                 
                 // IMPORTANT: Send skill IDs
                 repository.updateTalentProfile(
@@ -182,20 +175,29 @@ class EditTalentProfileViewModel(
                     imageFile = imageFile
                 )
 
+                Log.d("EditTalentProfileViewModel", "✅ Profile update successful, refreshing...")
+
                 // 2) Refresh profile
                 kotlin.runCatching {
                     val refreshedUserDto = repository.getTalentProfile().user
                     if (refreshedUserDto != null) {
                         val refreshedUser = refreshedUserDto.toDomain()
+                        Log.d("EditTalentProfileViewModel", "Refreshed user skills from backend: ${refreshedUser.skills}")
                         repository.saveUpdatedUser(refreshedUser)
                         currentProfileImageUrl.value = refreshedUser.profileImageUrl
+                        Log.d("EditTalentProfileViewModel", "✅ Profile refreshed and saved to local storage")
+                    } else {
+                        Log.w("EditTalentProfileViewModel", "⚠️ Refreshed user DTO is null")
                     }
+                }.onFailure { e ->
+                    Log.e("EditTalentProfileViewModel", "❌ Failed to refresh profile: ${e.message}", e)
                 }
 
                 saving.value = false
                 saved.value = true
 
             } catch (e: Exception) {
+                Log.e("EditTalentProfileViewModel", "❌ Failed to update profile: ${e.message}", e)
                 saving.value = false
                 error.value = ErrorHandler.getErrorMessage(e, ErrorContext.PROFILE_UPDATE)
             }
