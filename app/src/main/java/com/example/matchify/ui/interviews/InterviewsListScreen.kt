@@ -61,7 +61,7 @@ fun InterviewsListScreen(
     Scaffold(
         topBar = {
             MatchifyTopAppBar(
-                title = "Mes interviews",
+                title = "My Interviews",
                 onBack = onBack
             )
         },
@@ -89,13 +89,13 @@ fun InterviewsListScreen(
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = errorMessage ?: "Une erreur est survenue",
+                            text = errorMessage ?: "An error occurred",
                             color = Color(0xFFEF4444),
                             fontSize = 16.sp
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = { viewModel.loadInterviews() }) {
-                            Text("Réessayer")
+                            Text("Retry")
                         }
                     }
                 }
@@ -115,14 +115,14 @@ fun InterviewsListScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Aucune interview",
+                            text = "No interviews",
                             color = Color(0xFF9CA3AF),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Vous n'avez pas encore d'interviews planifiées",
+                            text = "You have no scheduled interviews yet",
                             color = Color(0xFF64748B),
                             fontSize = 14.sp
                         )
@@ -137,7 +137,7 @@ fun InterviewsListScreen(
                         if (upcomingInterviews.isNotEmpty()) {
                             item {
                                 Text(
-                                    text = "À venir",
+                                    text = "Upcoming",
                                     color = Color.White,
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
@@ -166,7 +166,7 @@ fun InterviewsListScreen(
                         if (pastInterviews.isNotEmpty()) {
                             item {
                                 Text(
-                                    text = "Passées",
+                                    text = "Past",
                                     color = Color(0xFF9CA3AF),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
@@ -211,7 +211,7 @@ fun InterviewCard(
     var showCancelDialog by remember { mutableStateOf(false) }
     var cancellationReason by remember { mutableStateOf("") }
     val isLoading by viewModel?.isLoading?.collectAsState() ?: remember { mutableStateOf(false) }
-    val dateFormat = SimpleDateFormat("dd MMM yyyy 'à' HH:mm", Locale.FRENCH)
+    val dateFormat = SimpleDateFormat("dd MMM yyyy 'at' HH:mm", Locale.ENGLISH)
     
     Surface(
         modifier = Modifier
@@ -263,7 +263,7 @@ fun InterviewCard(
                     } else {
                         // Pour les talents, afficher le nom du recruteur
                         Text(
-                            text = interview.recruiterName ?: "Recruteur",
+                            text = interview.recruiterName ?: "Recruiter",
                             color = Color(0xFF9CA3AF),
                             fontSize = 14.sp
                         )
@@ -348,7 +348,7 @@ fun InterviewCard(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Rejoindre")
+                        Text("Join")
                     }
                 }
                 
@@ -368,7 +368,7 @@ fun InterviewCard(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Annuler")
+                        Text("Cancel")
                     }
                 }
             }
@@ -381,7 +381,7 @@ fun InterviewCard(
             onDismissRequest = { showCancelDialog = false },
             title = {
                 Text(
-                    text = "Annuler l'interview",
+                    text = "Cancel Interview",
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
@@ -391,14 +391,14 @@ fun InterviewCard(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Voulez-vous vraiment annuler cette interview ? Une notification contenant la raison de l'annulation sera envoyée au talent.",
+                        text = "Are you sure you want to cancel this interview? A notification containing the cancellation reason will be sent to the talent.",
                         color = Color(0xFFE2E8F0)
                     )
                     OutlinedTextField(
                         value = cancellationReason,
                         onValueChange = { cancellationReason = it },
-                        label = { Text("Raison de l'annulation *", color = Color(0xFF9CA3AF)) },
-                        placeholder = { Text("Ex: Conflit d'horaire, changement de plan...", color = Color(0xFF6B7280)) },
+                        label = { Text("Reason for cancellation *", color = Color(0xFF9CA3AF)) },
+                        placeholder = { Text("Ex: Scheduling conflict, change of plans...", color = Color(0xFF6B7280)) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFF1E293B),
                             unfocusedContainerColor = Color(0xFF1E293B),
@@ -435,7 +435,7 @@ fun InterviewCard(
                         containerColor = Color(0xFFEF4444)
                     )
                 ) {
-                    Text("Confirmer l'annulation")
+                    Text("Confirm Cancellation")
                 }
             },
             dismissButton = {
@@ -445,7 +445,7 @@ fun InterviewCard(
                         cancellationReason = ""
                     }
                 ) {
-                    Text("Annuler", color = Color(0xFF9CA3AF))
+                    Text("Cancel", color = Color(0xFF9CA3AF))
                 }
             },
             containerColor = Color(0xFF1E293B),
@@ -458,9 +458,9 @@ fun InterviewCard(
 @Composable
 private fun StatusBadge(status: InterviewStatus) {
     val (text, bgColor, textColor) = when (status) {
-        InterviewStatus.SCHEDULED -> Triple("Planifié", Color(0xFF3B82F6), Color(0xFFDBEAFE))
-        InterviewStatus.COMPLETED -> Triple("Terminé", Color(0xFF10B981), Color(0xFFD1FAE5))
-        InterviewStatus.CANCELLED -> Triple("Annulé", Color(0xFFEF4444), Color(0xFFFEE2E2))
+        InterviewStatus.SCHEDULED -> Triple("Scheduled", Color(0xFF3B82F6), Color(0xFFDBEAFE))
+        InterviewStatus.COMPLETED -> Triple("Completed", Color(0xFF10B981), Color(0xFFD1FAE5))
+        InterviewStatus.CANCELLED -> Triple("Cancelled", Color(0xFFEF4444), Color(0xFFFEE2E2))
     }
     
     Surface(

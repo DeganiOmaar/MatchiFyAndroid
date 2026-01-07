@@ -34,7 +34,7 @@ enum class DrawerMenuItemType {
     MY_OFFERS,
     BROWSE_OFFERS,
     INTERVIEWS,
-    CHAT_BOT,
+
     SETTINGS,
     THEME,
     FAVORITE_TALENTS,
@@ -53,7 +53,7 @@ data class DrawerMenuItem(
             DrawerMenuItem("Browse Offers", Icons.Default.Search, DrawerMenuItemType.BROWSE_OFFERS),
             DrawerMenuItem("Favorite Talents", Icons.Default.Star, DrawerMenuItemType.FAVORITE_TALENTS),
             DrawerMenuItem("Interviews", Icons.Default.VideoCall, DrawerMenuItemType.INTERVIEWS),
-            DrawerMenuItem("Chat Bot", Icons.Default.Message, DrawerMenuItemType.CHAT_BOT),
+
             DrawerMenuItem("Settings", Icons.Default.Settings, DrawerMenuItemType.SETTINGS)
         )
         
@@ -62,7 +62,7 @@ data class DrawerMenuItem(
             DrawerMenuItem("My Stats", Icons.Default.Assessment, DrawerMenuItemType.MY_STATS),
             DrawerMenuItem("Create Offer", Icons.Default.Add, DrawerMenuItemType.CREATE_OFFER),
             DrawerMenuItem("My Offers", Icons.Default.List, DrawerMenuItemType.MY_OFFERS),
-            DrawerMenuItem("Chat Bot", Icons.Default.Message, DrawerMenuItemType.CHAT_BOT),
+
             DrawerMenuItem("Settings", Icons.Default.Settings, DrawerMenuItemType.SETTINGS)
         )
     }
@@ -344,7 +344,7 @@ private fun isItemSelected(
         DrawerMenuItemType.MY_OFFERS -> currentRoute == "my_offers"
         DrawerMenuItemType.BROWSE_OFFERS -> currentRoute == "browse_offers"
         DrawerMenuItemType.INTERVIEWS -> currentRoute == "interviews_list"
-        DrawerMenuItemType.CHAT_BOT -> currentRoute == "chatbot"
+
         DrawerMenuItemType.SETTINGS -> currentRoute == "settings"
         DrawerMenuItemType.THEME -> currentRoute == "theme"
         DrawerMenuItemType.FAVORITE_TALENTS -> currentRoute == "favorite_talents"

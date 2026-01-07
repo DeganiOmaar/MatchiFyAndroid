@@ -182,12 +182,7 @@ fun MainScreen(
                                     launchSingleTop = true
                                 }
                             }
-                            DrawerMenuItemType.CHAT_BOT -> {
-                                navController.navigate("chatbot") {
-                                    popUpTo("missions_list") { saveState = true }
-                                    launchSingleTop = true
-                                }
-                            }
+
                             DrawerMenuItemType.LOG_OUT -> {
                                 scope.launch {
                                     val result = runCatching { authSessionManager.logout() }
@@ -461,12 +456,7 @@ fun MainScreen(
                                     launchSingleTop = true
                                 }
                             }
-                            DrawerMenuItemType.CHAT_BOT -> {
-                                navController.navigate("chatbot") {
-                                    popUpTo("proposals_list") { saveState = true }
-                                    launchSingleTop = true
-                                }
-                            }
+
                             DrawerMenuItemType.LOG_OUT -> {
                                 scope.launch {
                                     val result = runCatching { authSessionManager.logout() }
@@ -547,12 +537,7 @@ fun MainScreen(
                                     launchSingleTop = true
                                 }
                             }
-                            DrawerMenuItemType.CHAT_BOT -> {
-                                navController.navigate("chatbot") {
-                                    popUpTo("alerts_list") { saveState = true }
-                                    launchSingleTop = true
-                                }
-                            }
+
                             DrawerMenuItemType.LOG_OUT -> {
                                 scope.launch {
                                     val result = runCatching { authSessionManager.logout() }
@@ -710,12 +695,7 @@ fun MainScreen(
                                     launchSingleTop = true
                                 }
                             }
-                            DrawerMenuItemType.CHAT_BOT -> {
-                                navController.navigate("chatbot") {
-                                    popUpTo("messages_list") { saveState = true }
-                                    launchSingleTop = true
-                                }
-                            }
+
                             DrawerMenuItemType.LOG_OUT -> {
                                 scope.launch {
                                     val result = runCatching { authSessionManager.logout() }
@@ -957,11 +937,7 @@ fun MainScreen(
                 )
             }
             
-            composable("chatbot") {
-                com.example.matchify.ui.chatbot.ChatBotScreen(
-                    onBack = { navController.popBackStack() }
-                )
-            }
+
             
             composable("favorite_talents") {
                 com.example.matchify.ui.talent.favorites.FavoriteTalentsScreen(

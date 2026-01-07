@@ -62,27 +62,9 @@ fun MissionAddScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { 
-                    Text(
-                        "Create Mission",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    ) 
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF0F172A)
-                )
+            com.example.matchify.ui.components.MatchifyTopAppBar(
+                title = "Create Mission",
+                onBack = onBack
             )
         },
         containerColor = Color(0xFF0F172A)

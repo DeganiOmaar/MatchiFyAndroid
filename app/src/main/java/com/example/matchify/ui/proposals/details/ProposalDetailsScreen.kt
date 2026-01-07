@@ -176,38 +176,20 @@ fun ProposalDetailsScreen(
                 }
             )
         },
-        containerColor = Color(0xFF0F172A)
+        containerColor = Color(0xFF0F172A),
+        topBar = {
+            com.example.matchify.ui.components.MatchifyTopAppBar(
+                title = "Proposal Details",
+                onBack = onBack
+            )
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
+                .padding(paddingValues)
                 .background(Color(0xFF0F172A))
-    ) {
-        // Custom Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF1E293B))
-                .statusBarsPadding()
-                .padding(horizontal = 8.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.Rounded.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color(0xFF3B82F6)
-                )
-            }
-            Text(
-                text = "Proposal Details",
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
 
         Box(modifier = Modifier.weight(1f)) {
             if (isLoading && proposal == null) {

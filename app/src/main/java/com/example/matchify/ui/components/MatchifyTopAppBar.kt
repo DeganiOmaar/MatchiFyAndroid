@@ -9,11 +9,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.unit.dp
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatchifyTopAppBar(
     title: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    windowInsets: WindowInsets = WindowInsets(0.dp)
 ) {
     CenterAlignedTopAppBar(
         title = {
@@ -33,6 +37,7 @@ fun MatchifyTopAppBar(
                 )
             }
         },
+        windowInsets = windowInsets,
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
             containerColor = Color(0xFF0F172A)
         )

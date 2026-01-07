@@ -92,26 +92,9 @@ fun RatingScreen(
     
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        text = "Noter ${talentName ?: "le talent"}",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight(600)
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Retour",
-                            tint = Color(0xFF3B82F6)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1E293B)
-                )
+            com.example.matchify.ui.components.MatchifyTopAppBar(
+                title = "Rate ${talentName ?: "the talent"}",
+                onBack = onBack
             )
         },
         containerColor = Color(0xFF0F172A)
@@ -176,13 +159,13 @@ fun RatingScreen(
                         }
                         Column {
                             Text(
-                                text = "Votre évaluation",
+                                text = "Your Rating",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                             Text(
-                                text = "Partagez votre expérience",
+                                text = "Share your experience",
                                 fontSize = 13.sp,
                                 color = Color(0xFF94A3B8)
                             )
@@ -191,7 +174,7 @@ fun RatingScreen(
                     
                     // Question principale
                     Text(
-                        text = "Comment évaluez-vous ce talent ?",
+                        text = "How do you rate this talent?",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
@@ -211,11 +194,11 @@ fun RatingScreen(
                             verticalArrangement = Arrangement.spacedBy(0.dp)
                         ) {
                             val categories = listOf(
-                                Triple(5, "Excellent", "Très satisfait"),
-                                Triple(4, "Très bon", "Satisfait"),
-                                Triple(3, "Bon", "Neutre"),
-                                Triple(2, "Médiocre", "Insatisfait"),
-                                Triple(1, "Mauvais", "Très insatisfait")
+                                Triple(5, "Excellent", "Very satisfied"),
+                                Triple(4, "Very good", "Satisfied"),
+                                Triple(3, "Good", "Neutral"),
+                                Triple(2, "Poor", "Dissatisfied"),
+                                Triple(1, "Bad", "Very dissatisfied")
                             )
                             
                             categories.forEachIndexed { index, (score, title, subtitle) ->
@@ -298,7 +281,7 @@ fun RatingScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Commentaire",
+                            text = "Comment",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFFE2E8F0)
@@ -313,7 +296,7 @@ fun RatingScreen(
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = { 
                                 Text(
-                                    "Décrivez votre expérience avec ce talent...",
+                                    "Describe your experience with this talent...",
                                     color = Color(0xFF64748B)
                                 )
                             },
@@ -333,7 +316,7 @@ fun RatingScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        text = "Optionnel",
+                                        text = "Optional",
                                         color = Color(0xFF64748B),
                                         fontSize = 11.sp
                                     )
@@ -358,13 +341,13 @@ fun RatingScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Recommander ce talent",
+                                text = "Recommend this talent",
                                 color = Color.White,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 16.sp
                             )
                             Text(
-                                text = "Ce talent apparaîtra dans les recommandations",
+                                text = "This talent will appear in recommendations",
                                 color = Color(0xFF94A3B8),
                                 fontSize = 12.sp
                             )
@@ -418,7 +401,7 @@ fun RatingScreen(
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Text(
-                                    text = if (myRating != null) "Mettre à jour l'évaluation" else "Enregistrer l'évaluation",
+                                    text = if (myRating != null) "Update Rating" else "Save Rating",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -456,7 +439,7 @@ fun RatingScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "Évaluation enregistrée avec succès",
+                                        text = "Rating saved successfully",
                                         color = Color(0xFF10B981),
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Medium
@@ -474,7 +457,7 @@ fun RatingScreen(
                     ) {
                         errorMessage?.let { error ->
                             // Ne pas afficher l'erreur générique "Problème de connexion"
-                            if (!error.contains("Problème de connexion")) {
+                            if (!error.contains("Connection problem")) {
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
                                     color = Color(0xFFEF4444).copy(alpha = 0.15f),
@@ -519,7 +502,7 @@ fun RatingScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Mon évaluation",
+                                text = "My Rating",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -624,14 +607,14 @@ fun RatingScreen(
                         onDismissRequest = { showDeleteDialog = false },
                         title = {
                             Text(
-                                text = "Supprimer l'évaluation",
+                                text = "Delete Rating",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold
                             )
                         },
                         text = {
                             Text(
-                                text = "Êtes-vous sûr de vouloir supprimer votre évaluation ? Cette action est irréversible.",
+                                text = "Are you sure you want to delete your rating? This action is irreversible.",
                                 color = Color(0xFFE2E8F0)
                             )
                         },
@@ -645,7 +628,7 @@ fun RatingScreen(
                                     containerColor = Color(0xFFEF4444)
                                 )
                             ) {
-                                Text("Supprimer", color = Color.White)
+                                Text("Delete", color = Color.White)
                             }
                         },
                         dismissButton = {
@@ -653,7 +636,7 @@ fun RatingScreen(
                                 onClick = { showDeleteDialog = false },
                                 colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF9CA3AF))
                             ) {
-                                Text("Annuler")
+                                Text("Cancel")
                             }
                         },
                         containerColor = Color(0xFF1E293B),

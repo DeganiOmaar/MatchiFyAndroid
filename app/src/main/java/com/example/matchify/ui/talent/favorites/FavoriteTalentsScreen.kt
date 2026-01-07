@@ -61,26 +61,9 @@ fun FavoriteTalentsScreen(
     
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Talents Favoris",
-                        color = whiteText,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Retour",
-                            tint = whiteText
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = darkBackground
-                )
+            com.example.matchify.ui.components.MatchifyTopAppBar(
+                title = "Talents Favoris",
+                onBack = onBack
             )
         },
         containerColor = darkBackground

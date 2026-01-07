@@ -45,8 +45,8 @@ fun CreateInterviewScreen(
     
     val snackbarHostState = remember { SnackbarHostState() }
     
-    val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.FRENCH)
-    val timeFormat = SimpleDateFormat("HH:mm", Locale.FRENCH)
+    val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH)
+    val timeFormat = SimpleDateFormat("HH:mm", Locale.ENGLISH)
     
     val success = viewModel.success.collectAsState().value
     val coroutineScope = rememberCoroutineScope()
@@ -55,9 +55,9 @@ fun CreateInterviewScreen(
         if (success) {
             // Afficher un message de succès selon le mode utilisé
             val message = if (useAutoGenerate) {
-                "✓ Interview planifiée ! Le lien Zoom/Meet a été généré automatiquement et envoyé au talent par email."
+                "✓ Interview scheduled! The Zoom/Meet link has been automatically generated and sent to the talent by email."
             } else {
-                "✓ Interview planifiée ! Le lien de réunion a été envoyé au talent par email."
+                "✓ Interview scheduled! The meeting link has been sent to the talent by email."
             }
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(
@@ -87,7 +87,7 @@ fun CreateInterviewScreen(
         },
         topBar = {
             MatchifyTopAppBar(
-                title = "Planifier une interview",
+                title = "Schedule Interview",
                 onBack = onBack
             )
         },
@@ -112,7 +112,7 @@ fun CreateInterviewScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Date et heure *",
+                        text = "Date and Time *",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF9CA3AF)
@@ -164,7 +164,7 @@ fun CreateInterviewScreen(
                             Icon(Icons.Rounded.Schedule, null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                text = scheduledDate?.let { dateFormat.format(it) } ?: "Sélectionner date",
+                                text = scheduledDate?.let { dateFormat.format(it) } ?: "Select Date",
                                 fontSize = 14.sp
                             )
                         }
@@ -209,7 +209,7 @@ fun CreateInterviewScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = scheduledDate?.let { timeFormat.format(it) } ?: "Heure",
+                                text = scheduledDate?.let { timeFormat.format(it) } ?: "Time",
                                 fontSize = 14.sp
                             )
                         }
@@ -236,7 +236,7 @@ fun CreateInterviewScreen(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Text(
-                                    text = "Sélectionné: ${dateFormat.format(scheduledDate)} à ${timeFormat.format(scheduledDate)}",
+                                    text = "Selected: ${dateFormat.format(scheduledDate)} at ${timeFormat.format(scheduledDate)}",
                                     fontSize = 13.sp,
                                     color = Color(0xFF3B82F6),
                                     fontWeight = FontWeight.Medium
@@ -263,16 +263,16 @@ fun CreateInterviewScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Lien de réunion",
+                                text = "Meeting Link",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF9CA3AF)
                             )
                             Text(
                                 text = if (useAutoGenerate) {
-                                    "Génération automatique"
+                                    "Automatic Generation"
                                 } else {
-                                    "Lien manuel"
+                                    "Manual Link"
                                 },
                                 fontSize = 12.sp,
                                 color = Color(0xFF9CA3AF).copy(alpha = 0.7f),
@@ -312,7 +312,7 @@ fun CreateInterviewScreen(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Text(
-                                    text = "Le lien Zoom/Meet sera généré automatiquement et envoyé au talent par email",
+                                    text = "The Zoom/Meet link will be automatically generated and sent to the talent by email",
                                     fontSize = 12.sp,
                                     color = Color(0xFF10B981),
                                     fontWeight = FontWeight.Medium
@@ -328,7 +328,7 @@ fun CreateInterviewScreen(
                             singleLine = true
                         )
                         Text(
-                            text = "Le lien saisi sera envoyé au talent par email",
+                            text = "The entered link will be sent to the talent by email",
                             fontSize = 11.sp,
                             color = Color(0xFF9CA3AF).copy(alpha = 0.7f),
                             modifier = Modifier.padding(top = 4.dp)
@@ -341,7 +341,7 @@ fun CreateInterviewScreen(
             DarkTextField(
                 value = notes,
                 onValueChange = { viewModel.setNotes(it) },
-                placeholder = "Notes (optionnel)",
+                placeholder = "Notes (optional)",
                 minLines = 4
             )
             
@@ -390,7 +390,7 @@ fun CreateInterviewScreen(
                     )
                 } else {
                     Text(
-                        "Planifier l'interview",
+                        "Schedule Interview",
                         color = Color.White,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
